@@ -18,7 +18,7 @@ open BioModelAnalyzer
 //
 // CL Parsing
 //
-type Engine = EngineCAV | EngineVMCAI | EngineSimulate | EngineSCM | EngineSYN | EnginePath | EngineVMCAIAsync | EngineAttractors
+type Engine = EngineCAV | EngineVMCAI | EngineSimulate | EngineSCM | EngineSYN | EnginePath | EngineVMCAIAsync | EngineAttractors | EngineGame
 let engine_of_string s = 
     match s with 
     | "PATH" | "path" -> Some EnginePath
@@ -29,6 +29,7 @@ let engine_of_string s =
     | "VMCAIASYNC" | "vmcaiasync" -> Some EngineVMCAIAsync
     | "Simulate" | "simulate" | "SIMULATE"-> Some EngineSimulate
     | "Attractors" | "attractors" | "ATTRACTORS" -> Some EngineAttractors
+    | "Game" | "game" | "GAME" -> Some EngineGame
     | _ -> None 
 
 // Command-line args
@@ -81,6 +82,9 @@ let ltloutputfilename = ref ""
 let attractorInitialCsvFilename = ref "" // optional input filename
 let attractorOut = ref "" // output filename
 let attractorMode = ref Attractors.Sync
+// related to Game engine
+let mutations : (QN.var * int) list ref = ref []
+let treatments : (QN.var * int) list ref = ref []
 
 let usage i = 
     Printf.printfn "Usage: BioCheckConsole.exe -model input_analysis_file.json"
@@ -129,6 +133,8 @@ let rec parse_args args =
     | "-async" :: rest -> attractorMode := Attractors.Async; parse_args rest
     | "-out" :: o :: rest -> attractorOut := o; parse_args rest 
     | "-initial" :: i :: rest -> attractorInitialCsvFilename := i; parse_args rest
+    | "-mutate" :: id :: konst :: rest -> mutations := (ko_of_string id konst) :: !mutations; parse_args rest 
+    | "-treat" :: id :: konst :: rest -> treatments := (ko_of_string id konst) :: !treatments; parse_args rest 
     | _ -> failwith "Bad command line args" 
 
 
@@ -295,7 +301,9 @@ let runPATHEngine qnX modelsdir other_model_name start_state dest_state =
     | PathFinder.Success L    ->    Log.log_debug (sprintf "There are no escape routes between the attractors. %d states explored" L.safe.Length)
                                     printf "%s" (String.concat "\n" (List.map (fun m -> Map.fold (fun s k v -> s + ";" + (string)k + "," + (string)v) "" m) L.safe))
 
-let runAttractorEngine = Attractors.findAttractors 
+let runAttractorEngine = Attractors.findAttractors
+
+let runGameEngine = Game.playGame
 
 //
 // main
@@ -356,6 +364,9 @@ let main args =
                     else false
                 | Some EngineAttractors ->
                     if (!attractorOut <> "") then runAttractorEngine !attractorMode !attractorOut qn !attractorInitialCsvFilename; true
+                    else false
+                | Some EngineGame ->
+                    if (!attractorOut <> "") then runGameEngine !attractorOut qn !mutations !treatments; true // can treat like kos
                     else false
                 | none -> false
 

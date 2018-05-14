@@ -4,7 +4,6 @@ module Attractors
 
 open System.Runtime.InteropServices
 open FSharp.NativeInterop
-open Simulate
 open BioCheckPlusZ3
 open Paths
 
@@ -111,7 +110,7 @@ let findAttractors mode proof_output qn initialCsvFilename =
 
     let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
     let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
-    let header = List.reduce (fun x y -> x + "," + y) variables 
+    let header = List.reduce (fun x y -> x + "," + y) variables
     let printRange min range =
         seq { for i in min .. min + range do yield string i } |> Seq.reduce (fun x y -> x + "; " + y)
     let bounds = Array.zip minValues ranges' |> Array.map (fun (min, range) ->
@@ -134,6 +133,9 @@ let findAttractors mode proof_output qn initialCsvFilename =
     let mode = match mode with
                 | Sync -> 0
                 | Async -> 1
+
+    // temp!
+    //let mode = 1
                                              
     attractors(List.length qn, ranges', minValues, numInputs, inputVars', numUpdates, inputValues', outputValues',
                 proof_output, String.length proof_output, header, String.length header, mode, initialCsvFilename, String.length initialCsvFilename) |> ignore

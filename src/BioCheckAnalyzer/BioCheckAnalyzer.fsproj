@@ -138,6 +138,8 @@
     <None Include="App.config" />
     <Compile Include="PathFinder.fs" />
     <Compile Include="Attractors.fs" />
+    <Compile Include="IncreasingReachability.fs" />
+    <Compile Include="Game.fs" />
     <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
