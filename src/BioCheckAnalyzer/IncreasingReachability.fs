@@ -22,10 +22,10 @@ let keys = Map.toList >> List.unzip >> fst
 let expandRange (qn : QN.node list) v r =
     let x = qn |> List.find (fun n -> n.var = v)
     let min, max = x.range
-    let r = if List.head r <> min then (List.head r - 1) :: r else r
-    let r = if List.last r <> max then r @ [List.last r + 1] else r
+    let r = if List.min r <> min then (List.min r - 1) :: r else r
+    let r = if List.max r <> max then r @ [List.max r + 1] else r
     r
-
+    
 let checkTransition _ _ _ = // temp
     failwith "unimplemented"
 
