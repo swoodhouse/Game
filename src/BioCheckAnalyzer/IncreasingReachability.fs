@@ -26,36 +26,16 @@ let expandRange (qn : QN.node list) v r =
     let r = if List.last r <> max then r @ [List.last r + 1] else r
     r
 
+
+
 let checkTransition _ _ _ = // temp
+    now this............
+    // 
     failwith "unimplemented"
 
-let remove x range = List.filter ((<>) x) range
-
-// write imperative to begin with. i think a mix of loop and recursion would work..
-// need a z3 context somewhere too..
-// check with nir that this seems correct
-let rec increasingReachability (qn : QN.node list) (initialRanges : Map<QN.var, int list>) =
-  let mutable expandedRanges = Map.empty
-  let mutable newRanges = Map.map (expandRange qn) initialRanges
-
-  // wait.. do i really need a loop and recursion.. yeah.. because next round you re-expand.. except expand is wrong if i do like this, with potential gaps in the range.. right?
-  // while loop. expandedNew != expanded // can we do with a generator expression instead?
-  while expandedRanges <> newRanges do
-    expandedRanges <- newRanges
-    for var in keys newRanges do
-      let range = Map.find var newRanges
-      for x in range do
-        if not (checkTransition qn x newRanges) then
-          newRanges <- Map.add var (remove x range) newRanges
-
-  if expandedRanges = initialRanges then [initialRanges] // or []?
-  else initialRanges :: increasingReachability qn expandedRanges // or expandedRanges :: ?
 
 
-// move this to Game.fs
-// let runIncreasingReachability qn initialRanges =
-//     increasingReachability qn initialRanges |> Attractors.collapseRanges // not sure if this is right..
-  
+
 // stepZ3rangelist.find_paths : qn -> int -> Map<QN.var, int list> -> Map<QN.var, int list> -> Map<QN.var, int list>
 // why two range parameters?
 
@@ -114,3 +94,33 @@ let rec increasingReachability (qn : QN.node list) (initialRanges : Map<QN.var, 
 //            else paths
 //        loop 0 bounds bounds [bounds]
 //
+
+
+
+
+let remove x range = List.filter ((<>) x) range
+
+// write imperative to begin with. i think a mix of loop and recursion would work..
+// need a z3 context somewhere too..
+// check with nir that this seems correct
+let rec increasingReachability (qn : QN.node list) (initialRanges : Map<QN.var, int list>) =
+  let mutable expandedRanges = Map.empty
+  let mutable newRanges = Map.map (expandRange qn) initialRanges
+
+  // wait.. do i really need a loop and recursion.. yeah.. because next round you re-expand.. except expand is wrong if i do like this, with potential gaps in the range.. right?
+  // while loop. expandedNew != expanded // can we do with a generator expression instead?
+  while expandedRanges <> newRanges do
+    expandedRanges <- newRanges
+    for var in keys newRanges do
+      let range = Map.find var newRanges
+      for x in range do
+        if not (checkTransition qn x newRanges) then
+          newRanges <- Map.add var (remove x range) newRanges
+
+  if expandedRanges = initialRanges then [initialRanges] // or []?
+  else initialRanges :: increasingReachability qn expandedRanges // or expandedRanges :: ?
+
+
+// move this to Game.fs
+// let runIncreasingReachability qn initialRanges =
+//     increasingReachability qn initialRanges |> Attractors.collapseRanges // not sure if this is right..
