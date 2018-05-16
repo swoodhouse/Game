@@ -77,7 +77,7 @@ let generateQNTable' (qn:QN.node list) (ranges : Map<QN.var,int list>) (node : Q
 
     list_of_possible_combinations, list_of_actual_next_vals
 
-let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatments : (QN.var * int) list) =
+let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatments : (QN.var * int) list) height =
     // build a table per submodel. lots shared between these so maybe don't duplicate that work
     // call DLL minimax/back()
     // split this up in sub-functions
@@ -113,6 +113,17 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
     // load attractors from files, and call increasingReachability, per submodel(?), from only the relevant attractors (easy to select out those with a particular choice var after loading)
     // good point - its after unmutate() that i should do increasingReachability
     // already have code to load ranges from files. and to collapseranges
-    
     // how do i do this based on unmutate?????????
     // well.. you are going to have to do many runs anyway. kind of horrible to explode here though. can i remove the mut vars, ....
+    let tables =
+        [ for i in 0 .. height do
+              let bottomRanges = failwith "unimplemented" // these need be loaded from files
+              let topRanges = failwith "unimplemented" // these need be loaded from files
+              let temp = IncreasingReachability.runIncreasingReachability qn bottomRanges topRanges // this needs to be another for loop over List.zip bottomRanges topRanges
+              () ]
+    minimax(List.length qn, ) |> ignore
+
+    
+    
+    
+
