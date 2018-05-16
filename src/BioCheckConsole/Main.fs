@@ -85,6 +85,7 @@ let attractorMode = ref Attractors.Sync
 // related to Game engine
 let mutations : (QN.var * int) list ref = ref []
 let treatments : (QN.var * int) list ref = ref []
+let gameHeight = ref 0
 
 let usage i = 
     Printf.printfn "Usage: BioCheckConsole.exe -model input_analysis_file.json"
@@ -96,6 +97,7 @@ let usage i =
     Printf.printfn "                           -engine CAV –formula f –path length –mc?  -outputmodel? –proof? [-ltloutput filename.json]? |"
     Printf.printfn "                           -engine SIMULATE –simulate_v0 initial_value_input_file.csv –simulate_time t –simulate output_file_name.csv -excel? |"
     Printf.printfn "                           -engine ATTRACTORS -out output_file_name -async? [-initial initial.csv]? |"
+    Printf.printfn "                           -engine GAME -out output_file_name -mutate id const -treat id const -height n |"
     Printf.printfn "                           -engine PATH –model2 model2.json –state initial_state.csv –state2 target_state.csv ]"
     Printf.printfn "                           -dump_before_xforms"
     Printf.printfn "                           -ko id const -dump_after_ko_xforms"
@@ -135,7 +137,8 @@ let rec parse_args args =
     | "-initial" :: i :: rest -> attractorInitialCsvFilename := i; parse_args rest
     | "-mutate" :: id :: konst :: rest -> mutations := (ko_of_string id konst) :: !mutations; parse_args rest 
     | "-treat" :: id :: konst :: rest -> treatments := (ko_of_string id konst) :: !treatments; parse_args rest 
-    | _ -> failwith "Bad command line args" 
+    | "-height" :: i :: rest -> gameHeight := (int i); parse_args rest 
+    | _ -> failwith "Bad command line args"
 
 
 let addVariableNames (model : Model) (layout : Model) =
@@ -366,7 +369,7 @@ let main args =
                     if (!attractorOut <> "") then runAttractorEngine !attractorMode !attractorOut qn !attractorInitialCsvFilename; true
                     else false
                 | Some EngineGame ->
-                    if (!attractorOut <> "") then runGameEngine !attractorOut qn !mutations !treatments; true // can treat like kos
+                    if (!attractorOut <> "") then runGameEngine !attractorOut qn !mutations !treatments !gameHeight; true // can treat like kos
                     else false
                 | none -> false
 
