@@ -10,27 +10,16 @@ initial ranges, per sub-model. or attractor per sub-model [per unmutated sub-mod
 2. For each possible concrete val of each var, and each abstract range of other vars, can i rule out some element of range in successor.
    do as a list not min/max bound. order of choice of variable does not matter. left to right
 3. stopping condition is that ranges stop changing
-4. one level back. global stopping condition is that ranges converg
-
-// then collapse everything
+4. one level back. global stopping condition is that ranges converge
 *)
-// move this to Game.fs
-// let runIncreasingReachability qn initialRanges =
-//     increasingReachability qn initialRanges |> Attractors.collapseRanges // not sure if this is right..
 
-//let runReachability qn initialRanges =
-//    printfn "Calling CAV reachability algorithm to narrow ranges..."
-//    let paths = output_paths qn initialRanges |> List.rev
-//    let stable = paths |> List.head |> values |> List.forall (fun l -> List.length l = 1)
-//
-//    if stable then
-//        List.head paths, stable
-//    else
-//        let ranges = collapseRanges initialRanges paths    
-//        ranges, stable
-// Attractors.collapseRanges
+// finish isSubset, Game.fs, GameDLL
 
 let keys = Map.toList >> List.unzip >> fst
+
+let remove x = List.filter ((<>) x)
+
+let isSubset range1 range2 = Set.isSubset (Set.ofList range1) (Set.ofList range2)
 
 let expandRange (qn : QN.node list) v r =
     let x = qn |> List.find (fun n -> n.var = v)
@@ -39,17 +28,13 @@ let expandRange (qn : QN.node list) v r =
     let r = if List.max r <> max then r @ [List.max r + 1] else r
     r
 
-let remove x range = List.filter ((<>) x) range
-
 let checkTransition qn fullRanges rangeFrom rangeTo =
-    let isSubset range1 range2 = Set.isSubset (Set.ofList range1) (Set.ofList range2)
     let reachable var range = isSubset range (Map.find var rangeTo) // is this correct?
     // in the case of rangeTo being a fixpoint... then you want to rule out x if the fixpoint is not contained in newRange   
     let newRange = stepZ3rangelist.find_paths qn 1 rangeFrom fullRanges
     newRange |> Map.forall reachable
 
-// check with nir that this seems correct
-let rec increasingReachability (qn : QN.node list) (initialRanges : Map<QN.var, int list>) =
+let rec increasingReachability qn initialRanges =
     let fullRanges = Rangelist.nuRangel qn
     let mutable expandedRanges = Map.empty
     let mutable newRanges = Map.map (expandRange qn) initialRanges
@@ -63,5 +48,10 @@ let rec increasingReachability (qn : QN.node list) (initialRanges : Map<QN.var, 
                 if not (checkTransition qn fullRanges singletonRange initialRanges) then
                     newRanges <- Map.add var (remove x range) newRanges
 
-    if expandedRanges = initialRanges then [initialRanges]
-    else initialRanges :: increasingReachability qn expandedRanges
+    if expandedRanges = initialRanges then Seq.singleton initialRanges
+    else Seq.append (Seq.singleton initialRanges) (increasingReachability qn expandedRanges)
+
+let runIncreasingReachability qn bottomRanges topRanges =
+    // lazily run backwards reachability from bottom ranges, return first range that contains topRanges
+    let ranges = increasingReachability qn bottomRanges
+    Seq.find (fun r -> isSubset (Attractors.values r) (Attractors.values topRanges)) ranges
