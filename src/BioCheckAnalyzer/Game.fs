@@ -115,13 +115,16 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
     // already have code to load ranges from files. and to collapseranges
     // how do i do this based on unmutate?????????
     // well.. you are going to have to do many runs anyway. kind of horrible to explode here though. can i remove the mut vars, ....
+    printfn "Building QN tables..."
     let tables =
         [ for i in 0 .. height do
               let bottomRanges = failwith "unimplemented" // these need be loaded from files
               let topRanges = failwith "unimplemented" // these need be loaded from files
               let temp = IncreasingReachability.runIncreasingReachability qn bottomRanges topRanges // this needs to be another for loop over List.zip bottomRanges topRanges
               () ]
-    minimax(List.length qn, ) |> ignore
+    printfn "Calling DLL..."
+    ()
+    //minimax(List.length qn, ) |> ignore
 
     
     
