@@ -85,7 +85,7 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
     let qn = qn |> List.sortBy (fun (n : QN.node) -> n.var) // important to sort to match ranges map ordering
     
     // call vmcai on each sub-model
-    printfn "Building QN tables..."
+    printfn "Building QN tables to find attractors..."
     let conditions = crossProduct [mutations; treatments]
     let inputValues, outputValues =
         [| for c in conditions do
@@ -97,7 +97,7 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
     let outputValues' = outputValues |> Array.map (List.concat >> Array.ofList) |> Array.concat
 
     // call DLL attractors. Test: reproduces ORDER? Compare efficency of calling once for each submodel vs once total using megamodel
-    printfn "Calling DLL..."
+    printfn "Calling DLL to find attractors..."
     let ranges = failwith "unimplemented" // let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1) means we don't allow vars to go from non-zero now.?.
                                           // i think what you need to do is have a minValue still, but have it be a global minValue, not vmcai based
     let qnVars = qn |> List.map (fun n -> n.var)
@@ -115,7 +115,7 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
     // already have code to load ranges from files. and to collapseranges
     // how do i do this based on unmutate?????????
     // well.. you are going to have to do many runs anyway. kind of horrible to explode here though. can i remove the mut vars, ....
-    printfn "Building QN tables..."
+    printfn "Building QN tables to play game..."
     let tables =
       [ for i in 0 .. height - 1 do
           let topRanges = System.IO.Directory.GetFiles(proof_output, sprintf "Attractor_%i_*.csv" i) // does order matter? i.e. do we want to load 0 before 1?
@@ -132,13 +132,16 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
         // well no i haven't.. i've done it per height. you can also do it per sub-model per height, and per attractor per sub-model per height
           let constrainedBounds = IncreasingReachability.runIncreasingReachability qn bottomRanges topRanges // this needs to be another for loop over List.zip bottomRanges topRanges
         // then generateQNTable'...
-        [| for c in conditions do
-               let submodel = List.fold (fun current_qn (var,c) -> QN.ko current_qn var c) qn c
-               let ranges, _ = Attractors.runVMCAI qn
-               yield qn |> List.map (generateQNTable' qn ranges) |> List.unzip |] |> Array.unzip
+
+    // let inputValues, outputValues =
+    //     [| for c in conditions do
+        // would have to filter 
+    //            let submodel = List.fold (fun current_qn (var,c) -> QN.ko current_qn var c) qn c
+    //            let ranges, _ = Attractors.runVMCAI qn // here do increasing reach
+    //            yield qn |> List.map (generateQNTable' qn ranges) |> List.unzip |] |> Array.unzip
 
         // to do it per submodel.. call cross product on the mutations.. also need to do unmutate
           () ]
-    printfn "Calling DLL..."
+    printfn "Calling DLL to play game..."
     ()
     //minimax(List.length qn, ) |> ignore
