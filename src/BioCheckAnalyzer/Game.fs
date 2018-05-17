@@ -32,22 +32,9 @@ extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, 
 extern int valueIteration(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
                           int numKoVars, int[] koVars, int numOeVars, int[] oeVars)
 
-// temp. copied. rewrite. take two lists not list of lists. ensure order generated on f# side is same as on c++ side..
-let rec crossProduct l =
-    let rec aux acc l1 l2 =
-        match l1, l2 with
-        | [], _ | _, [] -> acc
-        | h1::t1, h2::t2 -> 
-            let acc = (h1::h2)::acc
-            let acc = aux acc t1 l2
-            aux acc [h1] t2
-
-    match l with
-    | [] -> []
-    | [l1] -> List.map (fun x -> [x]) l1
-    | l1::tl ->
-        let tail_product = crossProduct tl
-        aux [] l1 tail_product
+// stolen from rosetta code. important to ensure c++ ordering and f# ordering match
+// ok, cP2 is ordered nicely. the c++ should be rewritten to be only for pairs, too
+let crossProduct a b = List.map (fun (a,b)->[a;b]) (List.allPairs a b)
 
 // SW: currently has duplicated code from BioCheckPlusZ3.fs
 let generateQNTable' (qn:QN.node list) (ranges : Map<QN.var,int list>) (node : QN.node) =
@@ -86,7 +73,7 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
     
     // call vmcai on each sub-model
     printfn "Building QN tables to find attractors..."
-    let conditions = crossProduct [mutations; treatments]
+    let conditions = crossProduct mutations treatments
     let inputValues, outputValues =
         [| for c in conditions do
                let submodel = List.fold (fun current_qn (var,c) -> QN.ko current_qn var c) qn c
