@@ -121,7 +121,7 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
           let topRanges = System.IO.Directory.GetFiles(proof_output, sprintf "Attractor_%i_*.csv" i) // does order matter? i.e. do we want to load 0 before 1?
                        |> Array.map (Attractors.loadRangesFromCsv qnVars)
           
-          let bottomRanges = System.IO.Directory.GetFiles(proof_output, sprintf "Attractor_%i_*.csv" (i + 1))
+          let bottomRanges = System.IO.Directory.GetFiles(proof_output, sprintf "Attractor_%i_*.csv" (i + 1)) // refactor out to a function
                           |> Array.map (Attractors.loadRangesFromCsv qnVars)
 
           let topRanges = Attractors.collapseRanges topRanges.[0] topRanges.[1..] // this is not ideal..
@@ -131,7 +131,13 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
         // well i've implemented one of the two possible ways......
         // well no i haven't.. i've done it per height. you can also do it per sub-model per height, and per attractor per sub-model per height
           let constrainedBounds = IncreasingReachability.runIncreasingReachability qn bottomRanges topRanges // this needs to be another for loop over List.zip bottomRanges topRanges
-          // then generateQNTable'...
+        // then generateQNTable'...
+        [| for c in conditions do
+               let submodel = List.fold (fun current_qn (var,c) -> QN.ko current_qn var c) qn c
+               let ranges, _ = Attractors.runVMCAI qn
+               yield qn |> List.map (generateQNTable' qn ranges) |> List.unzip |] |> Array.unzip
+
+        // to do it per submodel.. call cross product on the mutations.. also need to do unmutate
           () ]
     printfn "Calling DLL..."
     ()
