@@ -117,16 +117,22 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
     // well.. you are going to have to do many runs anyway. kind of horrible to explode here though. can i remove the mut vars, ....
     printfn "Building QN tables..."
     let tables =
-        [ for i in 0 .. height do
-              let bottomRanges = failwith "unimplemented" // these need be loaded from files
-              let topRanges = failwith "unimplemented" // these need be loaded from files
-              let temp = IncreasingReachability.runIncreasingReachability qn bottomRanges topRanges // this needs to be another for loop over List.zip bottomRanges topRanges
-              () ]
+      [ for i in 0 .. height - 1 do
+          let topRanges = System.IO.Directory.GetFiles(proof_output, sprintf "Attractor_%i_*.csv" i) // does order matter? i.e. do we want to load 0 before 1?
+                       |> Array.map (Attractors.loadRangesFromCsv qnVars)
+          
+          let bottomRanges = System.IO.Directory.GetFiles(proof_output, sprintf "Attractor_%i_*.csv" (i + 1))
+                          |> Array.map (Attractors.loadRangesFromCsv qnVars)
+
+          let topRanges = Attractors.collapseRanges topRanges.[0] topRanges.[1..] // this is not ideal..
+          let bottomRanges = Attractors.collapseRanges bottomRanges.[0] bottomRanges.[1..] // this is not ideal..
+          // then you have the choice of collapsing them and running increasingreach, or.. running increasingreach on each separately and then collapsing all of the results.. implement both here and comment one out
+          // can i use collapseRanges? why does it have a special initial parameter
+        // well i've implemented one of the two possible ways......
+        // well no i haven't.. i've done it per height. you can also do it per sub-model per height, and per attractor per sub-model per height
+          let constrainedBounds = IncreasingReachability.runIncreasingReachability qn bottomRanges topRanges // this needs to be another for loop over List.zip bottomRanges topRanges
+          // then generateQNTable'...
+          () ]
     printfn "Calling DLL..."
     ()
     //minimax(List.length qn, ) |> ignore
-
-    
-    
-    
-
