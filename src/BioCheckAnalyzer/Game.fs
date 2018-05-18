@@ -32,9 +32,21 @@ extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, 
 extern int valueIteration(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
                           int numKoVars, int[] koVars, int numOeVars, int[] oeVars)
 
-// stolen from rosetta code. important to ensure c++ ordering and f# ordering match
-// ok, cP2 is ordered nicely. the c++ should be rewritten to be only for pairs, too
-let crossProduct a b = List.map (fun (a,b)->[a;b]) (List.allPairs a b)
+// stolen from stackoverflow
+// sub-lists are in the reverse order to c++ here..
+let rec combinations acc size set = seq {
+  match size, set with
+  | n, x::xs ->
+      if n > 0 then yield! combinations (x::acc) (n - 1) xs
+      if n >= 0 then yield! combinations acc n xs
+  | 0, [] -> yield acc
+  | _, [] -> () }
+
+//combinations [] 3 [1 .. 4]
+
+// i think maybe combinations then cross product
+// no, just combinations.. [for x in combinations [] 2 [1; 2; 3] do for y in combinations [] 2 [-1;-2;-3;-4] do yield x, y] |> List.length;;
+// so now i need combinations in c++. and in same order
 
 // SW: currently has duplicated code from BioCheckPlusZ3.fs
 let generateQNTable' (qn:QN.node list) (ranges : Map<QN.var,int list>) (node : QN.node) =
@@ -73,7 +85,8 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
     
     // call vmcai on each sub-model
     printfn "Building QN tables to find attractors..."
-    let conditions = crossProduct mutations treatments
+    // NOT CROSS PRODUCT BUT ... as a hack could do cross product and filter for under a certain length..
+    let conditions = crossProduct mutations treatments // [for x in combinations [] 2 [1; 2; 3] do for y in combinations [] 2 [-1;-2;-3;-4] do yield x, y];; for height..
     let inputValues, outputValues =
         [| for c in conditions do
                let submodel = List.fold (fun current_qn (var,c) -> QN.ko current_qn var c) qn c
