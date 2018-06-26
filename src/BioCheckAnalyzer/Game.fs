@@ -32,11 +32,20 @@ extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, 
 extern int valueIteration(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
                           int numKoVars, int[] koVars, int numOeVars, int[] oeVars)
 
-// stolen from rosetta code. important to ensure c++ ordering and f# ordering match
-// ok, cP2 is ordered nicely. the c++ should be rewritten to be only for pairs, too
-let crossProduct a b = List.map (fun (a,b)->[a;b]) (List.allPairs a b)
 
+//// stolen from rosetta code. important to ensure c++ ordering and f# ordering match
+//// ok, cP2 is ordered nicely. the c++ should be rewritten to be only for pairs, too
+//let crossProduct a b = List.map (fun (a,b)->[a;b]) (List.allPairs a b)
+//  Microsoft.FSharp.Primitives.Basics.List.allPairs
 // SW: currently has duplicated code from BioCheckPlusZ3.fs
+
+let rec allPairs a b =
+    match a, b with
+    | [], _ | _, [] -> []
+    | h1::t1, h2::t2 -> (h1,h2)::(allPairs [h1] t2)@(allPairs t1 b)
+
+let crossProduct a b = List.map (fun (a,b)->[a;b]) (allPairs a b)
+
 let generateQNTable' (qn:QN.node list) (ranges : Map<QN.var,int list>) (node : QN.node) =
     let inputnodes =
         node :: List.concat
@@ -72,30 +81,30 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
     let qn = qn |> List.sortBy (fun (n : QN.node) -> n.var) // important to sort to match ranges map ordering
     
     // call vmcai on each sub-model
-    printfn "Building QN tables to find attractors..."
-    let conditions = crossProduct mutations treatments
-    let inputValues, outputValues =
-        [| for c in conditions do
-               let submodel = List.fold (fun current_qn (var,c) -> QN.ko current_qn var c) qn c
-               let ranges, _ = Attractors.runVMCAI qn
-               yield qn |> List.map (generateQNTable' qn ranges) |> List.unzip |] |> Array.unzip
+    //printfn "Building QN tables to find attractors..."
+    //let conditions = crossProduct mutations treatments
+    //let inputValues, outputValues =
+    //    [| for c in conditions do
+    //           let submodel = List.fold (fun current_qn (var,c) -> QN.ko current_qn var c) qn c
+    //           let ranges, _ = Attractors.runVMCAI qn
+    //           yield qn |> List.map (generateQNTable' qn ranges) |> List.unzip |] |> Array.unzip
 
-    let inputValues' = inputValues |> Array.map (List.concat >> List.concat >> Array.ofList) |> Array.concat
-    let outputValues' = outputValues |> Array.map (List.concat >> Array.ofList) |> Array.concat
+    //let inputValues' = inputValues |> Array.map (List.concat >> List.concat >> Array.ofList) |> Array.concat
+    //let outputValues' = outputValues |> Array.map (List.concat >> Array.ofList) |> Array.concat
 
-    // call DLL attractors. Test: reproduces ORDER? Compare efficency of calling once for each submodel vs once total using megamodel
-    printfn "Calling DLL to find attractors..."
-    let ranges = failwith "unimplemented" // let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1) means we don't allow vars to go from non-zero now.?.
-                                          // i think what you need to do is have a minValue still, but have it be a global minValue, not vmcai based
+    //// call DLL attractors. Test: reproduces ORDER? Compare efficency of calling once for each submodel vs once total using megamodel
+    //printfn "Calling DLL to find attractors..."
+    //let ranges = failwith "unimplemented" // let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1) means we don't allow vars to go from non-zero now.?.
+    //                                      // i think what you need to do is have a minValue still, but have it be a global minValue, not vmcai based
     let qnVars = qn |> List.map (fun n -> n.var)
-    let inputVars = qn |> List.map (fun n -> n.var :: List.filter (fun x -> not (x = n.var)) n.inputs)
-                       |> List.map (List.map (fun x -> List.findIndex ((=) x) qnVars)) // convert BMA index to 0-based index
-    let numInputs = List.map List.length inputVars |> Array.ofList
-    let inputVars' = List.concat inputVars |> Array.ofList
-    let numUpdates = Array.map (List.map List.length >> Array.ofList) outputValues |> Array.concat
-    let variables = qn |> List.map (fun n -> n.name)
-    let header = List.reduce (fun x y -> x + "," + y) variables
-    attractors(List.length qn, ranges, numInputs, inputVars', numUpdates, inputValues', outputValues', proof_output, String.length proof_output, header, String.length header) |> ignore
+    //let inputVars = qn |> List.map (fun n -> n.var :: List.filter (fun x -> not (x = n.var)) n.inputs)
+    //                   |> List.map (List.map (fun x -> List.findIndex ((=) x) qnVars)) // convert BMA index to 0-based index
+    //let numInputs = List.map List.length inputVars |> Array.ofList
+    //let inputVars' = List.concat inputVars |> Array.ofList
+    //let numUpdates = Array.map (List.map List.length >> Array.ofList) outputValues |> Array.concat
+    //let variables = qn |> List.map (fun n -> n.name)
+    //let header = List.reduce (fun x y -> x + "," + y) variables
+    //attractors(List.length qn, ranges, numInputs, inputVars', numUpdates, inputValues', outputValues', proof_output, String.length proof_output, header, String.length header) |> ignore
 
     // load attractors from files, and call increasingReachability, per submodel(?), from only the relevant attractors (easy to select out those with a particular choice var after loading)
     // good point - its after unmutate() that i should do increasingReachability
@@ -105,6 +114,7 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
     printfn "Building QN tables to play game..."
     let tables =
       [ for i in 0 .. height - 1 do
+          // need to treat fixpoints and attractor files separately
           let topRanges = System.IO.Directory.GetFiles(proof_output, sprintf "Attractor_%i_*.csv" i) // does order matter? i.e. do we want to load 0 before 1?
                        |> Array.map (Attractors.loadRangesFromCsv qnVars)
           
@@ -129,6 +139,6 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
 
         // to do it per submodel.. call cross product on the mutations.. also need to do unmutate
           () ]
-    printfn "Calling DLL to play game..."
+    //printfn "Calling DLL to play game..."
     ()
     //minimax(List.length qn, ) |> ignore

@@ -110,19 +110,19 @@ BDD Game::representTreatmentVar(int var, int val, int numMutVars) const {
 
 // this is a bit of a nightmare.. needs a table per ko? no.. yes
 BDD Game::mutantSyncQNTransitionRelation() const {
-    BDD relation = attractors.manager.bddZero();
+    //BDD relation = attractors.manager.bddZero();
 
-    int i = 0;
-    // you need to do all combinations of kovars and oevars.. cross product of them
-    for (koVars)
-        oeVars
-        BDD condition =...representTreatmentVar representMutationVar
-        relation = condition.ite(attractors.representSyncQNTransitionRelation(qnT[i]), relation) // is this gonna work correctly? you want this combination and only this combination
-    ... // this should be simple.. given a seq of qn tables, repreatedly call attractors.syncrelation
-        // except is isn't because attractors stores them as member vars. all that has to be moved up to Game
-        // maybe ranges need to line up too between qn tables?
+    //int i = 0;
+    //// you need to do all combinations of kovars and oevars.. cross product of them
+    //for (koVars)
+    //    oeVars
+    //    BDD condition =...representTreatmentVar representMutationVar
+    //    relation = condition.ite(attractors.representSyncQNTransitionRelation(qnT[i]), relation) // is this gonna work correctly? you want this combination and only this combination
+    //... // this should be simple.. given a seq of qn tables, repreatedly call attractors.syncrelation
+    //    // except is isn't because attractors stores them as member vars. all that has to be moved up to Game
+    //    // maybe ranges need to line up too between qn tables?
 
-    return relation;
+    //return relation;
 }
 
 
