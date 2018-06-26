@@ -108,7 +108,23 @@ BDD Game::representTreatmentVar(int var, int val, int numMutVars) const {
     return bdd;
 }
 
+// stolen from rosetta code
+void comb(int N, int K) {
+    std::string bitmask(K, 1); // K leading 1's
+    bitmask.resize(N, 0); // N-K trailing 0's
+
+    // print integers and permute bitmask
+    do {
+        for (int i = 0; i < N; ++i) // [0..N-1] integers
+        {
+            if (bitmask[i]) std::cout << " " << i;
+        }
+        std::cout << std::endl;
+    } while (std::prev_permutation(bitmask.begin(), bitmask.end()));
+}
+
 // this is a bit of a nightmare.. needs a table per ko? no.. yes
+// we also need to only consider products of a certain length.. e.g. no point building table for 10 mutations + 10 treatments if we are going to height 2... so maybe it is not cartesian product i want..
 BDD Game::mutantSyncQNTransitionRelation() const {
     //BDD relation = attractors.manager.bddZero();
 
@@ -124,6 +140,8 @@ BDD Game::mutantSyncQNTransitionRelation() const {
 
     //return relation;
 }
+
+// delete most of commented out code
 
 
 //BDD Attractors::representSyncQNTransitionRelation() const {
@@ -313,7 +331,7 @@ void Game::computeAttractorsSymbolicN(const std::string& outputPath, const std::
 
     for (int i = 0; i < height; i++) { // off by one?
         BDD initialStates = nMutations(numMutations) * nTreatments(numTreatments, numMutations); // you want to iteratively build this really........
-        BDD invalidStates = invalidMutationBitCombinations(numMutations);
+        BDD invalidStates = invalidMutationBitCombinations(numMutations) + invalidTreatmentBitCombinations(numTreatments);
         // at the moment this is independent for each level of the tree? does that work in general?
         
         std::list<BDD> atts = attractors.attractors(mutantTransitionRelation, invalidStates * !initialStates);

@@ -32,6 +32,21 @@ extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, 
 extern int valueIteration(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
                           int numKoVars, int[] koVars, int numOeVars, int[] oeVars)
 
+// stolen from stackoverflow
+// sub-lists are in the reverse order to c++ here..
+let rec combinations acc size set = seq {
+  match size, set with
+  | n, x::xs ->
+      if n > 0 then yield! combinations (x::acc) (n - 1) xs
+      if n >= 0 then yield! combinations acc n xs
+  | 0, [] -> yield acc
+  | _, [] -> () }
+
+//combinations [] 3 [1 .. 4]
+
+// i think maybe combinations then cross product
+// no, just combinations.. [for x in combinations [] 2 [1; 2; 3] do for y in combinations [] 2 [-1;-2;-3;-4] do yield x, y] |> List.length;;
+// so now i need combinations in c++. and in same order
 
 //// stolen from rosetta code. important to ensure c++ ordering and f# ordering match
 //// ok, cP2 is ordered nicely. the c++ should be rewritten to be only for pairs, too
@@ -96,6 +111,22 @@ let playGame (*mode*) proof_output qn (mutations : (QN.var * int) list) (treatme
     //printfn "Calling DLL to find attractors..."
     //let ranges = failwith "unimplemented" // let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1) means we don't allow vars to go from non-zero now.?.
     //                                      // i think what you need to do is have a minValue still, but have it be a global minValue, not vmcai based
+    printfn "Building QN tables to find attractors..."
+    // NOT CROSS PRODUCT BUT ... as a hack could do cross product and filter for under a certain length..
+    let conditions = crossProduct mutations treatments // [for x in combinations [] 2 [1; 2; 3] do for y in combinations [] 2 [-1;-2;-3;-4] do yield x, y];; for height..
+    let inputValues, outputValues =
+        [| for c in conditions do
+               let submodel = List.fold (fun current_qn (var,c) -> QN.ko current_qn var c) qn c
+               let ranges, _ = Attractors.runVMCAI qn
+               yield qn |> List.map (generateQNTable' qn ranges) |> List.unzip |] |> Array.unzip
+
+    let inputValues' = inputValues |> Array.map (List.concat >> List.concat >> Array.ofList) |> Array.concat
+    let outputValues' = outputValues |> Array.map (List.concat >> Array.ofList) |> Array.concat
+
+    // call DLL attractors. Test: reproduces ORDER? Compare efficency of calling once for each submodel vs once total using megamodel
+    printfn "Calling DLL to find attractors..."
+    let ranges = failwith "unimplemented" // let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1) means we don't allow vars to go from non-zero now.?.
+                                          // i think what you need to do is have a minValue still, but have it be a global minValue, not vmcai based
     let qnVars = qn |> List.map (fun n -> n.var)
     //let inputVars = qn |> List.map (fun n -> n.var :: List.filter (fun x -> not (x = n.var)) n.inputs)
     //                   |> List.map (List.map (fun x -> List.findIndex ((=) x) qnVars)) // convert BMA index to 0-based index

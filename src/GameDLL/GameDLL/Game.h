@@ -62,4 +62,3 @@ public:
     ADD minimax(int height, bool maximisingPlayerLast) const;
     ADD valueIteration(int height, bool maximisingPlayerLast) const;  
 };
-
