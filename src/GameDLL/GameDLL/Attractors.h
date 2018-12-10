@@ -15,15 +15,16 @@ struct QNTable {
 // all ADDs here are 0/1 ADDs, equivalent to BDDs
 // may be better to keep as BDDs and then convert? for now, do that
 class Attractors {
-    /*const std::vector<int> minValues;*/
-    const std::vector<int> ranges;
-    //const QNTable qn;
-    const BDD nonPrimeVariables;
-    const BDD primeVariables;
-
 public: // move this
+  /*const std::vector<int> minValues;*/
+    const std::vector<int> ranges;
+    const QNTable qn;
+
+
     const int numUnprimedBDDVars;
     const Cudd manager;
+    const BDD nonPrimeVariables;
+    const BDD primeVariables;
 
     BDD representState(const std::vector<bool>& values) const;
     BDD representNonPrimeVariables() const;
@@ -45,8 +46,8 @@ public: // move this
     std::string prettyPrint(const BDD& attractor) const;
 
 //public:
-    Attractors(/*std::vector<int>&& minVals,*/ std::vector<int>&& rangesV /*, QNTable&& qnT*/) :
-        /*minValues(std::move(minVals)),*/ ranges(std::move(rangesV)),
+    Attractors(/*std::vector<int>&& minVals,*/ std::vector<int>&& rangesV, QNTable&& qnT) :
+    /*minValues(std::move(minVals)),*/ ranges(std::move(rangesV)), qn(std::move(qnT)),
         numUnprimedBDDVars(countBits(ranges.size())),//minValues.size())),
         manager(numUnprimedBDDVars * 2),
         nonPrimeVariables(representNonPrimeVariables()), primeVariables(representPrimeVariables())
@@ -67,4 +68,8 @@ inline int bits(unsigned int i) {
 
 inline bool nthBitSet(int i, int n) {
     return (1 << n) & i;
+}
+
+inline BDD logicalEquivalence(const BDD& a, const BDD& b) {
+    return !(a ^ b);
 }
