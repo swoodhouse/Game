@@ -2641,6 +2641,19 @@ ADD::OrAbstract(
 
 
 ADD
+ADD::MaxAbstract(
+  const ADD& cube) const
+{
+    DdManager *mgr = checkSameManager(cube);
+    DdNode *result = Cudd_addMaxAbstract(mgr, node, cube.node);
+    checkReturnValue(result);
+    return ADD(p, result);
+
+} // Added by SW
+
+
+
+ADD
 ADD::Plus(
   const ADD& g) const
 {
