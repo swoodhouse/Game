@@ -24,7 +24,13 @@ open BioCheckPlusZ3
 extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
                    int numMutations, int numTreatments, int[] mutationVars, int[] treatmentVars, int apopVar, int depth, bool maximisingPlayerGoesLast)
 
-let playGame (*mode proof_output*) qn (mutations : (*(QN.var * int) list*) int list) (treatments : (*(QN.var * int) list*) int list) apopVar height maximisingPlayerGoesLast =
+let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatments : (QN.var * int) list) apopVar height maximisingPlayerGoesLast =
+
+    // temp!!!!
+    let mutations = List.unzip mutations |> fst
+    let treatments = List.unzip treatments |> fst
+    ////
+
     let qn = qn |> List.sortBy (fun (n : QN.node) -> n.var) // important to sort to match ranges map ordering
     let qnVars = qn |> List.map (fun n -> n.var)
     let variables = qn |> List.map (fun n -> n.name)
@@ -50,13 +56,7 @@ let playGame (*mode proof_output*) qn (mutations : (*(QN.var * int) list*) int l
 
     printfn "Calling DLL..."
     minimax(List.length qn, ranges', minValues, numInputs, inputVars', numUpdates, inputValues', outputValues',
-            List.length mutations, List.length treatments, Array.ofList mutations, Array.ofList treatments, apopVar, height, maximisingPlayerGoesLast)
-
-    ()
-     attractors( , , 
-                proof_output, String.length proof_output, header, String.length header, mode, initialCsvFilename, String.length initialCsvFilename) |> ignore
-
-
+            List.length mutations, List.length treatments, Array.ofList mutations, Array.ofList treatments, apopVar, height, maximisingPlayerGoesLast) |> ignore
 
 
 //

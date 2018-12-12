@@ -85,6 +85,8 @@ let attractorMode = ref Attractors.Sync
 // related to Game engine
 let mutations : (QN.var * int) list ref = ref []
 let treatments : (QN.var * int) list ref = ref []
+
+let apopVar = ref 0
 let gameHeight = ref 0
 
 let usage i = 
@@ -136,7 +138,8 @@ let rec parse_args args =
     | "-out" :: o :: rest -> attractorOut := o; parse_args rest 
     | "-initial" :: i :: rest -> attractorInitialCsvFilename := i; parse_args rest
     | "-mutate" :: id :: konst :: rest -> mutations := (ko_of_string id konst) :: !mutations; parse_args rest 
-    | "-treat" :: id :: konst :: rest -> treatments := (ko_of_string id konst) :: !treatments; parse_args rest 
+    | "-treat" :: id :: konst :: rest -> treatments := (ko_of_string id konst) :: !treatments; parse_args rest
+    | "-apopVar" :: i :: rest -> apopVar := (int i); parse_args rest 
     | "-height" :: i :: rest -> gameHeight := (int i); parse_args rest 
     | _ -> failwith "Bad command line args"
 
@@ -369,7 +372,7 @@ let main args =
                     if (!attractorOut <> "") then runAttractorEngine !attractorMode !attractorOut qn !attractorInitialCsvFilename; true
                     else false
                 | Some EngineGame ->
-                    if (!attractorOut <> "") then runGameEngine !attractorOut qn !mutations !treatments !gameHeight; true // can treat like kos
+                    if (!attractorOut <> "") then runGameEngine qn !mutations !treatments !apopVar !gameHeight; true // can treat like kos
                     else false
                 | none -> false
 
