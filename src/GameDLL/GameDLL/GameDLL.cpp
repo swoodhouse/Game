@@ -5,9 +5,8 @@
 #include "Attractors.h"
 #include "Game.h"
 
-extern "C" __declspec(dllexport) int attractors(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
-    int inputValues[], int outputValues[], const char *output, int outputLength, const char *csvHeader, int headerLength,
-    int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
+extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
+    int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
     std::string outputPath(output, outputLength);
     std::string header(csvHeader, headerLength);
     std::vector<int> rangesV(ranges, ranges + numVars);

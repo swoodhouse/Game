@@ -18,19 +18,24 @@ open BioCheckPlusZ3
 // the below dll signatures need to change to support mega models, i.e many sub-tables
 // also need to add corresponding entry points to GameDLL.cpp
 // add new Main entry point that calls playGame
-// implement valueIteration
-
-[<DllImport("Game.dll", CallingConvention=CallingConvention.Cdecl)>]
-extern int attractors(int numVars, int[] ranges, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
-                      string proofOutput, int proofOutputLength, string csvHeader, int headerLength)
+//// implement valueIteration
+//
+//[<DllImport("Game.dll", CallingConvention=CallingConvention.Cdecl)>]
+//extern int attractors(int numVars, int[] ranges, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
+//                      string proofOutput, int proofOutputLength, string csvHeader, int headerLength)
 
 [<DllImport("Game.dll", CallingConvention=CallingConvention.Cdecl)>]
 extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
-                   int numKoVars, int[] koVars, int numOeVars, int[] oeVars) // need who goes last, and depth/height
+                   int numMutations, int numTreatments, int[] mutationVars, int[] treatmentVars, int apopVar, int depth, bool maximisingPlayerGoesLast)
 
-[<DllImport("Game.dll", CallingConvention=CallingConvention.Cdecl)>]
-extern int valueIteration(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
-                          int numKoVars, int[] koVars, int numOeVars, int[] oeVars)
+//
+//extern "C" __declspec(dllexport) int attractors(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
+//    int inputValues[], int outputValues[], const char *output, int outputLength, const char *csvHeader, int headerLength,
+//    int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast)
+
+//[<DllImport("Game.dll", CallingConvention=CallingConvention.Cdecl)>]
+//extern int valueIteration(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
+//                          int numKoVars, int[] koVars, int numOeVars, int[] oeVars)
 
 // stolen from stackoverflow
 // sub-lists are in the reverse order to c++ here..
