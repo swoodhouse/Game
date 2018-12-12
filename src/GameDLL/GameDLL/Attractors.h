@@ -16,7 +16,7 @@ struct QNTable {
 // may be better to keep as BDDs and then convert? for now, do that
 class Attractors {
 public: // move this
-  /*const std::vector<int> minValues;*/
+    const std::vector<int> minValues;
     const std::vector<int> ranges;
     const QNTable qn;
 
@@ -46,9 +46,9 @@ public: // move this
     std::string prettyPrint(const BDD& attractor) const;
 
 //public:
-    Attractors(/*std::vector<int>&& minVals,*/ std::vector<int>&& rangesV, QNTable&& qnT) :
-    /*minValues(std::move(minVals)),*/ ranges(std::move(rangesV)), qn(std::move(qnT)),
-        numUnprimedBDDVars(countBits(ranges.size())),//minValues.size())),
+    Attractors(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qnT) :
+    minValues(std::move(minVals)), ranges(std::move(rangesV)), qn(std::move(qnT)),
+        numUnprimedBDDVars(countBits(ranges.size())),
         manager(numUnprimedBDDVars * 2),
         nonPrimeVariables(representNonPrimeVariables()), primeVariables(representPrimeVariables())
     {

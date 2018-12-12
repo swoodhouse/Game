@@ -187,8 +187,8 @@ class Game {
     // make sure Attractors::randomState still works, too. It won't - see note in Game.cpp
 
 public:
-    Game(std::vector<int>&& rangesV, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, QNTable&& qn, int depth, bool maximisingPlayerGoesLast) :
-      koVars(std::move(koVarsV)), oeVars(std::move(oeVarsV)), attractors(std::move(rangesV), std::move(qn)),
+    Game(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qn, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, int depth, bool maximisingPlayerGoesLast) :
+      koVars(std::move(koVarsV)), oeVars(std::move(oeVarsV)), attractors(std::move(minVals), std::move(rangesV), std::move(qn)),
       mutantTransitionRelation(buildMutantSyncQNTransitionRelation()),
 	scoreRelation(buildScoreRelation(apopVar)),
 	height(depth),
