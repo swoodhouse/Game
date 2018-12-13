@@ -24,6 +24,29 @@ open BioCheckPlusZ3
 extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
                    int numMutations, int numTreatments, int[] mutationVars, int[] treatmentVars, int apopVar, int depth, bool maximisingPlayerGoesLast)
 
+let extendQN qn mutations treatments = // eventually needs to be two classes of mutations, and treatments needs to be ko not oe
+    let lastId  = qn |> List.map (fun (n : QN.node) -> n.var) |> List.max
+
+    let mkNode tag id =
+        {QN.var = id; QN.f = Expr.Var id; QN.inputs = [id]; QN.range = (0, 1); QN.name = tag + "_" + string id; QN.nature = Map.ofList [(id, QN.Act)];
+         QN.number = 0; QN.defaultF = false; QN.tags = [(0, "")]}
+
+    let koVars = lastId + 1 |> Seq.unfold (fun id -> Some (mkNode "ko" id, id + 1)) |> Seq.take (List.length mutations) |> List.ofSeq
+    let oeVars = lastId + List.length mutations + 1 |>  Seq.unfold (fun id -> Some (mkNode "oe" id, id + 1)) |> Seq.take (List.length treatments) |> List.ofSeq
+
+    let extendTFwithKo (node : QN.node) (koNode : QN.node) = 
+        let range = snd node.range
+        Expr.Times (Expr.Minus (Expr.Const 1, Expr.Var koNode.var), node.f)
+    
+    let extendTFwithOe (n : QN.node) (oeNode : QN.node) =
+        let range = snd n.range
+        Expr.Plus(Expr.Times(Expr.Const range, Expr.Var oeNode.var), Expr.Times(n.f, Expr.Minus(Expr.Const 1, Expr.Var oeNode.var)))
+
+    let mutatedVars, nonMutatedVars = List.partition ..
+    let ... = mutatedVars |> List.map List.map2 mutatedVars koVars
+
+    inputs : var list;
+
 let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatments : (QN.var * int) list) apopVar height maximisingPlayerGoesLast =
 
     // temp!!!!
@@ -38,10 +61,12 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     printfn "Running VMCAI..."
     // this is the key..... we need to add special vars, corresponding target functions, then run vmcai, then remove special vars
     // basically.. maintain qn and extendedQn. ranges come from extendedQn, table from qn
-    let extendedQn = qn
+    let extendedQn = extendQN qn mutations treatments
     let ranges, _ = Attractors.runVMCAI extendedQn
     let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
     let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
+
+    // you need to trim ^ these to remove ko vars and oe vars................
 
     printfn "Building QN table..."
     let inputValues, outputValues = qn |> List.map (Attractors.generateQNTable qn ranges) |> List.unzip
