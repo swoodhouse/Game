@@ -140,30 +140,29 @@ BDD Attractors::representSyncQNTransitionRelation(const QNTable& qn) const {
 }
 
 BDD Attractors::renameRemovingPrimes(const BDD& bdd) const {
-    int *permute = new int[numUnprimedBDDVars * 2];
-    for (int i = 0; i < numUnprimedBDDVars; i++) {
-        permute[i] = i;
-        permute[i + numUnprimedBDDVars] = i;
-    }
-    BDD r = bdd.Permute(permute);
-    delete[] permute;
-    return r;
+	std::vector<int> permute(Cudd_ReadNodeCount(manager.getManager()));
+	std::iota(permute.begin(), permute.end(), 0);
+
+	for (int i = 0; i < numUnprimedBDDVars; i++) {
+		permute[i + numUnprimedBDDVars] = i;
+	}
+
+	return bdd.Permute(&permute[0]);
 }
 
 BDD Attractors::renameAddingPrimes(const BDD& bdd) const {
-    int *permute = new int[numUnprimedBDDVars * 2];
-    for (int i = 0; i < numUnprimedBDDVars; i++) {
-        permute[i] = i + numUnprimedBDDVars;
-        permute[i + numUnprimedBDDVars] = i + numUnprimedBDDVars;
-    }
+	std::vector<int> permute(Cudd_ReadNodeCount(manager.getManager()));
+	std::iota(permute.begin(), permute.end(), 0);
 
-    BDD r = bdd.Permute(permute);
-    delete[] permute;
-    return r;
+	for (int i = 0; i < numUnprimedBDDVars; i++) {
+		permute[i] = i + numUnprimedBDDVars;
+	}
+
+	return bdd.Permute(&permute[0]);
 }
 
 BDD Attractors::randomState(const BDD& S) const {
-    char *out = new char[numUnprimedBDDVars * 2];
+    char *out = new char[Cudd_ReadNodeCount(manager.getManager())];
     S.PickOneCube(out);
     std::vector<bool> values;
     for (int i = 0; i < numUnprimedBDDVars; i++) {
@@ -298,13 +297,11 @@ std::string Attractors::prettyPrint(const BDD& attractor) const {
         int i = 0;
         for (int v = 0; v < ranges.size(); v++) {
             if (ranges[v] == 0) {
-                //output.push_back(std::to_string(minValues[v]));
-                output.push_back(std::to_string(ranges[v])); // remember i've changed this when debugging
+                output.push_back(std::to_string(minValues[v]));
             }
             else {
                 int b = bits(ranges[v]);
-                // output.push_back(fromBinary(line.substr(i, b), minValues[v]));
-                output.push_back(fromBinary(line.substr(i, b), ranges[v])); // remember i've changed this when debugging
+                output.push_back(fromBinary(line.substr(i, b), minValues[v]));
                 i += b;
             }
         }

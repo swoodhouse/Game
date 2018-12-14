@@ -7,8 +7,8 @@
 
 extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
     int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
-    std::string outputPath(output, outputLength);
-    std::string header(csvHeader, headerLength);
+    //std::string outputPath(output, outputLength);
+    //std::string header(csvHeader, headerLength);
     std::vector<int> rangesV(ranges, ranges + numVars);
     std::vector<int> minValuesV(minValues, minValues + numVars);
 	std::vector<int> mutationVarsV(mutationVars, mutationVars + numMutations);
@@ -55,8 +55,6 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
     Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
     g.minimax();
-
-	// CORRECTION NEEDS TO BE MADE TO ATTRACTORS - ADD MINVALUES BACK IN
 
     return 0;
 }

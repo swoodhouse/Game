@@ -12,15 +12,11 @@ struct QNTable {
         inputVars(std::move(inputVarsV)), inputValues(std::move(inputValuesV)), outputValues(std::move(outputValuesV)) {}
 };
 
-// all ADDs here are 0/1 ADDs, equivalent to BDDs
-// may be better to keep as BDDs and then convert? for now, do that
 class Attractors {
 public: // move this
     const std::vector<int> minValues;
     const std::vector<int> ranges;
     const QNTable qn;
-
-
     const int numUnprimedBDDVars;
     const Cudd manager;
     const BDD nonPrimeVariables;
