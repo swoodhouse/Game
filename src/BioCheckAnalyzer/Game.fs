@@ -31,8 +31,8 @@ let extendQN qn mutations treatments = // eventually needs to be two classes of 
         {QN.var = id; QN.f = Expr.Var id; QN.inputs = [id]; QN.range = (0, 1); QN.name = tag + "_" + string id; QN.nature = Map.ofList [(id, QN.Act)];
          QN.number = 0; QN.defaultF = false; QN.tags = [(0, "")]}
 
-    let koVars = lastId + 1 |> Seq.unfold (fun id -> Some (mkNode "ko" id, id + 1)) |> Seq.take (List.length mutations) |> List.ofSeq
-    let oeVars = lastId + List.length mutations + 1 |>  Seq.unfold (fun id -> Some (mkNode "oe" id, id + 1)) |> Seq.take (List.length treatments) |> List.ofSeq
+    let koVars = lastId + 1 |> Seq.unfold (fun id -> Some (mkNode "ko" id, id + 1)) |> Seq.take (Set.count mutations) |> List.ofSeq
+    let oeVars = lastId + Set.count mutations + 1 |>  Seq.unfold (fun id -> Some (mkNode "oe" id, id + 1)) |> Seq.take (Set.count treatments) |> List.ofSeq
 
     let extendTFwithKo (node : QN.node) (koNode : QN.node) = 
         let range = snd node.range
@@ -42,10 +42,12 @@ let extendQN qn mutations treatments = // eventually needs to be two classes of 
         let range = snd n.range
         Expr.Plus(Expr.Times(Expr.Const range, Expr.Var oeNode.var), Expr.Times(n.f, Expr.Minus(Expr.Const 1, Expr.Var oeNode.var)))
 
-    let mutatedVars, nonMutatedVars = List.partition ..
-    let ... = mutatedVars |> List.map List.map2 mutatedVars koVars
+    let qn = qn |> List.mapi (fun i n -> if Set.contains n.var mutations then { n with f = extendTFwithKo n (mkNode "ko" <| lastId + i); inputs = (lastId + i) :: n.inputs}
+                                         elif Set.contains n.var treatments then { n with f = extendTFwithOe n (mkNode "oe" <| lastId + Set.count mutations + i); inputs = (lastId + Set.count mutations + i) :: n.inputs}
+                                         else n)
 
-    inputs : var list;
+    let qn = qn @ koVars @ oeVars
+    qn
 
 let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatments : (QN.var * int) list) apopVar height maximisingPlayerGoesLast =
 
@@ -61,8 +63,9 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     printfn "Running VMCAI..."
     // this is the key..... we need to add special vars, corresponding target functions, then run vmcai, then remove special vars
     // basically.. maintain qn and extendedQn. ranges come from extendedQn, table from qn
-    let extendedQn = extendQN qn mutations treatments
+    let extendedQn = extendQN qn (Set.ofList mutations) (Set.ofList treatments)
     let ranges, _ = Attractors.runVMCAI extendedQn
+    let ranges = ranges |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars))
     let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
     let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
 
