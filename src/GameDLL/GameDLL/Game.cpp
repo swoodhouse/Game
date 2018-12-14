@@ -31,7 +31,6 @@ BDD Game::representNonPrimedMutVars() const {
     return bdd;
 }
 
-
 ADD Game::renameMutVarsRemovingPrimes(const ADD& states) const {
     std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
     std::iota(permute.begin(), permute.end(), 0);
@@ -44,23 +43,7 @@ ADD Game::renameMutVarsRemovingPrimes(const ADD& states) const {
 
     return states.Permute(&permute[0]);
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// BDD Game::primeRelation() const {
-//     BDD bdd = attractors.manager.bddOne();
-//     int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size());
-//     int end = i + numMutations * bits(koVars.size()); // off by one???????????
-//     for (; i < end; i++) {
-//         BDD var1 = attractors.manager.bddVar(i);
-// 	BDD var2 = attractors.manager.bddVar(i + end);
-//         bdd *= logicalEquivalence(var1, var2);
-//     }
-//     return bdd;
-// }
-
 // maybe do purely at the level of bits?
-// i think the primes have to go here actually. delete prime relation
 BDD Game::chooseRelation(int level) const {
     BDD bdd = attractors.manager.bddZero();
 
@@ -91,73 +74,7 @@ BDD Game::chooseRelation(int level) const {
     // choice_level = unprimedMut_n  /\ primedMut_n = 0 /\ primedMut_i/=n = unprimedMut_i
     
     return bdd;
-   
-  // 
 }
-
-
-// void Game::removeInvalidMutationBitCombinations(BDD& S) const {
-//     int b = bits(koVars.size());
-//     int theoreticalMax = (1 << b) - 1;
-
-//     for (int var = 0; var < numMutations; var++) {
-//         for (int val = koVars.size(); val <= theoreticalMax; val++) {
-//             S *= !representMutation(var, val);
-// 	}
-//     }
-// }
-
-
-// BDD Attractors::renameRemovingPrimes(const BDD& bdd) const {
-//     int *permute = new int[numUnprimedBDDVars * 2];
-//     for (int i = 0; i < numUnprimedBDDVars; i++) {
-//         permute[i] = i;
-//         permute[i + numUnprimedBDDVars] = i;
-//     }
-//     BDD r = bdd.Permute(permute);
-//     delete[] permute;
-//     return r;
-// }
-
-// BDD Attractors::renameAddingPrimes(const BDD& bdd) const {
-//     int *permute = new int[numUnprimedBDDVars * 2];
-//     for (int i = 0; i < numUnprimedBDDVars; i++) {
-//         permute[i] = i + numUnprimedBDDVars;
-//         permute[i + numUnprimedBDDVars] = i + numUnprimedBDDVars;
-//     }
-
-//     BDD r = bdd.Permute(permute);
-//     delete[] permute;
-//     return r;
-// }
-
-// ////so i just thought of something. yes. unmutate is easy, set mutN as empty and choose N-1 of the old to be mut 1..N-1 lexigraphically. and set mutStored1=old mutN.
-/*
-
-what do we need to do..
-remember treatment. chosen = the treatment we have. here it doesn't need to be a disjunction.
-(so maybe we can use permute?)
-then exist out 
-(but what type of exist?.. does it matter.. there can only be one?.. wait that's not true)
-i'm confused. permute should always work.
-permute can't work for mutation at least.
-we are combining many states with different 
-
-hmm lets just try permute
-*/
-///*BDD*/ADD Game::buildUnmutateRelation() const {
-//    auto add = attractors.manager.addZero();
-//
-//    for (int var = 0; var < koVars.size(); var++) {
-//        auto isMutated = !representMutationVar(var, 0); // lexigraphical could seemingly make this more efficent.. ite..
-//        auto unmutate = representPrimedMutationVarZero(var);
-//        auto rememberMutation = representChosenMutation(var); // need to ITE over height.. no, have a param
-//        auto transition = isMutated * unmutate * rememberMutation;
-//        add += transition;
-//    }
-//
-//    return add;
-//}
 
 ADD Game::unmutate(int level, const ADD& states) const {
     ADD add = states * chooseRelation(level).Add();
@@ -165,8 +82,6 @@ ADD Game::unmutate(int level, const ADD& states) const {
     add = renameMutVarsRemovingPrimes(add);
     return add;
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Game::forceMutationLexicographicalOrdering(BDD& S) const {
     BDD ordering = attractors.manager.bddOne();
@@ -281,7 +196,6 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 	  for (int lvl = 0; lvl < numMutations; lvl++) {
 	    isMutated += representMutation(lvl, v);
 	  }
-	  //bdd *= Ite(isMutated, representPrimedVarQN(v, 0), targetFunction);
 	  bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0) * attractors.representUnprimedVarQN(v, 0), targetFunction);
 	  k++;
 	  // do i need to also set unprimed........... if you don't, when you run backwards you can unmutate spontanously
@@ -291,7 +205,6 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 	  BDD isTreated = attractors.manager.bddZero();
 	  isTreated += representTreatment(v);
 	  int max = *std::max_element(attractors.ranges.begin(), attractors.ranges.end());
-	  //bdd *= Ite(isTreated, representPrimedVarQN(v, max), targetFunction);
 	  bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max) * attractors.representUnprimedVarQN(v, max), targetFunction);
 	  o++;
 	}
@@ -317,9 +230,7 @@ ADD addSetDiffMin(const ADD& a, const ADD& b) {
     // if -b > -a then 0 + b = b
 }
 
-// I NEED TO CHANGE THE CORRESPONDING FUNCTIONS IN ATTRACTORS. AND RANDOMSTATE
 ADD Game::renameAddingPrimes(const ADD& add) const {
-    // int *permute = new int[numUnprimedBDDVars * 2];
     int *permute = new int[Cudd_ReadNodeCount(attractors.manager.getManager())];
     int i = 0;
     for (; i < attractors.numUnprimedBDDVars; i++) {
@@ -498,7 +409,6 @@ BDD Game::representPrimedMutation(int var, int mutation) const {
     
     return bdd;
 }
-
 
 BDD Game::representChosenTreatment(int level, int treatment) const { // in this case var is the val..
     BDD bdd = attractors.manager.bddOne();
