@@ -294,6 +294,10 @@ ADD Game::scoreAttractors(int numMutations) const {
    removeInvalidMutationBitCombinations(initial);
    forceMutationLexicographicalOrdering(initial);
 
+   removePrimedMutations(initial);
+   removeChosenTreatments(initial);
+   removeChosenMutations(initial);
+*/
    std::list<BDD> att = attractors.attractors(mutantTransitionRelation, !initial);
 
    for (const BDD& a : att) {

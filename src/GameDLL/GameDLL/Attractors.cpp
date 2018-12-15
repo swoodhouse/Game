@@ -173,6 +173,17 @@ BDD Attractors::randomState(const BDD& S) const {
             values.push_back(true);
         }
     }
+
+	// modification made for Game - we need to be able to represent random choices of mutations, treaments too
+	for (int i = numUnprimedBDDVars * 2; i < Cudd_ReadNodeCount(manager.getManager()); i++) {
+		if (out[i] == 0) {
+			values.push_back(false);
+		}
+		else {
+			values.push_back(true);
+		}
+	}
+
     delete[] out;
     return representState(values);
 }
