@@ -161,31 +161,32 @@ BDD Attractors::renameAddingPrimes(const BDD& bdd) const {
 	return bdd.Permute(&permute[0]);
 }
 
-BDD Attractors::randomState(const BDD& S) const {
+BDD Attractors::randomState(const BDD& S, const std::unordered_set<int>& variablesToIgnore) const {
     char *out = new char[Cudd_ReadNodeCount(manager.getManager())];
     S.PickOneCube(out);
-    std::vector<bool> values;
+	BDD bdd = manager.bddOne();
+	
     for (int i = 0; i < numUnprimedBDDVars; i++) {
+		BDD var = manager.bddVar(i);
         if (out[i] == 0) {
-            values.push_back(false);
+			var = !var;
         }
-        else {
-            values.push_back(true);
-        }
+		bdd *= var;
     }
 
 	// modification made for Game - we need to be able to represent random choices of mutations, treaments too
 	for (int i = numUnprimedBDDVars * 2; i < Cudd_ReadNodeCount(manager.getManager()); i++) {
-		if (out[i] == 0) {
-			values.push_back(false);
-		}
-		else {
-			values.push_back(true);
+		if (variablesToIgnore.find(i) != variablesToIgnore.end()) {
+			BDD var = manager.bddVar(i);
+			if (out[i] == 0) {
+				var = !var;
+			}
+			bdd *= var;
 		}
 	}
 
     delete[] out;
-    return representState(values);
+	return bdd;
 }
 
 // BDD Attractors::randomState(const BDD& S) const {
@@ -264,18 +265,18 @@ BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& val
     return reachable;
 }
 
-std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove) const {
+std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const std::unordered_set<int>& variablesToIgnore) const {
     std::list<BDD> attractors;
     BDD S = manager.bddOne();
     removeInvalidBitCombinations(S);
     S *= !statesToRemove;
 
     while (!S.IsZero()) {
-        BDD s = randomState(S);
+        BDD s = randomState(S, variablesToIgnore);
 
         for (int i = 0; i < ranges.size(); i++) { // unrolling by ranges.size() may not be the perfect choice of number
             BDD sP = immediateSuccessorStates(transitionBdd, s);
-            s = randomState(sP);
+            s = randomState(sP, variablesToIgnore);
         }
 
         BDD fr = forwardReachableStates(transitionBdd, s);
