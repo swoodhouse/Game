@@ -11,7 +11,6 @@
 // Windows Header Files:
 #include <windows.h>
 
-
 #include "cuddObj.hh"
 #include <vector>
 #include <list>
@@ -20,3 +19,4 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <unordered_set>

@@ -1,16 +1,6 @@
 // heavy refactoring needed. an on Attractors.cpp too i think
 
-//#include "stdafx.h"
-
-#include "cuddObj.hh"
-#include <vector>
-#include <list>
-#include <numeric>
-#include <algorithm>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-
+#include "stdafx.h"
 #include "Attractors.h"
 #include "Game.h"
 
@@ -293,12 +283,10 @@ ADD Game::scoreAttractors(int numMutations) const {
    removeInvalidTreatmentBitCombinations(initial); // refacotr this out.. can be computed once too
    removeInvalidMutationBitCombinations(initial);
    forceMutationLexicographicalOrdering(initial);
+   
+   std::unordered_set<int> variablesToIgnore {}; // primedMutations, chosenTreatments, chosenMutations, ...
 
-   removePrimedMutations(initial);
-   removeChosenTreatments(initial);
-   removeChosenMutations(initial);
-
-   std::list<BDD> att = attractors.attractors(mutantTransitionRelation, !initial);
+   std::list<BDD> att = attractors.attractors(mutantTransitionRelation, !initial, variablesToIgnore);
 
    for (const BDD& a : att) {
         ADD max = (a.Add() * scoreRelation).FindMax(); // replace this with iterative mean computation
@@ -314,7 +302,10 @@ ADD Game::minimax() const {
     int numTreatments = this->numTreatments;
     int numMutations = this->numMutations;
     bool maximisingPlayer = this->maximisingPlayerLast;
- 
+
+	// refactor out
+	std::unordered_set<int> variablesToIgnore{}; // primedMutations, chosenTreatments, chosenMutations, ...
+	 
     ADD states = scoreAttractors(numMutations);
 
     for (; height > 0; height--) { // do i have an off by one error
@@ -328,8 +319,8 @@ ADD Game::minimax() const {
 			removeInvalidTreatmentBitCombinations(initial); // refacotr this out.. can be computed once too
 			removeInvalidMutationBitCombinations(initial);
 			forceMutationLexicographicalOrdering(initial);
-        
-            for (const BDD& a : attractors.attractors(mutantTransitionRelation, !initial)) {
+
+            for (const BDD& a : attractors.attractors(mutantTransitionRelation, !initial, variablesToIgnore)) {
                 att += a;
             }
             states *= att.Add(); // what happens here if we have duplicate states? well, chosen mut is retained and tagged so there are no duplicates
@@ -348,7 +339,7 @@ ADD Game::minimax() const {
 			removeInvalidMutationBitCombinations(initial);
 			forceMutationLexicographicalOrdering(initial);
         
-            for (const BDD& a : attractors.attractors(mutantTransitionRelation, !initial)) {
+            for (const BDD& a : attractors.attractors(mutantTransitionRelation, !initial, variablesToIgnore)) {
                 att += a;
             }
             states *= att.Add();
