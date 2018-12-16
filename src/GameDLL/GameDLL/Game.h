@@ -157,16 +157,19 @@ class Game {
     const ADD scoreRelation;
 
     ADD buildScoreRelation(int apopVar) const; // done
-    ADD renameAddingPrimes(const ADD& add) const; // done
+    ADD renameBDDVarsAddingPrimes(const ADD& add) const; // done
     ADD immediateBackMax(const ADD& states) const; // done
     ADD immediateBackMin(const ADD& states) const; // done
     ADD backMin(const ADD& states) const; // done
     ADD backMax(const ADD& states) const; // done
     ADD scoreAttractors(int numMutations) const; // done.. except taking max not mean
     BDD buildMutantSyncQNTransitionRelation() const; // done.. except no.. i need zero to mean no mutation i think!!!
-    BDD representTreatment(int val) const; // done.. except no.. i need zero to mean no mutation i think!!!
-    BDD representMutation(int var, int val) const; // done.. except zero for no mutation i think!!!!!!!!
-    BDD representPrimedMutation(int var, int val) const; // done.. except zero for no mutation i think!!!!!!!!    
+    BDD representTreatment(int val) const; // done.. including zero mut and bits
+	BDD representTreatmentNone() const; //	done
+    BDD representMutation(int var, int val) const; // done.. including zero mut and bits
+	BDD representMutationNone(int var) const; // done
+    BDD representPrimedMutation(int var, int val) const; // done.. including zero mut and bits
+	BDD representPrimedMutationNone(int var) const; // done
     BDD representChosenTreatment(int level, int treatment) const; // done
     BDD representChosenMutation(int level, int mutation) const; // done
     BDD nMutations(int n) const; // done
