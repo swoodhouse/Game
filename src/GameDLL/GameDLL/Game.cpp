@@ -284,14 +284,16 @@ ADD Game::scoreAttractors(int numMutations) const {
    removeInvalidMutationBitCombinations(initial);
    forceMutationLexicographicalOrdering(initial);
    
-   std::unordered_set<int> variablesToIgnore;
+   std::unordered_set<int> variablesToIgnore; // think this should be removed
    // primedMutations, chosenTreatments, chosenMutations, ...
    for (int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + numMutations * bits(koVars.size() + 1); i < Cudd_ReadNodeCount(attractors.manager.getManager()); i++) {
 	   variablesToIgnore.emplace(i);
    }
    // NEED + 1 here too ^
 
-   std::list<BDD> att = attractors.attractors(mutantTransitionRelation, !initial, variablesToIgnore);
+   BDD variablesToKeep = initial; //TODO : switch between variablesToIngore and variablesToKeep implementations
+
+   std::list<BDD> att = attractors.attractors(mutantTransitionRelation, !initial, variablesToIgnore, variablesToKeep);
 
    for (const BDD& a : att) {
         ADD max = (a.Add() * scoreRelation).FindMax(); // replace this with iterative mean computation
@@ -309,7 +311,7 @@ ADD Game::minimax() const {
     bool maximisingPlayer = this->maximisingPlayerLast;
 
 	// refactor out
-	std::unordered_set<int> variablesToIgnore;
+	std::unordered_set<int> variablesToIgnore; // think this should be removed
 	// primedMutations, chosenTreatments, chosenMutations, ...
 	for (int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + numMutations * bits(koVars.size() + 1); i < Cudd_ReadNodeCount(attractors.manager.getManager()); i++) {
 		variablesToIgnore.emplace(i);
@@ -330,7 +332,9 @@ ADD Game::minimax() const {
 			removeInvalidMutationBitCombinations(initial);
 			forceMutationLexicographicalOrdering(initial);
 
-            for (const BDD& a : attractors.attractors(mutantTransitionRelation, !initial, variablesToIgnore)) {
+			BDD variablesToKeep = initial; //TODO : switch between variablesToIngore and variablesToKeep implementations
+
+            for (const BDD& a : attractors.attractors(mutantTransitionRelation, !initial, variablesToIgnore, variablesToKeep)) {
                 att += a;
             }
             states *= att.Add(); // what happens here if we have duplicate states? well, chosen mut is retained and tagged so there are no duplicates
@@ -348,8 +352,10 @@ ADD Game::minimax() const {
 			removeInvalidTreatmentBitCombinations(initial); // move all these out to one function
 			removeInvalidMutationBitCombinations(initial);
 			forceMutationLexicographicalOrdering(initial);
+
+			BDD variablesToKeep = initial; //TODO : switch between variablesToIngore and variablesToKeep implementations
         
-            for (const BDD& a : attractors.attractors(mutantTransitionRelation, !initial, variablesToIgnore)) {
+            for (const BDD& a : attractors.attractors(mutantTransitionRelation, !initial, variablesToIgnore, variablesToKeep)) {
                 att += a;
             }
             states *= att.Add();

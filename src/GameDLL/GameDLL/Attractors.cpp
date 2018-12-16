@@ -161,7 +161,9 @@ BDD Attractors::renameAddingPrimes(const BDD& bdd) const {
 	return bdd.Permute(&permute[0]);
 }
 
-BDD Attractors::randomState(const BDD& S, const std::unordered_set<int>& variablesToIgnore) const {
+// TODO: switch between variablesToIngore and variablesToKeep implementations, verify they are equivalent and it is just that
+// the later is more efficent
+BDD Attractors::randomState(const BDD& S, const std::unordered_set<int>& variablesToIgnore, const BDD& variablesToKeep) const {
     char *out = new char[Cudd_ReadNodeCount(manager.getManager())];
     S.PickOneCube(out);
 	BDD bdd = manager.bddOne();
@@ -175,7 +177,8 @@ BDD Attractors::randomState(const BDD& S, const std::unordered_set<int>& variabl
     }
 
 	// modification made for Game - we need to be able to represent random choices of mutations, treaments too
-	for (int i = numUnprimedBDDVars * 2; i < Cudd_ReadNodeCount(manager.getManager()); i++) {
+	// now actually think this was a mistake, turned off for now
+	/*for (int i = numUnprimedBDDVars * 2; i < Cudd_ReadNodeCount(manager.getManager()); i++) {
 		if (variablesToIgnore.find(i) != variablesToIgnore.end()) {
 			BDD var = manager.bddVar(i);
 			if (out[i] == 0) {
@@ -183,10 +186,13 @@ BDD Attractors::randomState(const BDD& S, const std::unordered_set<int>& variabl
 			}
 			bdd *= var;
 		}
-	}
+	}*/
+
+	// i think what we actually want is variables to keep - ......
 
     delete[] out;
-	return bdd;
+	//return bdd;
+	return bdd * variablesToKeep; //TODO: switch between variablesToIngore and variablesToKeep implementations
 }
 
 // BDD Attractors::randomState(const BDD& S) const {
@@ -265,18 +271,19 @@ BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& val
     return reachable;
 }
 
-std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const std::unordered_set<int>& variablesToIgnore) const {
+std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const std::unordered_set<int>& variablesToIgnore,
+	                                  const BDD& variablesToKeep) const {
     std::list<BDD> attractors;
     BDD S = manager.bddOne();
     removeInvalidBitCombinations(S);
     S *= !statesToRemove;
 
     while (!S.IsZero()) {
-        BDD s = randomState(S, variablesToIgnore);
+        BDD s = randomState(S, variablesToIgnore, variablesToKeep);
 
         for (int i = 0; i < ranges.size(); i++) { // unrolling by ranges.size() may not be the perfect choice of number
             BDD sP = immediateSuccessorStates(transitionBdd, s);
-            s = randomState(sP, variablesToIgnore);
+            s = randomState(sP, variablesToIgnore, variablesToKeep);
         }
 
         BDD fr = forwardReachableStates(transitionBdd, s);
