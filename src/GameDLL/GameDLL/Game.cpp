@@ -260,6 +260,31 @@ ADD Game::backMax(const ADD& states) const {
     return reachable;
 }
 
+//// eventually want to replace with immediateForwardMean
+//ADD Game::immediateForwardMaxOnLoop(const ADD& states) const {
+//	ADD add = states * mutantTransitionRelation.Add();
+//	add = add.MaxAbstract(attractors.nonPrimeVariables.Add());
+//	return renameBDDVarsAddingPrimes(add); // uses attractors.primeVariables/nonPrime
+//}
+//
+//// eventually want forwardMean instead
+//ADD Game::forwardMaxOnLoop(const ADD& states) const {
+//	
+//}
+////
+//
+//BDD Attractors::forwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) const {
+//	BDD reachable = manager.bddZero();
+//	BDD frontier = valuesBdd;
+//
+//	while (!frontier.IsZero()) {
+//		frontier = immediateSuccessorStates(transitionBdd, frontier) * !reachable;
+//		reachable += frontier;
+//	}
+//	return reachable;
+//}
+
+
 ADD Game::backMin(const ADD& states) const {
     // repeatedly do immediatePre then max seems correct. as long as transition relation has koVar' = koVar
 
@@ -293,12 +318,21 @@ ADD Game::scoreAttractors(int numMutations) const {
 
    BDD variablesToKeep = initial; //TODO : switch between variablesToIngore and variablesToKeep implementations
 
+   // TODO: variables to keep implementation breaks this. each BDD now represents N attractors.
+   // but.. iterative max computation would work
    std::list<BDD> att = attractors.attractors(mutantTransitionRelation, !initial, variablesToIgnore, variablesToKeep);
 
-   for (const BDD& a : att) {
-        ADD max = (a.Add() * scoreRelation).FindMax(); // replace this with iterative mean computation
-        ADD scoredLoop = max * a.Add(); // refactor out repeated Add calls
-        states += scoredLoop; // this is ok because each state is tagged by its mutations
+   //for (const BDD& a : att) {
+   //     ADD max = (a.Add() * scoreRelation).FindMax(); // replace this with iterative mean computation
+   //     ADD scoredLoop = max * a.Add(); // refactor out repeated Add calls
+   //     states += scoredLoop; // this is ok because each state is tagged by its mutations
+   // }
+    for (const BDD& a : att) {
+		// existmax out bdd vars, leaving just mutvars
+		// call findmax
+		ADD scoredPoints = a.Add() * scoreRelation;
+		ADD maxes = scoredPoints.MaxAbstract(attractors.nonPrimeVariables.Add());
+		states += a.Add() * maxes;
     }
     return states;
 }
