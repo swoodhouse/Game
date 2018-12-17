@@ -372,8 +372,7 @@ let main args =
                     if (!attractorOut <> "") then runAttractorEngine !attractorMode !attractorOut qn !attractorInitialCsvFilename; true
                     else false
                 | Some EngineGame ->
-                    if (!attractorOut <> "") then runGameEngine qn !mutations !treatments !apopVar !gameHeight true; true // can treat like kos
-                    else false
+                    runGameEngine qn !mutations !treatments !apopVar !gameHeight true; true // fix this
                 | none -> false
 
             if (not parameters_were_ok) then
