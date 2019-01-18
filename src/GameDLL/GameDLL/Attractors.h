@@ -14,11 +14,12 @@ struct QNTable {
 
 class Attractors {
 public: // move this
-    const std::vector<int> minValues;
+	const Cudd manager;
+	const std::vector<int> minValues;
     const std::vector<int> ranges;
     const QNTable qn;
     const int numUnprimedBDDVars;
-    const Cudd manager;
+    
     const BDD nonPrimeVariables;
     const BDD primeVariables;
 
@@ -42,13 +43,13 @@ public: // move this
 		                      const BDD& variablesToKeep) const;
     std::string prettyPrint(const BDD& attractor) const;
 
-//public:
     Attractors(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qnT) :
     minValues(std::move(minVals)), ranges(std::move(rangesV)), qn(std::move(qnT)),
         numUnprimedBDDVars(countBits(ranges.size())),
         manager(numUnprimedBDDVars * 2),
         nonPrimeVariables(representNonPrimeVariables()), primeVariables(representPrimeVariables())
     {
+		std::cout << "4" << std::endl;
         manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
     };
 };

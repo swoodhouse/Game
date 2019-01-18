@@ -13,11 +13,11 @@ struct QNTable {
 };
 
 class Attractors {
-    const std::vector<int> minValues;
+	const Cudd manager;
+	const std::vector<int> minValues;
     const std::vector<int> ranges;
     const QNTable qn;
     const int numUnprimedBDDVars;
-    const Cudd manager;
     const BDD nonPrimeVariables;
     const BDD primeVariables;
 

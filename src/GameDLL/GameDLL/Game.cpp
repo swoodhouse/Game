@@ -157,7 +157,12 @@ ADD Game::untreat(int level, const ADD& states) const {
 }
 
 BDD Game::buildMutantSyncQNTransitionRelation() const {
-    BDD bdd = attractors.manager.bddOne();
+
+	std::cout << "5" << std::endl;
+
+    BDD bdd = attractors.manager.bddOne(); // this is the problem apparently.
+
+	std::cout << "7" << std::endl;
 
     int k = 0;
     int o = 0;
@@ -168,7 +173,7 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 			const auto& iValues = attractors.qn.inputValues[v];
 			const auto& oValues = attractors.qn.outputValues[v];
 			std::vector<BDD> states(attractors.ranges[v] + 1, attractors.manager.bddZero());
-			for (long unsigned int i = 0; i < oValues.size(); i++) {
+			for (int i = 0; i < oValues.size(); i++) {
 				states[oValues[i]] += attractors.representStateQN(iVars, iValues[i]);
 			}
 
@@ -202,6 +207,10 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 			}
 		}
 	}
+
+
+	std::cout << "6" << std::endl;
+
     return bdd;
 }
 
@@ -515,7 +524,7 @@ BDD Game::representChosenMutation(int level, int mutation) const { // in this ca
 		bdd *= var;
 		i++;
     }
-    
+
     return bdd;
 }
 

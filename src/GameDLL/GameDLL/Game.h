@@ -145,6 +145,7 @@ BDD Game::representMutation(int var, int mutation) const {
  */
 class Game {
 public: // temp
+	const Attractors attractors;
     const int numMutations;
     const int numTreatments;
     const int height;
@@ -190,9 +191,10 @@ public: // temp
     // also.. it seems i had to change Attractors to represent full range not minimum..maximum
     // make sure Attractors::randomState still works, too. It won't - see note in Game.cpp
 
-	const Attractors attractors;
+	
 
-    Game(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qn, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, int depth, bool maximisingPlayerGoesLast) :
+	Game(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qn, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, int depth,
+		bool maximisingPlayerGoesLast) :
       koVars(std::move(koVarsV)), oeVars(std::move(oeVarsV)), attractors(std::move(minVals), std::move(rangesV), std::move(qn)),
       mutantTransitionRelation(buildMutantSyncQNTransitionRelation()),
 	scoreRelation(buildScoreRelation(apopVar)),
@@ -201,6 +203,7 @@ public: // temp
 	numMutations(height % 2 != 0 && !maximisingPlayerGoesLast ? (height / 2) + 1 : (height / 2)), // test these two lines..
 	numTreatments(height % 2 != 0 && maximisingPlayerGoesLast ? (height / 2) + 1 : (height / 2))
     {      
+		std::cout << "3" << std::endl;
     }; // done
 
     ADD minimax() const; // done

@@ -7,10 +7,14 @@
 
 extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
     int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
+//extern "C" __declspec(dllexport) int minimax2(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
+//	int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
     //std::string outputPath(output, outputLength);
     //std::string header(csvHeader, headerLength);
+
+	
     std::vector<int> rangesV(ranges, ranges + numVars);
-    std::vector<int> minValuesV(minValues, minValues + numVars);
+	std::vector<int> minValuesV(minValues, minValues + numVars);
 	std::vector<int> mutationVarsV(mutationVars, mutationVars + numMutations);
 	std::vector<int> treatmentVarsV(treatmentVars, treatmentVars + numTreatments);
     std::vector<std::vector<int>> inputVarsV;
@@ -51,9 +55,13 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
         inputValuesV.push_back(in);
     }
 
+
 	QNTable qn = QNTable(std::move(inputVarsV), std::move(inputValuesV), std::move(outputValuesV));
 
+	// problem is this line
+	std::cout << "here1" << std::endl;
     Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
+	std::cout << "2" << std::endl;
     ADD out = g.minimax();
 
 	std::cout << "done." << out.IsOne() << out.IsZero();
