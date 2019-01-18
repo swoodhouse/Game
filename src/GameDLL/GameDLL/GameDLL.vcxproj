@@ -51,8 +51,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)..\..\ext\CUDD\cudd-3.0.0\cudd;$(SolutionDir)..\..\ext\CUDD\cudd-3.0.0\cplusplus</IncludePath>
-    <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration)\;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)..\..\ext\CUDD\cudd-3.0.0\cudd;$(SolutionDir)..\..\ext\CUDD\cudd-3.0.0\cplusplus;$(SolutionDir)..\..\ext\rapidcheck-master\include</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration)\;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)..\..\ext\rapidcheck-master\Release</LibraryPath>
     <OutDir>..\..\BioCheckConsole\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -95,7 +95,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Cudd3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>rapidcheck.lib;Cudd3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy $(TargetDir)$(TargetFileName) ..\..\BioCheckConsole\bin\$(Platform)\Debug</Command>
@@ -119,6 +119,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Tests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\ext\CUDD\Cudd3.vcxproj">
