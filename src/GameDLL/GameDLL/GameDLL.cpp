@@ -54,7 +54,9 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	QNTable qn = QNTable(std::move(inputVarsV), std::move(inputValuesV), std::move(outputValuesV));
 
     Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
-    g.minimax();
+    ADD out = g.minimax();
+
+	std::cout << "done." << out.IsOne() << out.IsZero();
 
     return 0;
 }

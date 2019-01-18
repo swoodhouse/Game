@@ -316,7 +316,7 @@ ADD Game::scoreAttractors(int numMutations) const {
    }
    // NEED + 1 here too ^
 
-   BDD variablesToKeep = initial; //TODO : switch between variablesToIngore and variablesToKeep implementations
+   BDD variablesToKeep = initial; //TODO : switch between variablesToIngnore and variablesToKeep implementations
 
    // TODO: variables to keep implementation breaks this. each BDD now represents N attractors.
    // but.. iterative max computation would work

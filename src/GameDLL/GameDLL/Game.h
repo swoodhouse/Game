@@ -144,6 +144,7 @@ BDD Game::representMutation(int var, int mutation) const {
 
  */
 class Game {
+public: // temp
     const int numMutations;
     const int numTreatments;
     const int height;
@@ -151,7 +152,7 @@ class Game {
     const std::vector<int> koVars;
     const std::vector<int> oeVars;
 
-    const Attractors attractors;
+    
     const BDD mutantTransitionRelation;
     const BDD unmutateRelation; // needed?
     const ADD scoreRelation;
@@ -189,7 +190,8 @@ class Game {
     // also.. it seems i had to change Attractors to represent full range not minimum..maximum
     // make sure Attractors::randomState still works, too. It won't - see note in Game.cpp
 
-public:
+	const Attractors attractors;
+
     Game(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qn, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, int depth, bool maximisingPlayerGoesLast) :
       koVars(std::move(koVarsV)), oeVars(std::move(oeVarsV)), attractors(std::move(minVals), std::move(rangesV), std::move(qn)),
       mutantTransitionRelation(buildMutantSyncQNTransitionRelation()),

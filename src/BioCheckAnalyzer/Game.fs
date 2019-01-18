@@ -20,7 +20,8 @@ open BioCheckPlusZ3
 // add new Main entry point that calls playGame
 //// implement valueIteration
 
-[<DllImport("Game.dll", CallingConvention=CallingConvention.Cdecl)>]
+//[<DllImport("Game.dll", CallingConvention=CallingConvention.Cdecl)>]
+[<DllImport("GameDLL.dll", CallingConvention=CallingConvention.Cdecl)>]
 extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
                    int numMutations, int numTreatments, int[] mutationVars, int[] treatmentVars, int apopVar, int depth, bool maximisingPlayerGoesLast)
 
