@@ -58,11 +58,8 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 	QNTable qn = QNTable(std::move(inputVarsV), std::move(inputValuesV), std::move(outputValuesV));
 
-	// problem is this line
-	std::cout << "here1" << std::endl;
     Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
-	std::cout << "2" << std::endl;
-    ADD out = g.minimax();
+	ADD out = g.minimax();
 
 	std::cout << "done." << out.IsOne() << out.IsZero();
 

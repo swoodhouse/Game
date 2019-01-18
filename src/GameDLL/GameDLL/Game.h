@@ -202,8 +202,7 @@ public: // temp
 	maximisingPlayerLast(maximisingPlayerGoesLast),
 	numMutations(height % 2 != 0 && !maximisingPlayerGoesLast ? (height / 2) + 1 : (height / 2)), // test these two lines..
 	numTreatments(height % 2 != 0 && maximisingPlayerGoesLast ? (height / 2) + 1 : (height / 2))
-    {      
-		std::cout << "3" << std::endl;
+    {
     }; // done
 
     ADD minimax() const; // done

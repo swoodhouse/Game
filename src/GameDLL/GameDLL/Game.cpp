@@ -157,13 +157,8 @@ ADD Game::untreat(int level, const ADD& states) const {
 }
 
 BDD Game::buildMutantSyncQNTransitionRelation() const {
-
-	std::cout << "5" << std::endl;
-
     BDD bdd = attractors.manager.bddOne(); // this is the problem apparently.
-
-	std::cout << "7" << std::endl;
-
+	
     int k = 0;
     int o = 0;
     
@@ -207,9 +202,6 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 			}
 		}
 	}
-
-
-	std::cout << "6" << std::endl;
 
     return bdd;
 }
