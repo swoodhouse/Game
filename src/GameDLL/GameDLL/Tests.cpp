@@ -371,14 +371,14 @@ void maximum(const Game& game) {
 		RC_ASSERT((x + y).BddPattern() == (a + b));
 	});
 
-	rc::check("check that maximum(random bdd * n, same random bdd * m) = random bdd + m where m >= n",
+	rc::check("check that maximum(random bdd * n, same random bdd * m) = random bdd * m where m >= n",
 		[&](const std::vector<bool> &l, int n, int m) {
 		RC_PRE(l.size() > 0);
 		ADD a = game.attractors.manager.constant(std::min(n, m));
 		ADD b = game.attractors.manager.constant(std::max(n, m));
 		ADD x = game.attractors.representState(l).Add();
 
-		RC_ASSERT((x * a).Maximum(x * b) == (x + b));
+		RC_ASSERT((x * a).Maximum(x * b) == (x * b));
 	});
 }
 
