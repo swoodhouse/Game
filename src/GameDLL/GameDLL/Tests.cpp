@@ -492,9 +492,9 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	//maximum(game); // passes
 	//oneZeroMaximum(game); // fails: test works, reveals that oneZeroMaximum doesn't work how I think it does - so replace it
 	//bddPattern(game); // passes
-	//findMax(game); // passes. but we don't even seem to be using?
+	//findMax(game); // passes. but we don't even seem to be using? maybe we should
 
-	//renameMutVarsRemovingPrimes(game); // crashes
+	renameMutVarsRemovingPrimes(game); // crashes - problem is this representMutationNone uses -1. you can't do that. so found a second bug
 
 	//backMax(game); // hanging.. and using a lot of memory
 	//backMin(game);
