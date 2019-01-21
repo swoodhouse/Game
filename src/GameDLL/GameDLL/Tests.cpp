@@ -506,7 +506,19 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 	//numMutations();
 	renameMutVarsRemovingPrimes(game); // fails. seems to reveal an indexing error. so found a second bug
-	// oh no actually that should be fine
+	/*Falsifiable after 1 tests and 1 shrink
+
+		std::tuple<std::vector<float>>:
+	([0])
+
+		Tests.cpp : 275 :
+		RC_ASSERT(state1 == state2)
+
+		Expands to :
+	!(x18 | x19) == !(x22 | x23)
+	
+	=> off by 4?
+	*/
 
 	//backMax(game); // hanging.. and using a lot of memory
 	//backMin(game);
