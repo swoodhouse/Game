@@ -206,15 +206,22 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
     return bdd;
 }
 
+// OneZeroMaximum is not what we want
+ADD binaryMaximum(const ADD& a, const ADD& b) {
+	return a.Maximum(b).BddPattern().Add();
+}
+
 ADD addSetDiffMax(const ADD& a, const ADD& b) {
-    return a.OneZeroMaximum(b) * a + b.OneZeroMaximum(a) * b;
+	return binaryMaximum(a, b) * a + binaryMaximum(b, a) * b;
+    //return a.OneZeroMaximum(b) * a + b.OneZeroMaximum(a) * b;
     // if a = b = 0 then this gives zero
     // if a > b then a + 0 = a
     // if b > a then 0 + b = b
 }
 
 ADD addSetDiffMin(const ADD& a, const ADD& b) {
-    return (-a).OneZeroMaximum(-b) * a + (-b).OneZeroMaximum(-a) * b;
+	return binaryMaximum(-a, -b) * a + binaryMaximum(-b, -a) * b;
+    //return (-a).OneZeroMaximum(-b) * a + (-b).OneZeroMaximum(-a) * b;
     // if -a = -b = 0 then 0
     // if -a > -b then a + 0 = a
     // if -b > -a then 0 + b = b

@@ -382,16 +382,51 @@ void maximum(const Game& game) {
 	});
 }
 
-// test that maximum(a * n, b * m).bdd() = onezeromaximum(a * n, b * m).bdd()
+void bddPattern(const Game& game) {
+	rc::check("bddPattern..",
+		[&](const std::vector<bool> &l, int n) { // floats?
+		RC_PRE(l.size() > 0);
+		RC_PRE(n > 0);
+		BDD b = game.attractors.representState(l);
+		ADD v = game.attractors.manager.constant(n);
+
+		RC_ASSERT(b == (b.Add() * v).BddPattern());
+		RC_ASSERT(b.Add() == (b.Add() * v).BddPattern().Add());
+	});
+}
+
 void oneZeroMaximum(const Game& game) {
 	rc::check("test that maximum(x * n, y * m).bdd() = onezeromaximum(x * n, y * m).bdd()",
-		[&](const std::vector<bool> &l0, const std::vector<bool> &l1, int n, int m) {
+		[&](const std::vector<bool> &l0, const std::vector<bool> &l1, int n, int m) { // floats?
+		RC_PRE(l0.size() > 0);
+		RC_PRE(l1.size() > 0);
+		RC_PRE(n > 0);
+		RC_PRE(m > 0);
+
 		ADD a = game.attractors.manager.constant(n);
 		ADD b = game.attractors.manager.constant(m);
 		ADD x = game.attractors.representState(l0).Add();
 		ADD y = game.attractors.representState(l1).Add();
 
-		RC_ASSERT((x * a).Maximum(y * b).BddPattern() == (x * a).OneZeroMaximum(y * b).BddPattern());
+
+		// so i think the problem was we were allowing 0 scores. this could be a problem in general? one zero max really what we want? actually, probably is
+		// ([false], [false], 1, 1) is false too..
+		// which means that x.max(x) != x or x.onezeromax(x) != x
+		RC_ASSERT(x.Maximum(x) == x);
+		RC_ASSERT(x.OneZeroMaximum(x) == x);
+		// could we repplace onezeromax with this instead?
+		//if ((x * a).Maximum(y * b).BddPattern() == (x * a).OneZeroMaximum(y * b).BddPattern()) {
+		//	return true;
+		//}
+		//(x * a).Maximum(y * b).PrintMinterm();
+		
+		
+		//(x * a).PrintMinterm(); // zero
+		//std::cout << (x * a).IsZero(); // true
+		//std::cout << ((y * b) == y); // true
+		//zero.maximum(y) != zero.onexeromaximum
+		//return false;
+		//RC_ASSERT((x * a).Maximum(y * b).BddPattern() == (x * a).OneZeroMaximum(y * b).BddPattern());
 	});
 }
 
@@ -449,7 +484,8 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	Game game(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
 
 	//maximum(game); // passes
-	oneZeroMaximum(game); // fails
+	//oneZeroMaximum(game); // fails: test works, reveals that oneZeroMaximum doesn't work how I think it does - so replace it
+	bddPattern(game);
 	//findMax(game); // crashes
 	//renameMutVarsRemovingPrimes(game); // crashes
 	//backMax(game); // hanging
