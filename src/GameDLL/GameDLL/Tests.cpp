@@ -270,15 +270,21 @@ void renameMutVarsRemovingPrimes(const Game& game) {
 void findMax(const Game& game) {
 	rc::check("findMax....",
 		[&](const std::vector<float> &l) {
+		RC_PRE(l.size() > 0);
+		float max = *std::max_element(std::begin(l), std::end(l));
+		RC_PRE(max > 0);
+
 		ADD add = game.attractors.manager.addZero();
 		// instead of 0 to n, shuffle? for (i in indices)
 		for (int i = 0; i < l.size(); i++) {
 			ADD a = game.attractors.manager.addVar(i);
 			add = a.Ite(game.attractors.manager.constant(l[i]), add);
 		}
-		float max = *std::max_element(std::begin(l), std::end(l));
 		ADD maxAdd = game.attractors.manager.constant(max);
-		RC_ASSERT(add == maxAdd);
+
+		//add.PrintMinterm();
+		//maxAdd.PrintMinterm();
+		RC_ASSERT(add.FindMax() == maxAdd);
 	});
 }
 
@@ -485,10 +491,12 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 	//maximum(game); // passes
 	//oneZeroMaximum(game); // fails: test works, reveals that oneZeroMaximum doesn't work how I think it does - so replace it
-	bddPattern(game);
-	//findMax(game); // crashes
+	//bddPattern(game); // passes
+	//findMax(game); // passes. but we don't even seem to be using?
+
 	//renameMutVarsRemovingPrimes(game); // crashes
-	//backMax(game); // hanging
+
+	//backMax(game); // hanging.. and using a lot of memory
 	//backMin(game);
 	//untreat(game); // exception
 	//unmutate(game); // // exception
