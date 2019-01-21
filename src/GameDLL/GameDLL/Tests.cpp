@@ -21,6 +21,9 @@ void test1() {
 	});
 }
 
+void numMutations() {
+}
+
 /*
 test that score relation actually works - generate a random state with a designated apop var, verify that state.add() * score maps to state * apopVar.value.
 to test disjunctions.. a loop of a random length. add them all. verify states.add() * score maps to states * max(values apopVars)+
@@ -240,24 +243,31 @@ void unmutate(const Game& game) {
 // generate N random pairs of vals. call representMutation(var, val). if -1 call representMutationNone(var). flip a coin to add or multiply to state[skipping this at the moment]. in parallel build a state2 doing representPrimedMutation(var, val), if -1 then representPrimedMutationNone(var). then, check state1 == state2
 void renameMutVarsRemovingPrimes(const Game& game) {
 	rc::check("rename...",
-		[&](const std::vector<float> &l) {
+		[&](const std::vector<float> &l) { // why do i need floats here?
 		RC_PRE(l.size() > 0);
+		RC_PRE(l.size() <= game.koVars.size());
 		// report length
 		BDD state1 = game.attractors.manager.bddOne();
 		BDD state2 = game.attractors.manager.bddOne();
 
 		std::random_device rd;     // only used once to initialise (seed) engine
 		std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
-		std::uniform_int_distribution<int> uni(-1, game.numMutations - 1); // guaranteed unbiased
+		std::uniform_int_distribution<int> uni(-1, game.koVars.size() - 1); // guaranteed unbiased
 
 		for (int i = 0; i < l.size(); i++) {
+			std::cout << i << std::endl;
 			int val = uni(rng); // report this value
+			std::cout << val << std::endl;
 			if (val == -1) { // report
+				std::cout << "here1" << std::endl;
 				state1 *= game.representMutationNone(i);
+				std::cout << "here2" << std::endl;
 				state2 *= game.representPrimedMutationNone(i);
 			}
 			else {
+				std::cout << "here3" << std::endl;
 				state1 *= game.representMutation(i, val);
+				std::cout << "here4" << std::endl;
 				state2 *= game.representPrimedMutation(i, val);
 			}
 		}
@@ -494,7 +504,9 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	//bddPattern(game); // passes
 	//findMax(game); // passes. but we don't even seem to be using? maybe we should
 
-	renameMutVarsRemovingPrimes(game); // crashes - problem is this representMutationNone uses -1. you can't do that. so found a second bug
+	//numMutations();
+	renameMutVarsRemovingPrimes(game); // fails. seems to reveal an indexing error. so found a second bug
+	// oh no actually that should be fine
 
 	//backMax(game); // hanging.. and using a lot of memory
 	//backMin(game);
