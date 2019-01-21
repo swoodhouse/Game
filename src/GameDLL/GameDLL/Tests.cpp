@@ -448,8 +448,8 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	test1();
 	Game game(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
 
-	maximum(game); // fails. try printing minterms before equality check
-	//oneZeroMaximum(game); // fails
+	//maximum(game); // passes
+	oneZeroMaximum(game); // fails
 	//findMax(game); // crashes
 	//renameMutVarsRemovingPrimes(game); // crashes
 	//backMax(game); // hanging
