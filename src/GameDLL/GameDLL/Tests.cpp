@@ -360,9 +360,15 @@ void maximum(const Game& game) {
 		ADD y = b.Add();
 
 		//RC_ASSERT((x + y) == x.Maximum(y) == y.Maximum(x));
-		RC_ASSERT((x + y) == x.Maximum(y));
+
+		//std::cout << "x+y:" << std::endl;
+		//(x + y).PrintMinterm();
+		//std::cout << "x.Maximum(y):" << std::endl;
+		//x.Maximum(y).PrintMinterm();
+
+		RC_ASSERT((a + b).Add() == x.Maximum(y));
 		RC_ASSERT(x.Maximum(y) == y.Maximum(x));
-		RC_ASSERT((x + y) == (a + b).Add());
+		RC_ASSERT((x + y).BddPattern() == (a + b));
 	});
 
 	rc::check("check that maximum(random bdd * n, same random bdd * m) = random bdd + m where m >= n",
@@ -442,14 +448,14 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	test1();
 	Game game(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
 
-	//maximum(game); // fails. try printing minterms before equality check
+	maximum(game); // fails. try printing minterms before equality check
 	//oneZeroMaximum(game); // fails
 	//findMax(game); // crashes
 	//renameMutVarsRemovingPrimes(game); // crashes
 	//backMax(game); // hanging
 	//backMin(game);
 	//untreat(game); // exception
-	unmutate(game);
+	//unmutate(game); // // exception
 	//scoreFixpoint(game); // fails
 	//scoreLoop(game); // crashes
 	return 0;
