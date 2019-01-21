@@ -86,6 +86,7 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     printfn "Calling DLL..."
     minimax(List.length qn, ranges', minValues, numInputs, inputVars', numUpdates, inputValues', outputValues',
             List.length mutations, List.length treatments, Array.ofList mutations, Array.ofList treatments, apopVar, height, maximisingPlayerGoesLast) |> ignore
+    printfn "finishing"
 
 
 //

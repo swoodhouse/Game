@@ -5,10 +5,10 @@
 #include "Attractors.h"
 #include "Game.h"
 
-extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
-    int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
-//extern "C" __declspec(dllexport) int minimax2(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
-//	int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
+//extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
+//    int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
+extern "C" __declspec(dllexport) int minimax2(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
+	int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
     //std::string outputPath(output, outputLength);
     //std::string header(csvHeader, headerLength);
 
@@ -60,8 +60,6 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
     Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
 	ADD out = g.minimax();
-
-	std::cout << "done." << out.IsOne() << out.IsZero();
 
     return 0;
 }
