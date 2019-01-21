@@ -8,6 +8,18 @@ inline BDD logicalImplication(const BDD& a, const BDD& b) {
     return (!a) + b;
 }
 
+int Game::calcNumMutations(int height, bool maximisingPlayerGoesLast) {
+	// temp!!!
+	return 2;
+	//return height % 2 != 0 && !maximisingPlayerGoesLast ? (height / 2) + 1 : (height / 2); // wrong
+}
+
+int Game::calcNumTreatments(int height, bool maximisingPlayerGoesLast) { // wrong
+	//temp!!
+	return 2;
+	//return height % 2 != 0 && maximisingPlayerGoesLast ? (height / 2) + 1 : (height / 2);
+}
+
 BDD Game::representNonPrimedMutVars() const {
     BDD bdd = attractors.manager.bddOne();
 
@@ -460,7 +472,19 @@ BDD Game::representPrimedMutation(int var, int mutation) const {
     
     int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + numMutations * bits(koVars.size() + 1) +
             var * bits(koVars.size() + 1);
+
+	std::cout << numMutations << std::endl; // 551072020.................. erm..
+
+	std::cout << attractors.numUnprimedBDDVars << std::endl;
+	std::cout << bits(oeVars.size() + 1) << std::endl;
+	std::cout << bits(koVars.size() + 1) << std::endl;
+	std::cout << var << std::endl;
+	std::cout << i << std::endl;
+
     int b = bits(koVars.size() + 1); // + 1 so we can represent no mutation too // you actually can use fewer bits that this, as you can represent one fewer choice each time // you actually can use fewer bits that this, as you can represent one fewer choice each time
+
+	std::cout << b << std::endl;
+
     for (int n = 0; n < b; n++) {
         BDD var = attractors.manager.bddVar(i);
         if (!nthBitSet(mutation, n)) {

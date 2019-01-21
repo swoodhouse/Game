@@ -143,6 +143,7 @@ BDD Game::representMutation(int var, int mutation) const {
 }
 
  */
+
 class Game {
 public: // temp
 	const Attractors attractors;
@@ -157,6 +158,9 @@ public: // temp
     const BDD mutantTransitionRelation;
     const BDD unmutateRelation; // needed?
     const ADD scoreRelation;
+
+	static int calcNumMutations(int height, bool maximisingPlayerGoesLast);
+	static int calcNumTreatments(int height, bool maximisingPlayerGoesLast);
 
     ADD buildScoreRelation(int apopVar) const; // done
     ADD renameBDDVarsAddingPrimes(const ADD& add) const; // done
@@ -185,13 +189,8 @@ public: // temp
     BDD chooseRelation(int level) const; // done but sure there are bugs
   ////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-    
     // also.. it seems i had to change Attractors to represent full range not minimum..maximum
     // make sure Attractors::randomState still works, too. It won't - see note in Game.cpp
-
-	
 
 	Game(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qn, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, int depth,
 		bool maximisingPlayerGoesLast) :
@@ -200,8 +199,8 @@ public: // temp
 	scoreRelation(buildScoreRelation(apopVar)),
 	height(depth),
 	maximisingPlayerLast(maximisingPlayerGoesLast),
-	numMutations(height % 2 != 0 && !maximisingPlayerGoesLast ? (height / 2) + 1 : (height / 2)), // test these two lines..
-	numTreatments(height % 2 != 0 && maximisingPlayerGoesLast ? (height / 2) + 1 : (height / 2))
+	numMutations(calcNumMutations(height, maximisingPlayerGoesLast)), // test these two lines..
+	numTreatments(calcNumTreatments(height, maximisingPlayerGoesLast))
     {
     }; // done
 
