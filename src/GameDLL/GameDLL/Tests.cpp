@@ -21,8 +21,37 @@ void test1() {
 	});
 }
 
-void numMutations() {
+// not currently a rapidcheck test, just a one-off check
+bool indicesAreSequential(const Game& game) {
+		// refactor this stuff out to a function
+		std::vector<int> attractorsIndicies = game.attractorsIndicies();
+		std::vector<int> treatmentVarIndices = game.treatmentVarIndices();
+		std::vector<int> unprimedMutationVarsIndices = game.unprimedMutationVarsIndices();
+		std::vector<int> primedMutationVarsIndices = game.primedMutationVarsIndices();
+		std::vector<int> chosenTreatmentsIndices = game.chosenTreatmentsIndices();
+		std::vector<int> chosenMutationsIndices = game.chosenMutationsIndices();
+
+		std::vector<int> indices;
+		// refactor this stuff out to a function
+		indices.insert(indices.end(), attractorsIndicies.begin(), attractorsIndicies.end());
+		indices.insert(indices.end(), treatmentVarIndices.begin(), treatmentVarIndices.end());
+		indices.insert(indices.end(), unprimedMutationVarsIndices.begin(), unprimedMutationVarsIndices.end());
+		indices.insert(indices.end(), primedMutationVarsIndices.begin(), primedMutationVarsIndices.end());
+		indices.insert(indices.end(), chosenTreatmentsIndices.begin(), chosenTreatmentsIndices.end());
+		indices.insert(indices.end(), chosenMutationsIndices.begin(), chosenMutationsIndices.end());	
+
+		std::vector<int> zeroToN(indices.size());
+		std::iota(zeroToN.begin(), zeroToN.end(), 0);
+
+		return indices == zeroToN;
 }
+
+void calcNumMutations() {
+}
+
+void calcNumTreatments() {
+}
+
 
 /*
 test that score relation actually works - generate a random state with a designated apop var, verify that state.add() * score maps to state * apopVar.value.
@@ -499,12 +528,16 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	test1();
 	Game game(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
 
+	std::cout << "indicesAreSequential: " << indicesAreSequential(game) << std::endl;
+
 	//maximum(game); // passes
 	//oneZeroMaximum(game); // fails: test works, reveals that oneZeroMaximum doesn't work how I think it does - so replace it
 	//bddPattern(game); // passes
 	//findMax(game); // passes. but we don't even seem to be using? maybe we should
 
-	//numMutations();
+	calcNumMutations(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
+	calcNumTreatments(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
+	
 	renameMutVarsRemovingPrimes(game); // fails. seems to reveal an indexing error. so found a second bug
 	/*Falsifiable after 1 tests and 1 shrink
 
@@ -518,8 +551,27 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	!(x18 | x19) == !(x22 | x23)
 	
 	=> off by 4?
+
+	representMutation:
+	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) +
+	var * bits(koVars.size() + 1);
+	int b = bits(koVars.size() + 1);
+
+	representPrimedMutation:
+	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + numMutations * bits(koVars.size() + 1) +
+	var * bits(koVars.size() + 1);
+	int b = bits(koVars.size() + 1);
+
+	rename:
+	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1);
+	int end = i + numMutations * bits(koVars.size() + 1); // off by one???????????
+	for (; i < end; i++) {
+	permute[i + end] = i;
+	}
+
 	*/
 
+	// failure of backMax/backMin can be explained by above indexing problems. untreat/unmutate too
 	//backMax(game); // hanging.. and using a lot of memory
 	//backMin(game);
 	//untreat(game); // exception

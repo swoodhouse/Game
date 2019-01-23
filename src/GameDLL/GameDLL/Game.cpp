@@ -20,6 +20,43 @@ int Game::calcNumTreatments(int height, bool maximisingPlayerGoesLast) { // wron
 	//return height % 2 != 0 && maximisingPlayerGoesLast ? (height / 2) + 1 : (height / 2);
 }
 
+std::vector<int> Game::attractorsIndicies() const {
+	std::vector<int> v(attractors.numUnprimedBDDVars * 2);
+	std::iota(v.begin(), v.end(), 0);
+	return v;
+}
+
+std::vector<int> Game::treatmentVarIndices() const {
+	std::vector<int> v(bits(oeVars.size() + 1));
+	std::iota(v.begin(), v.end(), attractorsIndicies().back());
+	return v;
+}
+
+std::vector<int> Game::unprimedMutationVarsIndices() const {
+	std::vector<int> v(numMutations * bits(koVars.size() + 1));
+	std::iota(v.begin(), v.end(), treatmentVarIndices().back());
+	return v;
+}
+
+std::vector<int> Game::primedMutationVarsIndices() const {
+	std::vector<int> v(numMutations * bits(koVars.size() + 1));
+	std::iota(v.begin(), v.end(), unprimedMutationVarsIndices().back());
+	return v;
+}
+
+// probably take level as param...
+std::vector<int> Game::chosenTreatmentsIndices() const {
+	std::vector<int> v(numTreatments * bits(oeVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
+	std::iota(v.begin(), v.end(), primedMutationVarsIndices().back());
+	return v;
+}
+
+std::vector<int> Game::chosenMutationsIndices() const {
+	std::vector<int> v(numMutations * bits(koVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
+	std::iota(v.begin(), v.end(), chosenTreatmentsIndices().back());
+	return v;
+}
+
 BDD Game::representNonPrimedMutVars() const {
     BDD bdd = attractors.manager.bddOne();
 

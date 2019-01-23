@@ -162,6 +162,13 @@ public: // temp
 	static int calcNumMutations(int height, bool maximisingPlayerGoesLast);
 	static int calcNumTreatments(int height, bool maximisingPlayerGoesLast);
 
+	std::vector<int> attractorsIndicies() const;
+	std::vector<int> treatmentVarIndices() const;
+	std::vector<int> unprimedMutationVarsIndices() const;
+	std::vector<int> primedMutationVarsIndices() const;
+	std::vector<int> chosenTreatmentsIndices() const;
+	std::vector<int> chosenMutationsIndices() const;
+
     ADD buildScoreRelation(int apopVar) const; // done
     ADD renameBDDVarsAddingPrimes(const ADD& add) const; // done
     ADD immediateBackMax(const ADD& states) const; // done
