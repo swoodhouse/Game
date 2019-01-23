@@ -530,15 +530,15 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 	std::cout << "indicesAreSequential: " << indicesAreSequential(game) << std::endl;
 
-	//maximum(game); // passes
+	maximum(game); // passes
 	//oneZeroMaximum(game); // fails: test works, reveals that oneZeroMaximum doesn't work how I think it does - so replace it
-	//bddPattern(game); // passes
-	//findMax(game); // passes. but we don't even seem to be using? maybe we should
+	bddPattern(game); // passes
+	findMax(game); // passes. but we don't even seem to be using? maybe we should
 
-	calcNumMutations(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
-	calcNumTreatments(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
-	
-	renameMutVarsRemovingPrimes(game); // fails. seems to reveal an indexing error. so found a second bug
+	//calcNumMutations(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
+	//calcNumTreatments(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
+	//
+	//renameMutVarsRemovingPrimes(game); // fails. seems to reveal an indexing error. so found a second bug
 	/*Falsifiable after 1 tests and 1 shrink
 
 		std::tuple<std::vector<float>>:

@@ -28,32 +28,32 @@ std::vector<int> Game::attractorsIndicies() const {
 
 std::vector<int> Game::treatmentVarIndices() const {
 	std::vector<int> v(bits(oeVars.size() + 1));
-	std::iota(v.begin(), v.end(), attractorsIndicies().back());
+	std::iota(v.begin(), v.end(), attractorsIndicies().back() + 1);
 	return v;
 }
 
 std::vector<int> Game::unprimedMutationVarsIndices() const {
 	std::vector<int> v(numMutations * bits(koVars.size() + 1));
-	std::iota(v.begin(), v.end(), treatmentVarIndices().back());
+	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
 	return v;
 }
 
 std::vector<int> Game::primedMutationVarsIndices() const {
 	std::vector<int> v(numMutations * bits(koVars.size() + 1));
-	std::iota(v.begin(), v.end(), unprimedMutationVarsIndices().back());
+	std::iota(v.begin(), v.end(), unprimedMutationVarsIndices().back() + 1);
 	return v;
 }
 
 // probably take level as param...
 std::vector<int> Game::chosenTreatmentsIndices() const {
 	std::vector<int> v(numTreatments * bits(oeVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
-	std::iota(v.begin(), v.end(), primedMutationVarsIndices().back());
+	std::iota(v.begin(), v.end(), primedMutationVarsIndices().back() + 1);
 	return v;
 }
 
 std::vector<int> Game::chosenMutationsIndices() const {
 	std::vector<int> v(numMutations * bits(koVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
-	std::iota(v.begin(), v.end(), chosenTreatmentsIndices().back());
+	std::iota(v.begin(), v.end(), chosenTreatmentsIndices().back() + 1);
 	return v;
 }
 
