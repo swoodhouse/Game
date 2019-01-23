@@ -60,9 +60,7 @@ std::vector<int> Game::chosenMutationsIndices() const {
 BDD Game::representNonPrimedMutVars() const {
     BDD bdd = attractors.manager.bddOne();
 
-    int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1); 
-    int end = i + numMutations * bits(koVars.size() + 1); // + 1 so we can represent no mutation too // off by one???????????
-    for (; i < end; i++) {
+    for (int i : unprimedMutationVarsIndices()) {
         BDD var = attractors.manager.bddVar(i);
         bdd *= var;
     }
