@@ -74,10 +74,11 @@ ADD Game::renameMutVarsRemovingPrimes(const ADD& states) const {
     std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
     std::iota(permute.begin(), permute.end(), 0);
 
-    int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1);
-    int end = i + numMutations * bits(koVars.size() + 1); // off by one???????????
-    for (; i < end; i++) {
-        permute[i + end] = i;
+	std::vector<int> primedIndices(primedMutationVarsIndices());
+	std::vector<int> unprimedIndices(unprimedMutationVarsIndices());
+	
+    for (int i = 0; i < primedIndices.size(); i++) {
+        permute[primedIndices[i]] = unprimedIndices[i];
     }
 
     return states.Permute(&permute[0]);

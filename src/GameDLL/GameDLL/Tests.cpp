@@ -538,7 +538,7 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	//calcNumMutations(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
 	//calcNumTreatments(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
 	//
-	//renameMutVarsRemovingPrimes(game); // fails. seems to reveal an indexing error. so found a second bug
+	renameMutVarsRemovingPrimes(game); // fails. seems to reveal an indexing error. so found a second bug
 	/*Falsifiable after 1 tests and 1 shrink
 
 		std::tuple<std::vector<float>>:
