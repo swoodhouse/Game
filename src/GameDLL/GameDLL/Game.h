@@ -169,6 +169,11 @@ public: // temp
 	std::vector<int> chosenTreatmentsIndices() const;
 	std::vector<int> chosenMutationsIndices() const;
 
+	/*std::vector<std::vector<int>> unprimedMutationVarsIndices() const;
+	std::vector<std::vector<int>> primedMutationVarsIndices() const;
+	std::vector<std::vector<int>> chosenTreatmentsIndices() const;
+	std::vector<std::vector<int>> chosenMutationsIndices() const;*/
+
     ADD buildScoreRelation(int apopVar) const; // done
     ADD renameBDDVarsAddingPrimes(const ADD& add) const; // done
     ADD immediateBackMax(const ADD& states) const; // done

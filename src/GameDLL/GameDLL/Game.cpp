@@ -33,12 +33,32 @@ std::vector<int> Game::treatmentVarIndices() const {
 }
 
 std::vector<int> Game::unprimedMutationVarsIndices() const {
+	//std::vector<std::vector<int>> result(numMutations);
+
+	//for (int i = 0; i < numMutations; i++) {
+	//	std::vector<int> v(koVars.size() + 1);
+	//	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
+	//	result.push_back(v);
+	//}
+
+	//return result;
+
 	std::vector<int> v(numMutations * bits(koVars.size() + 1));
 	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
 	return v;
 }
 
 std::vector<int> Game::primedMutationVarsIndices() const {
+	//std::vector<std::vector<int>> result(numMutations);
+
+	//for (int i = 0; i < numMutations; i++) {
+	//	std::vector<int> v(koVars.size() + 1);
+	//	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
+	//	result.push_back(v);
+	//}
+
+	//return result;
+
 	std::vector<int> v(numMutations * bits(koVars.size() + 1));
 	std::iota(v.begin(), v.end(), unprimedMutationVarsIndices().back() + 1);
 	return v;
@@ -480,22 +500,36 @@ BDD Game::representTreatmentNone() const {
 }
 
 BDD Game::representMutation(int var, int mutation) const {
+	//mutation++;  // 0 represents no mutation, so n is represented by n+1
+ //   BDD bdd = attractors.manager.bddOne();
+ //   
+	//std::vector<int> indices(unprimedMutationVarsIndices());
+	//
+	//for (int i = 0; i < indices.size(); i++) {
+ //       BDD var = attractors.manager.bddVar(indices[i]);
+ //       if (!nthBitSet(mutation, i)) {
+ //           var = !var;
+ //       }
+ //       bdd *= var;
+ //   }
+ //   
+ //   return bdd;
 	mutation++;  // 0 represents no mutation, so n is represented by n+1
-    BDD bdd = attractors.manager.bddOne();
-    
-    int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) +
-            var * bits(koVars.size() + 1);
-    int b = bits(koVars.size() + 1); // + 1 so we can represent no mutation too // you actually can use fewer bits that this, as you can represent one fewer choice each time
-    for (int n = 0; n < b; n++) {
-        BDD var = attractors.manager.bddVar(i);
-        if (!nthBitSet(mutation, n)) {
-            var = !var;
-        }
-        bdd *= var;
-        i++;
-    }
-    
-    return bdd;
+	BDD bdd = attractors.manager.bddOne();
+
+	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) +
+		var * bits(koVars.size() + 1);
+	int b = bits(koVars.size() + 1); // + 1 so we can represent no mutation too // you actually can use fewer bits that this, as you can represent one fewer choice each time
+	for (int n = 0; n < b; n++) {
+		BDD var = attractors.manager.bddVar(i);
+		if (!nthBitSet(mutation, n)) {
+			var = !var;
+		}
+		bdd *= var;
+		i++;
+	}
+
+	return bdd;
 }
 
 BDD Game::representMutationNone(int var) const {
@@ -509,18 +543,8 @@ BDD Game::representPrimedMutation(int var, int mutation) const {
     int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + numMutations * bits(koVars.size() + 1) +
             var * bits(koVars.size() + 1);
 
-	std::cout << numMutations << std::endl; // 551072020.................. erm..
-
-	std::cout << attractors.numUnprimedBDDVars << std::endl;
-	std::cout << bits(oeVars.size() + 1) << std::endl;
-	std::cout << bits(koVars.size() + 1) << std::endl;
-	std::cout << var << std::endl;
-	std::cout << i << std::endl;
-
     int b = bits(koVars.size() + 1); // + 1 so we can represent no mutation too // you actually can use fewer bits that this, as you can represent one fewer choice each time // you actually can use fewer bits that this, as you can represent one fewer choice each time
-
-	std::cout << b << std::endl;
-
+	
     for (int n = 0; n < b; n++) {
         BDD var = attractors.manager.bddVar(i);
         if (!nthBitSet(mutation, n)) {

@@ -11,6 +11,18 @@
 #include "Attractors.h"
 #include "Game.h"
 
+//struct MyVec {
+//	std::vector<int> vec;
+//};
+//
+//template<>
+//struct Arbitrary<MyVec> {
+//	static Gen<MyVec> arbitrary() {
+//		std::vector<int> v;
+//		return gen::build<MyVec>(gen::set(&MyVec::vec, v));
+//	}
+//};
+
 void test1() {
 	rc::check("double reversal yields the original value",
 		[](const std::vector<int> &l0) {
@@ -21,15 +33,23 @@ void test1() {
 	});
 }
 
+std::vector<int> collapse(std::vector<std::vector<int>> vec) {
+	std::vector<int> result;
+	for (auto & v : vec) {
+		result.insert(result.end(), v.begin(), v.end());
+	}
+	return result;
+}
+
 // not currently a rapidcheck test, just a one-off check
 bool indicesAreSequential(const Game& game) {
 		// refactor this stuff out to a function
 		std::vector<int> attractorsIndicies = game.attractorsIndicies();
 		std::vector<int> treatmentVarIndices = game.treatmentVarIndices();
-		std::vector<int> unprimedMutationVarsIndices = game.unprimedMutationVarsIndices();
-		std::vector<int> primedMutationVarsIndices = game.primedMutationVarsIndices();
+		std::vector<int> unprimedMutationVarsIndices = game.unprimedMutationVarsIndices(); // colapse
+		std::vector<int> primedMutationVarsIndices = game.primedMutationVarsIndices(); // colapse
 		std::vector<int> chosenTreatmentsIndices = game.chosenTreatmentsIndices();
-		std::vector<int> chosenMutationsIndices = game.chosenMutationsIndices();
+		std::vector<int> chosenMutationsIndices = game.chosenMutationsIndices(); // colapse
 
 		std::vector<int> indices;
 		// refactor this stuff out to a function
@@ -272,9 +292,17 @@ void unmutate(const Game& game) {
 // generate N random pairs of vals. call representMutation(var, val). if -1 call representMutationNone(var). flip a coin to add or multiply to state[skipping this at the moment]. in parallel build a state2 doing representPrimedMutation(var, val), if -1 then representPrimedMutationNone(var). then, check state1 == state2
 void renameMutVarsRemovingPrimes(const Game& game) {
 	rc::check("rename...",
-		[&](const std::vector<float> &l) { // why do i need floats here?
-		RC_PRE(l.size() > 0);
-		RC_PRE(l.size() <= game.koVars.size());
+		[&](std::vector<int> unused) {
+
+		//std::vector
+		//if (v.size() > game.numMutations) {
+		//	v.resize(game.numMutations);
+		//}
+		//for (int i : v) {
+		//	RC_PRE(i > 0);
+		//	RC_PRE(i < game.koVars.size());
+		//}
+		
 		// report length
 		BDD state1 = game.attractors.manager.bddOne();
 		BDD state2 = game.attractors.manager.bddOne();
@@ -283,25 +311,26 @@ void renameMutVarsRemovingPrimes(const Game& game) {
 		std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
 		std::uniform_int_distribution<int> uni(-1, game.koVars.size() - 1); // guaranteed unbiased
 
-		for (int i = 0; i < l.size(); i++) {
-			std::cout << i << std::endl;
+
+		const auto v = *rc::gen::container<std::vector<int>>(rc::gen::inRange(0, game.numMutations)); // temp
+
+		for (int i : v) {
 			int val = uni(rng); // report this value
-			std::cout << val << std::endl;
 			if (val == -1) { // report
-				std::cout << "here1" << std::endl;
 				state1 *= game.representMutationNone(i);
-				std::cout << "here2" << std::endl;
 				state2 *= game.representPrimedMutationNone(i);
 			}
 			else {
-				std::cout << "here3" << std::endl;
 				state1 *= game.representMutation(i, val);
-				std::cout << "here4" << std::endl;
 				state2 *= game.representPrimedMutation(i, val);
 			}
 		}
+		std::cout << state1.FactoredFormString() << std::endl;
+		std::cout << state2.FactoredFormString() << std::endl;
+		//std::cout << game.renameMutVarsRemovingPrimes(state2.Add()).BddPattern().FactoredFormString() << std::endl;
 
-		RC_ASSERT(state1 == state2);
+		RC_ASSERT(state1.Add() == game.renameMutVarsRemovingPrimes(state2.Add()));
+		RC_ASSERT(state1.Add() == game.renameMutVarsRemovingPrimes(state1.Add()));
 	});
 }
 
@@ -538,39 +567,7 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	//calcNumMutations(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
 	//calcNumTreatments(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
 	//
-	renameMutVarsRemovingPrimes(game); // fails. seems to reveal an indexing error. so found a second bug
-	/*Falsifiable after 1 tests and 1 shrink
-
-		std::tuple<std::vector<float>>:
-	([0])
-
-		Tests.cpp : 275 :
-		RC_ASSERT(state1 == state2)
-
-		Expands to :
-	!(x18 | x19) == !(x22 | x23)
-	
-	=> off by 4?
-
-	representMutation:
-	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) +
-	var * bits(koVars.size() + 1);
-	int b = bits(koVars.size() + 1);
-
-	representPrimedMutation:
-	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + numMutations * bits(koVars.size() + 1) +
-	var * bits(koVars.size() + 1);
-	int b = bits(koVars.size() + 1);
-
-	rename:
-	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1);
-	int end = i + numMutations * bits(koVars.size() + 1); // off by one???????????
-	for (; i < end; i++) {
-	permute[i + end] = i;
-	}
-
-	*/
-
+	renameMutVarsRemovingPrimes(game); // passes
 	// failure of backMax/backMin can be explained by above indexing problems. untreat/unmutate too
 	//backMax(game); // hanging.. and using a lot of memory
 	//backMin(game);
