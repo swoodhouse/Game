@@ -79,34 +79,68 @@ to test disjunctions.. a loop of a random length. add them all. verify states.ad
 */
 void scoreFixpoint(const Game& game) {
 	rc::check("scoreFixpoint...",
-		[&](const std::vector<std::pair<int, int>> &varsValues, int apopVar) { // rename scoreVar
-		std::vector<int> vars(varsValues.size());
-		std::vector<int> values(varsValues.size());
+		//[&](const std::vector<std::pair<int, int>> &varsValues, int apopVar) { // rename scoreVar
+		//std::vector<int> vars(varsValues.size());
+		//std::vector<int> values(varsValues.size());
 
-		for (auto it = std::make_move_iterator(varsValues.begin()), end = std::make_move_iterator(varsValues.end()); it != end; ++it) {
-			vars.push_back(std::move(it->first));
-			values.push_back(std::move(it->second));
-		}
-
+		//for (auto it = std::make_move_iterator(varsValues.begin()), end = std::make_move_iterator(varsValues.end()); it != end; ++it) {
+		//	vars.push_back(std::move(it->first));
+		//	values.push_back(std::move(it->second));
+		//}
+		/*RC_PRE(varsValues.size());
 		RC_PRE(apopVar < vars.size());
 		RC_PRE(*std::min_element(vars.begin(), vars.end()) >= 0);
 		RC_PRE(*std::max_element(vars.begin(), vars.end()) < game.attractors.ranges.size());
-
 		// each var needs to be within range
 		RC_PRE(*std::min_element(values.begin(), values.end()) >= 0);
 
 		for (int i = 0; i < values.size(); i++) {
-			RC_PRE(values[0] <= game.attractors.ranges[i]);
+		RC_PRE(values[0] <= game.attractors.ranges[i]);
 		}
+*/
 
-		ADD scoreRelation = game.buildScoreRelation(apopVar);
+		[&]() {
+			int size = *rc::gen::inRange(1, static_cast<int>(game.attractors.ranges.size())); // num vars to include
+			const auto vars = *rc::gen::container<std::set<int>>(size, rc::gen::inRange(0, static_cast<int>(game.attractors.ranges.size()))); // which vars
+			int apopVarIndex = *rc::gen::inRange(0, static_cast<int>(vars.size()));
+			int apopVar = *std::next(vars.begin(), apopVarIndex); // rename scoreVar
+			auto values = std::vector<int>();
 
-		BDD state = game.attractors.manager.bddOne();
-		for (int i = 0; i < vars.size(); i++) {
-			state *= game.attractors.representUnprimedVarQN(vars[i], values[i]);
-		}
+			for (int v : vars) {
+				std::cout << "here" << std::endl;
+				int random = *rc::gen::inRange(0, game.attractors.ranges.at(v) + 1);
+				std::cout << "random:" << random << std::endl;
+				values.push_back(random);
+			}
+			
+			ADD scoreRelation = game.buildScoreRelation(apopVar);
 
-		RC_ASSERT(state.Add() * scoreRelation == (state.Add() * game.attractors.manager.constant(values[apopVar])));
+			BDD state = game.attractors.manager.bddOne();
+			int i = 0;
+			for (int v : vars) {
+				state *= game.attractors.representUnprimedVarQN(v, values.at(i));
+				i++;
+			}
+			std::cout << "state:" << state.FactoredFormString() << std::endl;
+			//if (!(state.Add() * scoreRelation == (state.Add() * game.attractors.manager.constant(values[apopVar])))) {
+			//	std::cout << state.FactoredFormString() << std::endl;
+			//	state.PrintMinterm
+			//	return false;
+			//}
+			//else {
+			//	return true;
+			//}
+			//RC_ASSERT(state.Add() * scoreRelation == (state.Add() * game.attractors.manager.constant(values[apopVar])));
+			std::cout << "apopVar:" << game.attractors.representUnprimedVarQN(apopVar, values.at(apopVarIndex)) << std::endl;
+			std::cout << "state * score, as bdd:" << (state.Add() * scoreRelation).BddPattern().FactoredFormString() << std::endl;
+			std::cout << "range of apopVar:" << game.attractors.ranges.at(apopVar) << std::endl;
+			std::cout << "values[apopVar]:" << values.at(apopVarIndex) << std::endl; // why is this always zero?
+			RC_ASSERT(state.Add() * scoreRelation == (state.Add() * game.attractors.manager.constant(values.at(apopVarIndex) + 1)));
+			//RC_ASSERT(state.Add() * scoreRelation == (state.Add() * game.attractors.manager.constant(values.at(apopVarIndex))));
+
+
+			// well the bdd form of scoreRelation looks correct: it's the same as the state. question is does it map to correct number.
+			// rc::gen::inRange seems to be working unexpectedly?
 	});
 }
 
@@ -114,12 +148,14 @@ void scoreFixpoint(const Game& game) {
 void scoreLoop(const Game& game) {
 	rc::check("scoreLoop...",
 		[&](const std::vector<int> &values, int apopVar) { // rename scoreVar
+		RC_PRE(values.size() > 0);
 		RC_PRE(apopVar > 0);
 		RC_PRE(apopVar < game.attractors.ranges.size());
 		RC_PRE(*std::min_element(values.begin(), values.end()) >= 0);
 		int max = *std::max_element(values.begin(), values.end());
 		RC_PRE(max <= game.attractors.ranges[apopVar]);
 
+		//[&]() {
 		BDD loop = game.attractors.manager.bddZero();
 
 		for (int value : values) {
@@ -559,22 +595,23 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 	std::cout << "indicesAreSequential: " << indicesAreSequential(game) << std::endl;
 
-	maximum(game); // passes
+	//maximum(game); // passes
 	//oneZeroMaximum(game); // fails: test works, reveals that oneZeroMaximum doesn't work how I think it does - so replace it
-	bddPattern(game); // passes
-	findMax(game); // passes. but we don't even seem to be using? maybe we should
+	//bddPattern(game); // passes
+	//findMax(game); // passes. but we don't even seem to be using? maybe we should
 
 	//calcNumMutations(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
 	//calcNumTreatments(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
 	//
-	renameMutVarsRemovingPrimes(game); // passes
+	//renameMutVarsRemovingPrimes(game); // passes
+	scoreFixpoint(game); // can't run.. generate yourself
+	//scoreLoop(game); // can't run.. generate yourself
 	// failure of backMax/backMin can be explained by above indexing problems. untreat/unmutate too
 	//backMax(game); // hanging.. and using a lot of memory
 	//backMin(game);
 	//untreat(game); // exception
 	//unmutate(game); // // exception
-	//scoreFixpoint(game); // fails
-	//scoreLoop(game); // crashes
+	
 	return 0;
 }
 // Report statistics, change these so they fail too. vectors need to be truncated to numVars
@@ -584,3 +621,7 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 // Also, hunt down the zero/one bdd. where does it come from?
 
+
+
+
+// // temp: turning off vmcai for Tests.cpp

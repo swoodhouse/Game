@@ -64,9 +64,15 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     printfn "Running VMCAI..."
     // this is the key..... we need to add special vars, corresponding target functions, then run vmcai, then remove special vars
     // basically.. maintain qn and extendedQn. ranges come from extendedQn, table from qn
-    let extendedQn = extendQN qn (Set.ofList mutations) (Set.ofList treatments)
-    let ranges, _ = Attractors.runVMCAI extendedQn
-    let ranges = ranges |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars))
+//    let extendedQn = extendQN qn (Set.ofList mutations) (Set.ofList treatments)
+//    let ranges, _ = Attractors.runVMCAI extendedQn
+//    let ranges = ranges |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars))
+//    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
+//    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
+
+    // temp: turning off vmcai for Tests.cpp
+    printfn "TEMP: TURNING OFF VMCAI FOR TESTING..."
+    let ranges = qn |> List.map (fun n -> n.var, Attractors.rangeToList n.range) |> Map.ofList
     let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
     let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
 
