@@ -180,6 +180,7 @@ public: // temp
     ADD immediateBackMin(const ADD& states) const; // done
     ADD backMin(const ADD& states) const; // done
     ADD backMax(const ADD& states) const; // done
+	ADD scoreLoop(const BDD& loop, const ADD& scoreRelation) const;
     ADD scoreAttractors(int numMutations) const; // done.. except taking max not mean
     BDD buildMutantSyncQNTransitionRelation() const; // done.. except no.. i need zero to mean no mutation i think!!!
     BDD representTreatment(int val) const; // done.. including zero mut and bits

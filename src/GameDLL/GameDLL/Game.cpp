@@ -375,6 +375,12 @@ ADD Game::backMin(const ADD& states) const {
     return reachable;
 }
 
+ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
+	ADD a = loop.Add();
+	ADD max = (a * scoreRelation).FindMax();
+	return max * a;
+}
+
 ADD Game::scoreAttractors(int numMutations) const {
    ADD states = attractors.manager.addZero();
 
@@ -398,20 +404,16 @@ ADD Game::scoreAttractors(int numMutations) const {
    // but.. iterative max computation would work
    std::list<BDD> att = attractors.attractors(mutantTransitionRelation, !initial, variablesToIgnore, variablesToKeep);
 
-   //for (const BDD& a : att) {
-   //     ADD max = (a.Add() * scoreRelation).FindMax(); // replace this with iterative mean computation
-   //     ADD scoredLoop = max * a.Add(); // refactor out repeated Add calls
-   //     states += scoredLoop; // this is ok because each state is tagged by its mutations
-   // }
-    for (const BDD& a : att) {
-		// existmax out bdd vars, leaving just mutvars
-		// call findmax
-		ADD scoredPoints = a.Add() * scoreRelation;
-		ADD maxes = scoredPoints.MaxAbstract(attractors.nonPrimeVariables.Add());
-		states += a.Add() * maxes;
-    }
-    return states;
+   for (const BDD& a : att) {
+	   // existmax out bdd vars, leaving just mutvars
+	   // call findmax
+	   states += scoreLoop(a, scoreRelation);
+   }
+
+   return states;
 }
+
+
 
 // go over comments in github version
 ADD Game::minimax() const {

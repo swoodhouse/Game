@@ -107,9 +107,7 @@ void scoreFixpoint(const Game& game) {
 			auto values = std::vector<int>();
 
 			for (int v : vars) {
-				std::cout << "here" << std::endl;
 				int random = *rc::gen::inRange(0, game.attractors.ranges.at(v) + 1);
-				std::cout << "random:" << random << std::endl;
 				values.push_back(random);
 			}
 			
@@ -121,7 +119,7 @@ void scoreFixpoint(const Game& game) {
 				state *= game.attractors.representUnprimedVarQN(v, values.at(i));
 				i++;
 			}
-			std::cout << "state:" << state.FactoredFormString() << std::endl;
+			//std::cout << "state:" << state.FactoredFormString() << std::endl;
 			//if (!(state.Add() * scoreRelation == (state.Add() * game.attractors.manager.constant(values[apopVar])))) {
 			//	std::cout << state.FactoredFormString() << std::endl;
 			//	state.PrintMinterm
@@ -131,13 +129,16 @@ void scoreFixpoint(const Game& game) {
 			//	return true;
 			//}
 			//RC_ASSERT(state.Add() * scoreRelation == (state.Add() * game.attractors.manager.constant(values[apopVar])));
-			std::cout << "apopVar:" << game.attractors.representUnprimedVarQN(apopVar, values.at(apopVarIndex)) << std::endl;
-			std::cout << "state * score, as bdd:" << (state.Add() * scoreRelation).BddPattern().FactoredFormString() << std::endl;
-			std::cout << "range of apopVar:" << game.attractors.ranges.at(apopVar) << std::endl;
-			std::cout << "values[apopVar]:" << values.at(apopVarIndex) << std::endl; // why is this always zero?
+			//std::cout << "apopVar:" << game.attractors.representUnprimedVarQN(apopVar, values.at(apopVarIndex)) << std::endl;
+			//std::cout << "state * score, as bdd:" << (state.Add() * scoreRelation).BddPattern().FactoredFormString() << std::endl;
+			//std::cout << "range of apopVar:" << game.attractors.ranges.at(apopVar) << std::endl;
+			//std::cout << "values[apopVar]:" << values.at(apopVarIndex) << std::endl; // why is this always zero?
 			RC_ASSERT(state.Add() * scoreRelation == (state.Add() * game.attractors.manager.constant(values.at(apopVarIndex) + 1)));
+
+			RC_ASSERT(game.scoreLoop(state, scoreRelation) == (state.Add() * game.attractors.manager.constant(values.at(apopVarIndex) + 1)));
 			//RC_ASSERT(state.Add() * scoreRelation == (state.Add() * game.attractors.manager.constant(values.at(apopVarIndex))));
 
+			// ALSO DIRECTLY CALL SCORELOOP
 
 			// well the bdd form of scoreRelation looks correct: it's the same as the state. question is does it map to correct number.
 			// rc::gen::inRange seems to be working unexpectedly?
@@ -147,15 +148,13 @@ void scoreFixpoint(const Game& game) {
 // simple test. combining above and this would be more complete
 void scoreLoop(const Game& game) {
 	rc::check("scoreLoop...",
-		[&](const std::vector<int> &values, int apopVar) { // rename scoreVar
-		RC_PRE(values.size() > 0);
-		RC_PRE(apopVar > 0);
-		RC_PRE(apopVar < game.attractors.ranges.size());
-		RC_PRE(*std::min_element(values.begin(), values.end()) >= 0);
-		int max = *std::max_element(values.begin(), values.end());
-		RC_PRE(max <= game.attractors.ranges[apopVar]);
+		[&]() {
+		int apopVar = *rc::gen::inRange(0, static_cast<int>(game.attractors.ranges.size())); // rename scoreVar
+		const auto values = *rc::gen::container<std::set<int>>(rc::gen::inRange(0, static_cast<int>(game.attractors.ranges.at(apopVar) + 1)));
 
-		//[&]() {
+		RC_PRE(values.size() > 0);
+		int max = *std::max_element(values.begin(), values.end());
+		
 		BDD loop = game.attractors.manager.bddZero();
 
 		for (int value : values) {
@@ -163,7 +162,11 @@ void scoreLoop(const Game& game) {
 		}
 
 		ADD scoreRelation = game.buildScoreRelation(apopVar);
-		RC_ASSERT(loop.Add() * scoreRelation == (loop.Add() * game.attractors.manager.constant(max)));
+
+		std::cout << (loop.Add() * scoreRelation).BddPattern().FactoredFormString() << std::endl;
+		std::cout << loop.FactoredFormString() << std::endl;
+
+		RC_ASSERT(game.scoreLoop(loop, scoreRelation) == (loop.Add() * game.attractors.manager.constant(max + 1)));
 	});
 
 }
@@ -599,13 +602,16 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	//oneZeroMaximum(game); // fails: test works, reveals that oneZeroMaximum doesn't work how I think it does - so replace it
 	//bddPattern(game); // passes
 	//findMax(game); // passes. but we don't even seem to be using? maybe we should
+	scoreFixpoint(game); // passes
+	//renameMutVarsRemovingPrimes(game); // passes
+	//scoreLoop(game); // passes
 
 	//calcNumMutations(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
 	//calcNumTreatments(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
 	//
-	//renameMutVarsRemovingPrimes(game); // passes
-	scoreFixpoint(game); // can't run.. generate yourself
-	//scoreLoop(game); // can't run.. generate yourself
+	
+	
+	
 	// failure of backMax/backMin can be explained by above indexing problems. untreat/unmutate too
 	//backMax(game); // hanging.. and using a lot of memory
 	//backMin(game);
