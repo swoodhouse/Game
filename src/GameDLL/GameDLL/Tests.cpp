@@ -311,20 +311,21 @@ void unmutate(const Game& game) {
 		BDD mutated = states * otherMutations * game.representMutation(level, mutation);
 
 		std::cout << "states:" << states.FactoredFormString() << std::endl;
-		std::cout << "unmutated:" << unmutated.FactoredFormString() << std::endl;
 		std::cout << "mutated:" << mutated.FactoredFormString() << std::endl;
+		std::cout << "unmutated:" << unmutated.FactoredFormString() << std::endl;
 		std::cout << "transformed:" << game.unmutate(level, mutated.Add()) << std::endl; // this is 1. like its removed everything
 
 		// any of these 3 lines could be the problem:
 		BDD one = mutated * game.chooseRelation(level); // doesn't seem to do anything, = mutated
 		BDD two = one.ExistAbstract(game.representNonPrimedMutVars()); // = states. probably because one doesn't add choose or primed muts
 		BDD three = game.renameMutVarsRemovingPrimes(two.Add()).BddPattern(); // = states. probably because one doesn't add choose or primed muts
+		// each step  now definitely does something, who knows where we are going wrong
 
 		// chooseRelation => probably the bug
 
 		std::cout << "one:" << one.FactoredFormString() << std::endl;
 		std::cout << "two:" << two.FactoredFormString() << std::endl;
-		std::cout << "three:" << three.FactoredFormString() << std::endl;
+		std::cout << "three:" << three.FactoredFormString() << "\n" << std::endl;
 
 		RC_ASSERT(game.unmutate(level, mutated.Add()) == unmutated.Add());
 	});

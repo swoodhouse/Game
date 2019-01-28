@@ -103,7 +103,8 @@ ADD Game::renameMutVarsRemovingPrimes(const ADD& states) const {
 }
 // maybe do purely at the level of bits?
 BDD Game::chooseRelation(int level) const {
-    BDD bdd = attractors.manager.bddZero();
+    //BDD bdd = attractors.manager.bddZero();
+	BDD bdd = attractors.manager.bddOne();
 
     for (int var = 0; var < numMutations; var++) {
         for (int val = 0; val < koVars.size(); val++) {
@@ -125,7 +126,8 @@ BDD Game::chooseRelation(int level) const {
 				}
 			}
 
-			bdd += logicalEquivalence(choice, unprimedMutVal * primedMutZero * otherPrimedUnchanged);
+			//bdd += logicalEquivalence(choice, unprimedMutVal * primedMutZero * otherPrimedUnchanged);
+			bdd *= logicalEquivalence(unprimedMutVal, choice * primedMutZero * otherPrimedUnchanged); // also should be *=?
 		}
     }
     // choice_level = unprimedMut_n  /\ primedMut_n = 0 /\ primedMut_i/=n = unprimedMut_i
