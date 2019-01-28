@@ -257,22 +257,16 @@ void backMin(const Game& game) {
 +untreat and unmutate work - ...generate a random BDD. Tag it with N treatments. Verify that untreat(bdd) == what? the bdd you began with before you tagged it with treatment1, or treatment2, ....  + a tag saying that was indeed the one that was chosen. do i pick a random number of treatments or can i assume this works inductively*/
 void untreat(const Game& game) {
 	rc::check("untreat",
-		[&](std::vector<bool> v, int level, int treatment) {
-		RC_PRE(v.size() > 0);
-		RC_PRE(level < game.numTreatments);
-		RC_PRE(treatment < game.oeVars.size());
-
-		std::random_device rd;     // only used once to initialise (seed) engine
-		std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
-		std::uniform_int_distribution<int> uni(0, 1); // guaranteed unbiased
-
-		if (v.size() > game.attractors.numUnprimedBDDVars) {
-			v.resize(game.attractors.numUnprimedBDDVars);
-		}
+		[&]() {
+		const auto v = *rc::gen::container<std::vector<bool>>(game.attractors.numUnprimedBDDVars, rc::gen::arbitrary<bool>()); // temp
+		const auto level = *rc::gen::inRange(0, game.numTreatments);
+		const auto treatment= *rc::gen::inRange(0, static_cast<int>(game.oeVars.size()));
 
 		BDD states = game.attractors.manager.bddVar(0);
+		if (*rc::gen::arbitrary<bool>()) states = !states;
+
 		for (int i = 1; i < v.size(); i++) {
-			if (uni(rng) == 0) { // report
+			if (*rc::gen::arbitrary<bool>()) {
 				states *= game.attractors.manager.bddVar(i);
 			}
 			else {
@@ -290,22 +284,16 @@ void untreat(const Game& game) {
 // same as above.. except add mutations up to level.
 void unmutate(const Game& game) {
 	rc::check("unmutate",
-		[&](std::vector<bool> v, int level, int mutation) {
-		RC_PRE(v.size() > 0);
-		RC_PRE(level < game.numMutations);
-		RC_PRE(mutation < game.koVars.size());
-
-		std::random_device rd;     // only used once to initialise (seed) engine
-		std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
-		std::uniform_int_distribution<int> uni(0, 1); // guaranteed unbiased
-
-		if (v.size() > game.attractors.numUnprimedBDDVars) {
-			v.resize(game.attractors.numUnprimedBDDVars);
-		}
+		[&]() {
+		const auto v = *rc::gen::container<std::vector<bool>>(game.attractors.numUnprimedBDDVars, rc::gen::arbitrary<bool>()); // temp
+		const auto level = *rc::gen::inRange(0, game.numMutations);
+		const auto mutation = *rc::gen::inRange(0, static_cast<int>(game.koVars.size()));
 
 		BDD states = game.attractors.manager.bddVar(0);
+		if (*rc::gen::arbitrary<bool>()) states = !states;
+
 		for (int i = 1; i < v.size(); i++) {
-			if (uni(rng) == 0) { // report
+			if (*rc::gen::arbitrary<bool>()) {
 				states *= game.attractors.manager.bddVar(i);
 			}
 			else {
@@ -313,16 +301,30 @@ void unmutate(const Game& game) {
 			}
 		}
 
-		std::uniform_int_distribution<int> uni2(0, game.koVars.size() - 1);
-
 		BDD otherMutations = game.attractors.manager.bddOne();
-		for (int i = 0; i < level; i++) {
-			int m = uni2(rng);
+	/*	for (int i = 0; i < level; i++) {
+			int m = *rc::gen::inRange(0, static_cast<int>(game.koVars.size()));
 			otherMutations *= game.representMutation(level, m);
-		}
+		}*/
 
 		BDD unmutated = states * otherMutations * game.representChosenMutation(level, mutation);
 		BDD mutated = states * otherMutations * game.representMutation(level, mutation);
+
+		std::cout << "states:" << states.FactoredFormString() << std::endl;
+		std::cout << "unmutated:" << unmutated.FactoredFormString() << std::endl;
+		std::cout << "mutated:" << mutated.FactoredFormString() << std::endl;
+		std::cout << "transformed:" << game.unmutate(level, mutated.Add()) << std::endl; // this is 1. like its removed everything
+
+		// any of these 3 lines could be the problem:
+		BDD one = mutated * game.chooseRelation(level); // doesn't seem to do anything, = mutated
+		BDD two = one.ExistAbstract(game.representNonPrimedMutVars()); // = states. probably because one doesn't add choose or primed muts
+		BDD three = game.renameMutVarsRemovingPrimes(two.Add()).BddPattern(); // = states. probably because one doesn't add choose or primed muts
+
+		// chooseRelation => probably the bug
+
+		std::cout << "one:" << one.FactoredFormString() << std::endl;
+		std::cout << "two:" << two.FactoredFormString() << std::endl;
+		std::cout << "three:" << three.FactoredFormString() << std::endl;
 
 		RC_ASSERT(game.unmutate(level, mutated.Add()) == unmutated.Add());
 	});
@@ -543,6 +545,8 @@ void oneZeroMaximum(const Game& game) {
 	});
 }
 
+// cd C:\Users\steve\Documents\Game\src\BioCheckConsole\bin\x64\Release
+// .\BioCheckConsole.exe -model Game_Benchmark.json -engine GAME -mutate 0 0 -mutate 1 0 -treat 2 1 -treat 3 1 - apopVar 4 - height 4
 
 extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
     int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
@@ -602,9 +606,10 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	//oneZeroMaximum(game); // fails: test works, reveals that oneZeroMaximum doesn't work how I think it does - so replace it
 	//bddPattern(game); // passes
 	//findMax(game); // passes. but we don't even seem to be using? maybe we should
-	scoreFixpoint(game); // passes
+	//scoreFixpoint(game); // passes
 	//renameMutVarsRemovingPrimes(game); // passes
 	//scoreLoop(game); // passes
+	//untreat(game); // passes
 
 	//calcNumMutations(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
 	//calcNumTreatments(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
@@ -615,8 +620,8 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	// failure of backMax/backMin can be explained by above indexing problems. untreat/unmutate too
 	//backMax(game); // hanging.. and using a lot of memory
 	//backMin(game);
-	//untreat(game); // exception
-	//unmutate(game); // // exception
+	
+	unmutate(game); // ....
 	
 	return 0;
 }
