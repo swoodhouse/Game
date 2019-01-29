@@ -282,22 +282,29 @@ void untreat(const Game& game) {
 }
 
 // same as above.. except add mutations up to level.
+// i was thinking about this test wrongly
 void unmutate(const Game& game) {
 	rc::check("unmutate",
 		[&]() {
 		const auto v = *rc::gen::container<std::vector<bool>>(game.attractors.numUnprimedBDDVars, rc::gen::arbitrary<bool>()); // temp
 		const auto level = *rc::gen::inRange(0, game.numMutations);
-		const auto mutation = *rc::gen::inRange(0, static_cast<int>(game.koVars.size()));
+		std::vector<int> mutVars(level);
+		std::iota(mutVars.begin(), mutVars.end(), 0);
+		const auto mutValues = *rc::gen::container<std::vector<int>>(level, rc::gen::inRange(0, static_cast<int>(game.koVars.size())));
 
 		BDD states = game.attractors.manager.bddVar(0);
-		if (*rc::gen::arbitrary<bool>()) states = !states;
+		if (v[0]) states = !states;
 
 		for (int i = 1; i < v.size(); i++) {
+			BDD s = game.attractors.manager.bddVar(i);
+
+			if (v[i]) s = !s;
+
 			if (*rc::gen::arbitrary<bool>()) {
-				states *= game.attractors.manager.bddVar(i);
+				states *= s;
 			}
 			else {
-				states += game.attractors.manager.bddVar(i);
+				states += s;
 			}
 		}
 
@@ -307,19 +314,24 @@ void unmutate(const Game& game) {
 			otherMutations *= game.representMutation(level, m);
 		}*/
 
-		BDD unmutated = states * otherMutations * game.representChosenMutation(level, mutation);
+		std::cout << "game.representChosenMutation(level, mutation):" << game.representChosenMutation(level, mutation).FactoredFormString() << std::endl;
+		std::cout << "game.representMutation(level, mutation):" << game.representMutation(level, mutation).FactoredFormString() << std::endl;
+
+		BDD unmutated = states * otherMutations * game.representChosenMutation(level, mutation) * game.representMutationNone(;
 		BDD mutated = states * otherMutations * game.representMutation(level, mutation);
 
 		std::cout << "states:" << states.FactoredFormString() << std::endl;
 		std::cout << "mutated:" << mutated.FactoredFormString() << std::endl;
 		std::cout << "unmutated:" << unmutated.FactoredFormString() << std::endl;
-		std::cout << "transformed:" << game.unmutate(level, mutated.Add()) << std::endl; // this is 1. like its removed everything
+		std::cout << "transformed:" << game.unmutate(level, mutated.Add()).BddPattern().FactoredFormString() << std::endl; // this is 1. like its removed everything
 
 		// any of these 3 lines could be the problem:
-		BDD one = mutated * game.chooseRelation(level); // doesn't seem to do anything, = mutated
-		BDD two = one.ExistAbstract(game.representNonPrimedMutVars()); // = states. probably because one doesn't add choose or primed muts
+		BDD one = mutated * game.chooseRelation(level); // looks wrong
+		BDD two = one.ExistAbstract(game.representNonPrimedMutVars()); // looks like it might be working
 		BDD three = game.renameMutVarsRemovingPrimes(two.Add()).BddPattern(); // = states. probably because one doesn't add choose or primed muts
 		// each step  now definitely does something, who knows where we are going wrong
+		// also, why does three != transformed
+		// 
 
 		// chooseRelation => probably the bug
 

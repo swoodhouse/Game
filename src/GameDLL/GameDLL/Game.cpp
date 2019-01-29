@@ -115,9 +115,12 @@ BDD Game::chooseRelation(int level) const {
             BDD otherPrimedUnchanged = attractors.manager.bddOne();
 			for (int var2 = 0; var2 < numMutations; var2++) {
 				if (var2 != var) {
-					int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + var2 * bits(koVars.size() + 1);
+					int i = treatmentVarIndices().back() + var2 * bits(koVars.size() + 1);
+					//int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + var2 * bits(koVars.size() + 1);
 					int end = i + bits(koVars.size() + 1);
 					int offset = numMutations * bits(koVars.size() + 1); // off by one???????????
+
+
 					for (; i < end; i++) {
 						BDD unprimeBit = attractors.manager.bddVar(i);
 						BDD primedBit = attractors.manager.bddVar(i + offset);
