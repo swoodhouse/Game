@@ -287,9 +287,7 @@ void unmutate(const Game& game) {
 	rc::check("unmutate",
 		[&]() {
 		const auto v = *rc::gen::container<std::vector<bool>>(game.attractors.numUnprimedBDDVars, rc::gen::arbitrary<bool>()); // temp
-		const auto level = *rc::gen::inRange(0, game.numMutations);
-		std::vector<int> mutVars(level);
-		std::iota(mutVars.begin(), mutVars.end(), 0);
+		const auto level = *rc::gen::inRange(1, game.numMutations);//*rc::gen::inRange(0, game.numMutations);
 		const auto mutValues = *rc::gen::container<std::vector<int>>(level, rc::gen::inRange(0, static_cast<int>(game.koVars.size())));
 
 		BDD states = game.attractors.manager.bddVar(0);
@@ -314,10 +312,21 @@ void unmutate(const Game& game) {
 			otherMutations *= game.representMutation(level, m);
 		}*/
 
+		// right?
+		//otherMutations = game.nMutations(level - 1);
+
+		// lexico needs testing too?
+		
+		//temp!!
+		int mutation = mutValues[0];
+
 		std::cout << "game.representChosenMutation(level, mutation):" << game.representChosenMutation(level, mutation).FactoredFormString() << std::endl;
 		std::cout << "game.representMutation(level, mutation):" << game.representMutation(level, mutation).FactoredFormString() << std::endl;
+		std::cout << "game.representMutationNone(level - 1):" << game.representMutationNone(level - 1).FactoredFormString() << std::endl;
+		// ^ representNone seems to be what we are missing, maybe indexing errors in chooseRelation
 
-		BDD unmutated = states * otherMutations * game.representChosenMutation(level, mutation) * game.representMutationNone(;
+		// temp!!
+		BDD unmutated = states * otherMutations * game.representChosenMutation(level, mutation) * game.representMutationNone(level - 1);
 		BDD mutated = states * otherMutations * game.representMutation(level, mutation);
 
 		std::cout << "states:" << states.FactoredFormString() << std::endl;
@@ -636,6 +645,8 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	
 	unmutate(game); // ....
 	
+	// mutationLexicographicalOrdering(game); // do this too?
+
 	return 0;
 }
 // Report statistics, change these so they fail too. vectors need to be truncated to numVars
@@ -649,3 +660,59 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 
 // // temp: turning off vmcai for Tests.cpp
+
+
+
+/*
+game.representChosenMutation(level, mutation):!(x49 | !x48)
+game.representMutation(level, mutation):!(x37 | !x36)
+game.representMutationNone(level - 1):!(x34 | x35)
+states:x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15))))))))))))))
+mutated:!((x37 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x36)
+unmutated:!(x34 | (x35 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48)))
+transformed:!(x33 | (x36 | (x37 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48))))
+one:!(x33 | (x34 & (((x37 | ((x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48))) | !x38)) | !x36) | !x35) | !x34 & (x35 | ((x37 | (x38 | (x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48))))) | !x36))))
+two:!(x33 | (x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48))))
+three:!(x33 | (x36 | (x37 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48))))
+
+Falsifiable after 1 tests and 20 shrinks
+
+std::vector<bool>:
+[false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+
+int:
+1
+
+std::vector<int>:
+[0]
+
+states:x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15))))))))))))))
+mutated:!((x37 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x36)
+unmutated:!(x34 | (x35 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48)))
+transformed:!(x36 | (x37 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48)))
+one:!(x34 & (x35 & ((x37 | (x38 & (x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48))) | !x38 & ((x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48))) | !x39))) | !x36) | !x35 & ((x37 | (x38 | (x39 | (x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48)))))) | !x36)) | !x34 & (x35 | ((x37 | (x38 & (x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48))) | !x38 & ((x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48))) | !x39))) | !x36)))
+two:!(x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48)))
+three:!(x36 | (x37 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48)))
+
+game.representChosenMutation(level, mutation):!(x49 | !x48)
+game.representMutation(level, mutation):!(x37 | !x36)
+game.representMutationNone(level - 1):!(x34 | x35)
+states:x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15))))))))))))))
+mutated:!((x37 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x36)
+unmutated:!(x34 | (x35 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48)))
+transformed:!(x36 | (x37 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48)))
+one:!(x34 & (x35 & ((x37 | (x38 & (x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48))) | !x38 & ((x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48))) | !x39))) | !x36) | !x35 & ((x37 | (x38 | (x39 | (x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48)))))) | !x36)) | !x34 & (x35 | ((x37 | (x38 & (x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48))) | !x38 & ((x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48))) | !x39))) | !x36)))
+two:!(x40 | (x41 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48)))
+three:!(x36 | (x37 | ((x49 | !(x0 | (x1 | (x2 | (x3 | (x4 | (x5 | (x6 | (x7 | (x8 | (x9 | (x10 | (x11 | (x12 | (x13 | (x14 | x15)))))))))))))))) | !x48)))
+
+Falsifiable after 1 tests and 17 shrinks
+
+std::vector<bool>:
+[false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+
+int:
+1
+
+std::vector<int>:
+[0]
+*/

@@ -32,6 +32,21 @@ std::vector<int> Game::treatmentVarIndices() const {
 	return v;
 }
 
+// write second in terms of this
+std::vector<std::vector<int>> Game::unprimedMutationVarsIndicesWindowed() const {
+	std::vector<std::vector<int>> result;
+	int start = treatmentVarIndices().back() + 1;
+
+	for (int i = 0; i < numMutations; i++) {
+		std::vector<int> v(koVars.size() + 1);
+		std::iota(v.begin(), v.end(), start);
+		start = v.back() + 1;
+		result.push_back(v);
+	}
+
+	return result;
+}
+
 std::vector<int> Game::unprimedMutationVarsIndices() const {
 	//std::vector<std::vector<int>> result(numMutations);
 
@@ -47,6 +62,22 @@ std::vector<int> Game::unprimedMutationVarsIndices() const {
 	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
 	return v;
 }
+
+// write second in terms of this. at least test unwindowing this gives the same as the other
+std::vector<std::vector<int>> Game::primedMutationVarsIndicesWindowed() const {
+	std::vector<std::vector<int>> result;
+	int start = unprimedMutationVarsIndices().back() + 1;
+
+	for (int i = 0; i < numMutations; i++) {
+		std::vector<int> v(koVars.size() + 1);
+		std::iota(v.begin(), v.end(), start);
+		start = v.back() + 1;
+		result.push_back(v);
+	}
+
+	return result;
+}
+
 
 std::vector<int> Game::primedMutationVarsIndices() const {
 	//std::vector<std::vector<int>> result(numMutations);
@@ -106,35 +137,54 @@ BDD Game::chooseRelation(int level) const {
     //BDD bdd = attractors.manager.bddZero();
 	BDD bdd = attractors.manager.bddOne();
 
+	const auto unprimedMuts = unprimedMutationVarsIndicesWindowed(); // use const auto more
+	const auto primedMuts = unprimedMutationVarsIndicesWindowed();
+	BDD choiceMustBeMade = attractors.manager.bddZero();
+
     for (int var = 0; var < numMutations; var++) {
         for (int val = 0; val < koVars.size(); val++) {
 			BDD unprimedMutVal = representMutation(var, val);
             BDD choice = representChosenMutation(level, val);
+			choiceMustBeMade += choice;
 			BDD primedMutZero = representPrimedMutationNone(var);
 
             BDD otherPrimedUnchanged = attractors.manager.bddOne();
 			for (int var2 = 0; var2 < numMutations; var2++) {
 				if (var2 != var) {
-					int i = treatmentVarIndices().back() + var2 * bits(koVars.size() + 1);
-					//int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + var2 * bits(koVars.size() + 1);
-					int end = i + bits(koVars.size() + 1);
-					int offset = numMutations * bits(koVars.size() + 1); // off by one???????????
-
-
-					for (; i < end; i++) {
-						BDD unprimeBit = attractors.manager.bddVar(i);
-						BDD primedBit = attractors.manager.bddVar(i + offset);
+					for (int i = 0; i < unprimedMuts[var2].size(); i++) {
+						BDD unprimeBit = attractors.manager.bddVar(unprimedMuts[var2][i]);
+						BDD primedBit = attractors.manager.bddVar(primedMuts[var2][i]);
 						otherPrimedUnchanged *= logicalEquivalence(unprimeBit, primedBit);
 					}
 				}
+				//if (var2 != var) {
+				//	int i = treatmentVarIndices().back() + var2 * bits(koVars.size() + 1);
+				//	//int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + var2 * bits(koVars.size() + 1);
+				//	int end = i + bits(koVars.size() + 1);
+				//	int offset = numMutations * bits(koVars.size() + 1); // off by one???????????
+
+
+				//	/*unprimedMutationVarsIndices
+				//	primedMutationVarsIndices*/
+
+
+
+				//	for (; i < end; i++) {
+				//		BDD unprimeBit = attractors.manager.bddVar(i);
+				//		BDD primedBit = attractors.manager.bddVar(i + offset);
+				//		otherPrimedUnchanged *= logicalEquivalence(unprimeBit, primedBit);
+				//	}
+				//}
 			}
 
-			//bdd += logicalEquivalence(choice, unprimedMutVal * primedMutZero * otherPrimedUnchanged);
+			//bdd += logicalEquivalence(choice, unprimedMutVal * primedMutZero * otherPrimedUnchanged); // we also need to say that a choice has to be made
 			bdd *= logicalEquivalence(unprimedMutVal, choice * primedMutZero * otherPrimedUnchanged); // also should be *=?
 		}
     }
     // choice_level = unprimedMut_n  /\ primedMut_n = 0 /\ primedMut_i/=n = unprimedMut_i
     
+	bdd *= choiceMustBeMade;
+
     return bdd;
 }
 
