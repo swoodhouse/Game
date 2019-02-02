@@ -190,7 +190,8 @@ BDD Game::chooseRelation(int level) const {
 
 ADD Game::unmutate(int level, const ADD& states) const {
     ADD add = states * chooseRelation(level).Add();
-    add = add.ExistAbstract(representNonPrimedMutVars().Add()); // not sure if this will work. not sure if maxabstract will either.. might have to implement my own exist abstract again here which returns 0 or .. or use clever min/max/negation..
+    //add = add.ExistAbstract(representNonPrimedMutVars().Add()); // not sure if this will work. not sure if maxabstract will either.. might have to implement my own exist abstract again here which returns 0 or .. or use clever min/max/negation..
+	add = add.MaxAbstract(representNonPrimedMutVars().Add());
     add = renameMutVarsRemovingPrimes(add);
     return add;
 }

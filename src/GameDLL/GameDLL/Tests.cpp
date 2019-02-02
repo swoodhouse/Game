@@ -287,7 +287,7 @@ void unmutate(const Game& game) {
 	rc::check("unmutate",
 		[&]() {
 		const auto v = *rc::gen::container<std::vector<bool>>(game.attractors.numUnprimedBDDVars, rc::gen::arbitrary<bool>()); // temp
-		const auto level = *rc::gen::inRange(1, game.numMutations);//*rc::gen::inRange(0, game.numMutations);
+		const auto level = *rc::gen::inRange(1, game.numMutations);//*rc::gen::inRange(0, game.numMutations); // or 0 to mut???
 		const auto mutValues = *rc::gen::container<std::vector<int>>(level, rc::gen::inRange(0, static_cast<int>(game.koVars.size())));
 
 		BDD states = game.attractors.manager.bddVar(0);
@@ -320,33 +320,28 @@ void unmutate(const Game& game) {
 		//temp!!
 		int mutation = mutValues[0];
 
-		std::cout << "game.representChosenMutation(level, mutation):" << game.representChosenMutation(level, mutation).FactoredFormString() << std::endl;
+	/*	std::cout << "game.representChosenMutation(level, mutation):" << game.representChosenMutation(level, mutation).FactoredFormString() << std::endl;
 		std::cout << "game.representMutation(level, mutation):" << game.representMutation(level, mutation).FactoredFormString() << std::endl;
-		std::cout << "game.representMutationNone(level - 1):" << game.representMutationNone(level - 1).FactoredFormString() << std::endl;
+		std::cout << "game.representMutationNone(level):" << game.representMutationNone(level).FactoredFormString() << std::endl;*/
 		// ^ representNone seems to be what we are missing, maybe indexing errors in chooseRelation
 
 		// temp!!
-		BDD unmutated = states * otherMutations * game.representChosenMutation(level, mutation) * game.representMutationNone(level - 1);
+		BDD unmutated = states * otherMutations * game.representChosenMutation(level, mutation) *  game.representMutationNone(level); //game.representMutationNone(level - 1);
 		BDD mutated = states * otherMutations * game.representMutation(level, mutation);
 
-		std::cout << "states:" << states.FactoredFormString() << std::endl;
-		std::cout << "mutated:" << mutated.FactoredFormString() << std::endl;
-		std::cout << "unmutated:" << unmutated.FactoredFormString() << std::endl;
-		std::cout << "transformed:" << game.unmutate(level, mutated.Add()).BddPattern().FactoredFormString() << std::endl; // this is 1. like its removed everything
+		//std::cout << "states:" << states.FactoredFormString() << std::endl;
+		//std::cout << "mutated:" << mutated.FactoredFormString() << std::endl;
+		//std::cout << "unmutated:" << unmutated.FactoredFormString() << std::endl;
+		//std::cout << "transformed:" << game.unmutate(level, mutated.Add()).BddPattern().FactoredFormString() << std::endl; // this is 1. like its removed everything
 
-		// any of these 3 lines could be the problem:
-		BDD one = mutated * game.chooseRelation(level); // looks wrong
-		BDD two = one.ExistAbstract(game.representNonPrimedMutVars()); // looks like it might be working
-		BDD three = game.renameMutVarsRemovingPrimes(two.Add()).BddPattern(); // = states. probably because one doesn't add choose or primed muts
-		// each step  now definitely does something, who knows where we are going wrong
-		// also, why does three != transformed
-		// 
+		//std::cout << "equal bdds?:" << (game.unmutate(level, mutated.Add()).BddPattern() == unmutated);
+		//std::cout << "equal adds?:" << (game.unmutate(level, mutated.Add()) == unmutated.Add());
 
+		// actually looks right now. but still failing.. some maybe the terminal node value is different?
+		// ah.. could come from exist abstract
+		// should i replace with max abstract then?? do i need a version for max and min?
+		// you get rid of the mutation but you tag with a new choice var. so should only be only possibility?
 		// chooseRelation => probably the bug
-
-		std::cout << "one:" << one.FactoredFormString() << std::endl;
-		std::cout << "two:" << two.FactoredFormString() << std::endl;
-		std::cout << "three:" << three.FactoredFormString() << "\n" << std::endl;
 
 		RC_ASSERT(game.unmutate(level, mutated.Add()) == unmutated.Add());
 	});
@@ -624,14 +619,15 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 	std::cout << "indicesAreSequential: " << indicesAreSequential(game) << std::endl;
 
-	//maximum(game); // passes
+	maximum(game); // passes
 	//oneZeroMaximum(game); // fails: test works, reveals that oneZeroMaximum doesn't work how I think it does - so replace it
-	//bddPattern(game); // passes
-	//findMax(game); // passes. but we don't even seem to be using? maybe we should
-	//scoreFixpoint(game); // passes
-	//renameMutVarsRemovingPrimes(game); // passes
-	//scoreLoop(game); // passes
-	//untreat(game); // passes
+	bddPattern(game); // passes
+	findMax(game); // passes. but we don't even seem to be using? maybe we should
+	scoreFixpoint(game); // passes
+	renameMutVarsRemovingPrimes(game); // passes
+	scoreLoop(game); // passes
+	untreat(game); // passes
+	unmutate(game); // not a complete test but passes....
 
 	//calcNumMutations(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
 	//calcNumTreatments(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
@@ -643,7 +639,7 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	//backMax(game); // hanging.. and using a lot of memory
 	//backMin(game);
 	
-	unmutate(game); // ....
+	
 	
 	// mutationLexicographicalOrdering(game); // do this too?
 
