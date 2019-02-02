@@ -164,10 +164,13 @@ BDD Attractors::renameAddingPrimes(const BDD& bdd) const {
 // TODO: switch between variablesToIngore and variablesToKeep implementations, verify they are equivalent and it is just that
 // the later is more efficent
 BDD Attractors::randomState(const BDD& S, const std::unordered_set<int>& variablesToIgnore, const BDD& variablesToKeep) const {
+	std::cout << "here random 1" << std::endl;
     char *out = new char[Cudd_ReadNodeCount(manager.getManager())];
+	std::cout << "here random 2" << std::endl;
     S.PickOneCube(out);
+	std::cout << "here random 3" << std::endl;
 	BDD bdd = manager.bddOne();
-	
+	std::cout << "here random 4" << std::endl;
     for (int i = 0; i < numUnprimedBDDVars; i++) {
 		BDD var = manager.bddVar(i);
         if (out[i] == 0) {
@@ -175,6 +178,7 @@ BDD Attractors::randomState(const BDD& S, const std::unordered_set<int>& variabl
         }
 		bdd *= var;
     }
+	std::cout << "here random 5" << std::endl;
 
 	// modification made for Game - we need to be able to represent random choices of mutations, treaments too
 	// now actually think this was a mistake, turned off for now
@@ -191,6 +195,7 @@ BDD Attractors::randomState(const BDD& S, const std::unordered_set<int>& variabl
 	// i think what we actually want is variables to keep - ......
 
     delete[] out;
+	std::cout << "here random 6" << std::endl;
 	//return bdd;
 	return bdd * variablesToKeep; //TODO: switch between variablesToIngore and variablesToKeep implementations
 }

@@ -180,14 +180,21 @@ void backMax(const Game& game) {
 
 		BDD S = game.attractors.manager.bddOne();
 
+		std::cout << "here1" << std::endl;
+
 		game.removeInvalidTreatmentBitCombinations(S); // refacotr this out.. can be computed once too
 		game.removeInvalidMutationBitCombinations(S);
 		game.forceMutationLexicographicalOrdering(S);
 		game.attractors.removeInvalidBitCombinations(S);
 
+		std::cout << "here2" << std::endl;
+
 		// unsure if the two other params are required
-		BDD state1 = game.attractors.randomState(S, std::unordered_set<int>(), game.attractors.manager.bddOne());
+		BDD state1 = game.attractors.randomState(S, std::unordered_set<int>(), game.attractors.manager.bddOne()); // hangs
+		std::cout << "here3" << std::endl;
 		BDD state2 = game.attractors.randomState(S, std::unordered_set<int>(), game.attractors.manager.bddOne());
+
+		std::cout << "here4" << std::endl;
 
 		RC_PRE(state1 != state2);
 
@@ -619,15 +626,15 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 	std::cout << "indicesAreSequential: " << indicesAreSequential(game) << std::endl;
 
-	maximum(game); // passes
-	//oneZeroMaximum(game); // fails: test works, reveals that oneZeroMaximum doesn't work how I think it does - so replace it
-	bddPattern(game); // passes
-	findMax(game); // passes. but we don't even seem to be using? maybe we should
-	scoreFixpoint(game); // passes
-	renameMutVarsRemovingPrimes(game); // passes
-	scoreLoop(game); // passes
-	untreat(game); // passes
-	unmutate(game); // not a complete test but passes....
+	//maximum(game); // passes
+	////oneZeroMaximum(game); // fails: test works, reveals that oneZeroMaximum doesn't work how I think it does - so replace it
+	//bddPattern(game); // passes
+	//findMax(game); // passes. but we don't even seem to be using? maybe we should
+	//scoreFixpoint(game); // passes
+	//renameMutVarsRemovingPrimes(game); // passes
+	//scoreLoop(game); // passes
+	//untreat(game); // passes
+	//unmutate(game); // not a complete test but passes....
 
 	//calcNumMutations(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
 	//calcNumTreatments(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
@@ -636,7 +643,7 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	
 	
 	// failure of backMax/backMin can be explained by above indexing problems. untreat/unmutate too
-	//backMax(game); // hanging.. and using a lot of memory
+	backMax(game); // hanging.. and using a lot of memory
 	//backMin(game);
 	
 	
