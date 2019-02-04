@@ -33,14 +33,13 @@ public: // move this
     BDD representSyncQNTransitionRelation(const QNTable& qn) const;
     BDD renameRemovingPrimes(const BDD& bdd) const;
     BDD renameAddingPrimes(const BDD& bdd) const;
-    BDD randomState(const BDD& S, const std::unordered_set<int>& variablesToIgnore, const BDD& variablesToKeep) const;
+    BDD randomState(const BDD& S) const;
     void removeInvalidBitCombinations(BDD& S) const;
     BDD immediateSuccessorStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
     BDD forwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
     BDD immediatePredecessorStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
     BDD backwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
-    std::list<BDD> attractors(const BDD& transitionBdd, const BDD& statesToRemove, const std::unordered_set<int>& variablesToIgnore,
-		                      const BDD& variablesToKeep) const;
+    std::list<BDD> attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& variablesToAdd) const;
     std::string prettyPrint(const BDD& attractor) const;
 
     Attractors(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qnT) :

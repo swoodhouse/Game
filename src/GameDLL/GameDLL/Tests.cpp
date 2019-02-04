@@ -190,9 +190,11 @@ void backMax(const Game& game) {
 		std::cout << "here2" << std::endl;
 
 		// unsure if the two other params are required
-		BDD state1 = game.attractors.randomState(S, std::unordered_set<int>(), game.attractors.manager.bddOne()); // hangs
+		BDD variablesToAdd = game.attractors.manager.bddOne(); // ?
+
+		BDD state1 = game.attractors.randomState(S) * variablesToAdd; // hangs
 		std::cout << "here3" << std::endl;
-		BDD state2 = game.attractors.randomState(S, std::unordered_set<int>(), game.attractors.manager.bddOne());
+		BDD state2 = game.attractors.randomState(S) * variablesToAdd;
 
 		std::cout << "here4" << std::endl;
 
@@ -233,8 +235,9 @@ void backMin(const Game& game) {
 		game.attractors.removeInvalidBitCombinations(S);
 
 		// unsure if the two other params are required
-		BDD state1 = game.attractors.randomState(S, std::unordered_set<int>(), game.attractors.manager.bddOne());
-		BDD state2 = game.attractors.randomState(S, std::unordered_set<int>(), game.attractors.manager.bddOne());
+		BDD variablesToAdd = game.attractors.manager.bddOne(); // ?
+		BDD state1 = game.attractors.randomState(S) * variablesToAdd; // hangs
+		BDD state2 = game.attractors.randomState(S) * variablesToAdd;
 
 		RC_PRE(state1 != state2);
 

@@ -160,45 +160,45 @@ BDD Attractors::renameAddingPrimes(const BDD& bdd) const {
 
 	return bdd.Permute(&permute[0]);
 }
-
-// TODO: switch between variablesToIngore and variablesToKeep implementations, verify they are equivalent and it is just that
-// the later is more efficent
-BDD Attractors::randomState(const BDD& S, const std::unordered_set<int>& variablesToIgnore, const BDD& variablesToKeep) const {
-	std::cout << "here random 1" << std::endl;
-    char *out = new char[Cudd_ReadNodeCount(manager.getManager())];
-	std::cout << "here random 2" << std::endl;
-    S.PickOneCube(out);
-	std::cout << "here random 3" << std::endl;
-	BDD bdd = manager.bddOne();
-	std::cout << "here random 4" << std::endl;
-    for (int i = 0; i < numUnprimedBDDVars; i++) {
-		BDD var = manager.bddVar(i);
-        if (out[i] == 0) {
-			var = !var;
-        }
-		bdd *= var;
-    }
-	std::cout << "here random 5" << std::endl;
-
-	// modification made for Game - we need to be able to represent random choices of mutations, treaments too
-	// now actually think this was a mistake, turned off for now
-	/*for (int i = numUnprimedBDDVars * 2; i < Cudd_ReadNodeCount(manager.getManager()); i++) {
-		if (variablesToIgnore.find(i) != variablesToIgnore.end()) {
-			BDD var = manager.bddVar(i);
-			if (out[i] == 0) {
-				var = !var;
-			}
-			bdd *= var;
-		}
-	}*/
-
-	// i think what we actually want is variables to keep - ......
-
-    delete[] out;
-	std::cout << "here random 6" << std::endl;
-	//return bdd;
-	return bdd * variablesToKeep; //TODO: switch between variablesToIngore and variablesToKeep implementations
-}
+//
+//// TODO: switch between variablesToIngore and variablesToKeep implementations, verify they are equivalent and it is just that
+//// the later is more efficent
+//BDD Attractors::randomState(const BDD& S, const std::unordered_set<int>& variablesToIgnore, const BDD& variablesToKeep) const {
+//	std::cout << "here random 1" << std::endl;
+//    char *out = new char[Cudd_ReadNodeCount(manager.getManager())];
+//	std::cout << "here random 2" << std::endl;
+//    S.PickOneCube(out);
+//	std::cout << "here random 3" << std::endl;
+//	BDD bdd = manager.bddOne();
+//	std::cout << "here random 4" << std::endl;
+//    for (int i = 0; i < numUnprimedBDDVars; i++) {
+//		BDD var = manager.bddVar(i);
+//        if (out[i] == 0) {
+//			var = !var;
+//        }
+//		bdd *= var;
+//    }
+//	std::cout << "here random 5" << std::endl;
+//
+//	// modification made for Game - we need to be able to represent random choices of mutations, treaments too
+//	// now actually think this was a mistake, turned off for now
+//	/*for (int i = numUnprimedBDDVars * 2; i < Cudd_ReadNodeCount(manager.getManager()); i++) {
+//		if (variablesToIgnore.find(i) != variablesToIgnore.end()) {
+//			BDD var = manager.bddVar(i);
+//			if (out[i] == 0) {
+//				var = !var;
+//			}
+//			bdd *= var;
+//		}
+//	}*/
+//
+//	// i think what we actually want is variables to keep - ......
+//
+//    delete[] out;
+//	std::cout << "here random 6" << std::endl;
+//	//return bdd;
+//	return bdd * variablesToKeep; //TODO: switch between variablesToIngore and variablesToKeep implementations
+//}
 
 // BDD Attractors::randomState(const BDD& S) const {
 //     int bddVars = manager.ReadSize(); // this also does ADD vars annoyingly.. do we actually introduce any additional vars in score though? i don't think so.
@@ -228,6 +228,54 @@ BDD Attractors::randomState(const BDD& S, const std::unordered_set<int>& variabl
 //     delete[] out;
 //     return values;
 // }
+
+/*
+// original
+BDD Attractors::randomState(const BDD& S) const {
+    char *out = new char[numUnprimedBDDVars * 2];
+    S.PickOneCube(out);
+    std::vector<bool> values;
+    for (int i = 0; i < numUnprimedBDDVars; i++) {
+        if (out[i] == 0) {
+            values.push_back(false);
+        }
+        else {
+            values.push_back(true);
+        }
+    }
+    delete[] out;
+    return representState(values);
+}*/
+
+BDD Attractors::randomState(const BDD& S) const {
+	//char *out = new char[numUnprimedBDDVars * 2];
+	char *out = new char[200]; // temp, hack
+	//char *out = new char[Cudd_ReadNodeCount(manager.getManager())]; // Cudd_ReadNodeCount is a huge number for some reason
+
+	std::cout << "numUnprimedBDDVars * 2: " << numUnprimedBDDVars * 2 << std::endl;;
+	std::cout << "Cudd_ReadNodeCount(manager.getManager()): " << Cudd_ReadNodeCount(manager.getManager()) << std::endl;;
+
+	S.PickOneCube(out);
+	std::vector<bool> values;
+	for (int i = 0; i < numUnprimedBDDVars; i++) {
+		if (out[i] == 0) {
+			std::cout << false << std::endl;
+			values.push_back(false);
+		}
+		else {
+			std::cout << true << std::endl;
+			values.push_back(true);
+		}
+	}
+	std::cout << "before delete" << std::endl;
+
+	//delete[] out; // temp
+
+	std::cout << "after delete" << std::endl;
+
+	return representState(values);
+}
+
 
 void Attractors::removeInvalidBitCombinations(BDD& S) const {
     for (int var = 0; var < ranges.size(); var++) {
@@ -276,32 +324,59 @@ BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& val
     return reachable;
 }
 
-std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const std::unordered_set<int>& variablesToIgnore,
-	                                  const BDD& variablesToKeep) const {
-    std::list<BDD> attractors;
-    BDD S = manager.bddOne();
-    removeInvalidBitCombinations(S);
-    S *= !statesToRemove;
+//std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const std::unordered_set<int>& variablesToIgnore,
+//	                                  const BDD& variablesToKeep) const {
+//    std::list<BDD> attractors;
+//    BDD S = manager.bddOne();
+//    removeInvalidBitCombinations(S);
+//    S *= !statesToRemove;
+//
+//    while (!S.IsZero()) {
+//        BDD s = randomState(S, variablesToIgnore, variablesToKeep);
+//
+//        for (int i = 0; i < ranges.size(); i++) { // unrolling by ranges.size() may not be the perfect choice of number
+//            BDD sP = immediateSuccessorStates(transitionBdd, s);
+//            s = randomState(sP, variablesToIgnore, variablesToKeep);
+//        }
+//
+//        BDD fr = forwardReachableStates(transitionBdd, s);
+//        BDD br = backwardReachableStates(transitionBdd, s);
+//
+//        if ((fr * !br).IsZero()) {
+//            attractors.push_back(fr);
+//        }
+//
+//        S *= !(s + br);
+//    }
+//    return attractors;
+//}
 
-    while (!S.IsZero()) {
-        BDD s = randomState(S, variablesToIgnore, variablesToKeep);
-
-        for (int i = 0; i < ranges.size(); i++) { // unrolling by ranges.size() may not be the perfect choice of number
-            BDD sP = immediateSuccessorStates(transitionBdd, s);
-            s = randomState(sP, variablesToIgnore, variablesToKeep);
-        }
-
-        BDD fr = forwardReachableStates(transitionBdd, s);
-        BDD br = backwardReachableStates(transitionBdd, s);
-
-        if ((fr * !br).IsZero()) {
-            attractors.push_back(fr);
-        }
-
-        S *= !(s + br);
-    }
-    return attractors;
-}
+// i don't think this is an optimal implementation, will do repeated work - if state a is ruled out under mutations X but not Y, will be run again under X and Y
+std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& variablesToAdd) const {
+	    std::list<BDD> attractors;
+	    BDD S = manager.bddOne();
+	    removeInvalidBitCombinations(S);
+	    S *= !statesToRemove;
+	
+	    while (!S.IsZero()) {
+	        BDD s = randomState(S) * variablesToAdd; // variab
+	
+	        for (int i = 0; i < ranges.size(); i++) { // unrolling by ranges.size() may not be the perfect choice of number
+	            BDD sP = immediateSuccessorStates(transitionBdd, s); // variables to add here???
+	            s = randomState(sP) * variablesToAdd;
+	        }
+	
+	        BDD fr = forwardReachableStates(transitionBdd, s);
+	        BDD br = backwardReachableStates(transitionBdd, s);
+	
+	        if ((fr * !br).IsZero()) {
+	            attractors.push_back(fr);
+	        }
+	
+	        S *= !(s + br);
+	    }
+	    return attractors;
+	}
 
 std::string Attractors::prettyPrint(const BDD& attractor) const {
     // ideally would not use a temp file
