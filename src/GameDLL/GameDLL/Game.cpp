@@ -289,6 +289,7 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
     int o = 0;
     
     for (std::vector<int>::size_type v = 0; v < attractors.ranges.size(); v++) {
+		std::cout << "buildMutation iterationCudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
 		if (attractors.ranges[v] > 0) {
 			const auto& iVars = attractors.qn.inputVars[v];
 			const auto& iValues = attractors.qn.inputValues[v];
@@ -655,6 +656,8 @@ BDD Game::representChosenMutation(int level, int mutation) const { // in this ca
 }
 
 ADD Game::buildScoreRelation(int apopVar) const {
+	std::cout << "buildScoreRelation start Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
+
     ADD score = attractors.manager.addZero();
 
     for (int val = 0; val <= attractors.ranges[apopVar]; val++) { // what if it is a ko/oe var with a range of 0?
@@ -662,6 +665,8 @@ ADD Game::buildScoreRelation(int apopVar) const {
         score = selector.Ite(attractors.manager.constant(val + 1), score); // maybe IteConstant
         // PRETTY SURE IT WILL HAVE TO BE VAL + 1, ZERO IS FOR UNREACHED STATES
     }
+
+	std::cout << "buildScoreRelation end Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
 
     return score;
 }

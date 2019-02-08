@@ -202,6 +202,8 @@ void backMax(const Game& game) {
 
 		RC_PRE(state1 != state2);
 
+		std::cout << "here5" << std::endl;
+
 		BDD back1 = game.attractors.backwardReachableStates(game.mutantTransitionRelation, state1);
 		BDD back2 = game.attractors.backwardReachableStates(game.mutantTransitionRelation, state2);
 
@@ -210,6 +212,17 @@ void backMax(const Game& game) {
 
 		ADD scoredBack = game.backMax(scoredState1 + scoredState2);
 
+		// count whether equal, separate, intersecting
+		// temp
+		if (back1 == back2) {
+			std::cout << "Equal" << std::endl;
+		}
+		else if ((back1 * !back2).IsZero()) {
+			std::cout << "Separate" << std::endl;
+		}
+		else if (!(back1 * !back2).IsZero()) {
+			std::cout << "Intersecting" << std::endl;
+		}
 		// count whether equal, separate, intersecting
 		RC_CLASSIFY(back1 == back2, "Equal");
 		RC_CLASSIFY((back1 * !back2).IsZero(), "Separate");
