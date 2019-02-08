@@ -246,15 +246,23 @@ BDD Attractors::randomState(const BDD& S) const {
     delete[] out;
     return representState(values);
 }*/
+//
+//std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
+//std::iota(permute.begin(), permute.end(), 0);
+//
+//int i = attractors.numUnprimedBDDVars * 2; // refactor out
+//int j = i + bits(oeVars.size() + 1) + numMutations * 2 * bits(koVars.size() + 1) + level * bits(oeVars.size() + 1);
+//
+//for (int n = 0; n < bits(oeVars.size() + 1); n++) { // duplication
+//	permute[n + i] = n + j;
+//}
+//
+//return states.Permute(&permute[0]);
 
 BDD Attractors::randomState(const BDD& S) const {
-	//char *out = new char[numUnprimedBDDVars * 2];
-	char *out = new char[200]; // temp, hack
-	//char *out = new char[Cudd_ReadNodeCount(manager.getManager())]; // Cudd_ReadNodeCount is a huge number for some reason
-
-	std::cout << "numUnprimedBDDVars * 2: " << numUnprimedBDDVars * 2 << std::endl;;
-	std::cout << "Cudd_ReadNodeCount(manager.getManager()): " << Cudd_ReadNodeCount(manager.getManager()) << std::endl;;
-
+	char *out = new char[Cudd_ReadSize(manager.getManager())];
+	
+	std::cout << "Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(manager.getManager()) << std::endl;
 	S.PickOneCube(out);
 	std::vector<bool> values;
 	for (int i = 0; i < numUnprimedBDDVars; i++) {
@@ -269,11 +277,14 @@ BDD Attractors::randomState(const BDD& S) const {
 	}
 	std::cout << "before delete" << std::endl;
 
-	//delete[] out; // temp
+	delete[] out; // temp
 
 	std::cout << "after delete" << std::endl;
+	BDD temp = representState(values);
 
-	return representState(values);
+	std::cout << "after temp" << std::endl;
+
+	return temp;
 }
 
 

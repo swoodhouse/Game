@@ -48,6 +48,7 @@ public: // move this
         manager(numUnprimedBDDVars * 2),
         nonPrimeVariables(representNonPrimeVariables()), primeVariables(representPrimeVariables())
     {
+		std::cout << "Cudd_ReadNodeCount(manager.getManager()): " << Cudd_ReadNodeCount(manager.getManager()) << std::endl;;
         manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
     };
 };

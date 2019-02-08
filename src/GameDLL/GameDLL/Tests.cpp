@@ -175,6 +175,7 @@ void scoreLoop(const Game& game) {
 void backMax(const Game& game) {
 	rc::check("backMax...",
 		[&](int i, int j) {
+		std::cout << "Cudd_ReadNodeCount(manager.getManager()): " << Cudd_ReadNodeCount(game.attractors.manager.getManager()) << std::endl;;
 		ADD n = game.attractors.manager.constant(std::min(i, j));
 		ADD m = game.attractors.manager.constant(std::max(i, j));
 
@@ -188,6 +189,7 @@ void backMax(const Game& game) {
 		game.attractors.removeInvalidBitCombinations(S);
 
 		std::cout << "here2" << std::endl;
+		std::cout << "Cudd_ReadNodeCount(manager.getManager()): " << Cudd_ReadNodeCount(game.attractors.manager.getManager()) << std::endl;;
 
 		// unsure if the two other params are required
 		BDD variablesToAdd = game.attractors.manager.bddOne(); // ?
@@ -626,9 +628,9 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 	test1();
 	Game game(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
-
+	std::cout << "Cudd_ReadNodeCount(manager.getManager()): " << Cudd_ReadNodeCount(game.attractors.manager.getManager()) << std::endl;;
 	std::cout << "indicesAreSequential: " << indicesAreSequential(game) << std::endl;
-
+	std::cout << "game.chosenMutationsIndices().back():" << game.chosenMutationsIndices().back();
 	//maximum(game); // passes
 	////oneZeroMaximum(game); // fails: test works, reveals that oneZeroMaximum doesn't work how I think it does - so replace it
 	//bddPattern(game); // passes

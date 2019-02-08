@@ -283,6 +283,8 @@ ADD Game::untreat(int level, const ADD& states) const {
 BDD Game::buildMutantSyncQNTransitionRelation() const {
     BDD bdd = attractors.manager.bddOne();
 
+	std::cout << "buildMutation start Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
+
     int k = 0;
     int o = 0;
     
@@ -326,6 +328,8 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 			}
 		}
 	}
+
+	std::cout << "buildMutation end Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
 
     return bdd;
 }
