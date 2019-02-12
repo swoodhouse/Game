@@ -640,9 +640,9 @@ void backMaxNew(const Game& game) {
 	int max = 0;
 
 	ADD scoredAtts = game.attractors.manager.addZero();
-	std::list<BDD> unscoredAtts = game.attractors.attractors(game.mutantTransitionRelation, game.attractors.manager.bddZero(), game.attractors.manager.bddOne());
-	std::cout << "#attractors: " << unscoredAtts.size() << std::endl;
-	BDD unscoredBack = game.attractors.manager.bddZero();
+	std::list<BDD> atts = game.attractors.attractors(game.mutantTransitionRelation, game.attractors.manager.bddZero(), game.attractors.manager.bddOne());
+	std::cout << "#attractors: " << atts.size() << std::endl;
+	//BDD unscoredBack = game.attractors.manager.bddZero();
 	
 
 	std::random_device rd;     // only used once to initialise (seed) engine
@@ -650,34 +650,70 @@ void backMaxNew(const Game& game) {
 	std::uniform_int_distribution<int> uni(1, 1000); // guaranteed unbiased
 	
 
-	for (auto & a : unscoredAtts) {
-		const auto n = uni(rng);
-		max = std::max(max, n);
+	for (const auto &a1 : atts) {
+		for (const auto &a2 : atts) {
+			if (a1 == a2) continue;
 
-		ADD scoredAttractor = a.Add() * game.attractors.manager.constant(n);
-		scoredAtts += scoredAttractor;
+			const auto n = uni(rng);
+			const auto m = uni(rng);
+			
+			const auto min = game.attractors.manager.constant(std::min(n, m));
+			const auto max = game.attractors.manager.constant(std::max(n, m));
 
-		BDD back = game.attractors.backwardReachableStates(game.mutantTransitionRelation, a);
-		unscoredBack += back;
+			/*const auto max = game.attractors.manager.constant(std::min(n, m));
+			const auto min = game.attractors.manager.constant(std::max(n, m));*/
+	/*
+			std::cout << min << std::endl;
+			std::cout << max << std::endl;*/
 
-		// temp
-		BDD immediateBack = game.attractors.immediatePredecessorStates(game.mutantTransitionRelation, a); // also need to switch back buildMutant........
-		ADD scoredImmediate = game.immediateBackMax(a.Add());
+			
+			BDD back1 = game.attractors.backwardReachableStates(game.mutantTransitionRelation, a1);
+			BDD back2 = game.attractors.backwardReachableStates(game.mutantTransitionRelation, a2);
 
-		std::cout << "immediateBack == scoredImmediate.BddPattern(): " << (immediateBack == scoredImmediate.BddPattern()) << std::endl; // ok so this is good
+			ADD scored1 = a1.Add() * min;
+			ADD scored2 = a2.Add() * max;
+
+			ADD scoredBack = game.backMax(scored1 + scored2);
+
+			// count whether equal, separate, intersecting
+			if (scoredBack.IsZero()) {
+				std::cout << "Zero" << std::endl;
+			}
+			if (scoredBack.IsOne()) {
+				std::cout << "One" << std::endl;
+			}
+			
+			if (back1 == back2) {
+				std::cout << "Equal" << std::endl;
+			}
+			else if ((back1 * !back2).IsZero()) {
+				std::cout << "Separate" << std::endl;
+			}
+			else if (!((back1 * !back2).IsZero())) {
+				std::cout << "Intersecting" << std::endl;
+			}
+
+			std::cout << "(back1 * !back2).Add() * scoredBack" << std::endl;
+			((back1 * !back2).Add() * scoredBack).PrintMinterm();
+			std::cout << "((back2 * !back1).Add() * max):" << std::endl;
+			((back2 * !back1).Add() * max).PrintMinterm();
+
+			std::cout << "scoredBack.BddPattern() == back1 + back2: " << (scoredBack.BddPattern() == (back1 + back2)) << std::endl; // states reachable are same
+			std::cout << "set difference is scored right (1): " << ((back1 * !back2).Add() * scoredBack == ((back1 * !back2).Add() * min)) << std::endl;
+			std::cout << "set difference is scored right (2): " << ((back2 * !back1).Add() * scoredBack == ((back2 * !back1).Add() * max)) << std::endl;
+			std::cout << "intersection is max: " << ((back1 * back2).Add() * scoredBack == ((back1 * back2).Add() * max)) << std::endl;
+			std::cout << "back of max initial are all max" << ((back2.Add() * scoredBack) == (back2.Add() * max)) << std::endl;
+		}
 	}
-	// do previously written test on all pairs of attractors
 
-	ADD scoredBack = game.backMax(scoredAtts);
-	BDD back2 = game.attractors.backwardReachableStates(game.mutantTransitionRelation, scoredAtts.BddPattern());
-	std::cout << "scoredBack.BddPattern() == unscoredBack: " << (scoredBack.BddPattern() == unscoredBack) << std::endl; // states reachable are same. FAILS..
-	
 
-	std::cout << "scoredBack: " << scoredBack.BddPattern().FactoredFormString() << std::endl;
-
-	std::cout << "unscoredBack: " << unscoredBack.FactoredFormString() << std::endl;
-
-	std::cout << "back2: " << back2.FactoredFormString() << std::endl;
+	// add this, initial state......
+	//BDD S = game.attractors.manager.bddOne();
+	////std::cout << "here1" << std::endl;
+	//game.removeInvalidTreatmentBitCombinations(S); // refacotr this out.. can be computed once too
+	//game.removeInvalidMutationBitCombinations(S);
+	//game.forceMutationLexicographicalOrdering(S);
+	//game.attractors.removeInvalidBitCombinations(S);
 }
 
 
