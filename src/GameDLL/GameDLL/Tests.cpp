@@ -686,17 +686,18 @@ void backMaxNew(const Game& game) {
 			if (back1 == back2) {
 				std::cout << "Equal" << std::endl;
 			}
-			else if ((back1 * !back2).IsZero()) {
+			//else if ((back1 * !back2).IsZero()) {
+			else if ((back1 * back2).IsZero()) {
 				std::cout << "Separate" << std::endl;
 			}
-			else if (!((back1 * !back2).IsZero())) {
+			else {
 				std::cout << "Intersecting" << std::endl;
 			}
-
+/*
 			std::cout << "(back1 * !back2).Add() * scoredBack" << std::endl;
 			((back1 * !back2).Add() * scoredBack).PrintMinterm();
 			std::cout << "((back2 * !back1).Add() * max):" << std::endl;
-			((back2 * !back1).Add() * max).PrintMinterm();
+			((back2 * !back1).Add() * max).PrintMinterm();*/
 
 			std::cout << "scoredBack.BddPattern() == back1 + back2: " << (scoredBack.BddPattern() == (back1 + back2)) << std::endl; // states reachable are same
 			std::cout << "set difference is scored right (1): " << ((back1 * !back2).Add() * scoredBack == ((back1 * !back2).Add() * min)) << std::endl;
