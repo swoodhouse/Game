@@ -58,6 +58,9 @@ extern "C" __declspec(dllexport) int minimax2(int numVars, int ranges[], int min
 
 	QNTable qn = QNTable(std::move(inputVarsV), std::move(inputValuesV), std::move(outputValuesV));
 
+	std::sort(mutationVarsV.begin(), mutationVarsV.end());
+	std::sort(treatmentVarsV.begin(), treatmentVarsV.end());
+
     Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
 	ADD out = g.minimax();
 

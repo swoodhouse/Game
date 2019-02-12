@@ -262,27 +262,27 @@ BDD Attractors::randomState(const BDD& S) const {
 BDD Attractors::randomState(const BDD& S) const {
 	char *out = new char[Cudd_ReadSize(manager.getManager())];
 	
-	std::cout << "Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(manager.getManager()) << std::endl;
+	//std::cout << "Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(manager.getManager()) << std::endl;
 	S.PickOneCube(out);
 	std::vector<bool> values;
 	for (int i = 0; i < numUnprimedBDDVars; i++) {
 		if (out[i] == 0) {
-			std::cout << false << std::endl;
+			//std::cout << false << std::endl;
 			values.push_back(false);
 		}
 		else {
-			std::cout << true << std::endl;
+			//std::cout << true << std::endl;
 			values.push_back(true);
 		}
 	}
-	std::cout << "before delete" << std::endl;
+	//std::cout << "before delete" << std::endl;
 
 	delete[] out; // temp
 
-	std::cout << "after delete" << std::endl;
+	//std::cout << "after delete" << std::endl;
 	BDD temp = representState(values);
 
-	std::cout << "after temp" << std::endl;
+	//std::cout << "after temp" << std::endl;
 
 	return temp;
 }

@@ -171,64 +171,112 @@ void scoreLoop(const Game& game) {
 
 }
 
+// keeps valuesBdd in reachable.
+BDD backwardReachableStates2(const Attractors& attractors, const BDD& transitionBdd, const BDD& valuesBdd) {
+	//BDD reachable = manager.bddZero();
+	BDD reachable = valuesBdd;
+	BDD frontier = valuesBdd;
+
+	while (!frontier.IsZero()) {
+		frontier = attractors.immediatePredecessorStates(transitionBdd, frontier) * !reachable;
+		reachable += frontier;
+	}
+	return reachable;
+}
+
+
 /* backMax[Min] - test backMax not immediateBackMax [backMin is similar]. pick two random, unequal, states. call Attractors.backwardReachableStates on each, call those a and b. multiply those two random states by n and m, n < m, and then add. call backMax on that, call the result x. check that x.bdd() = a + b. check that (a-b).Add() * x = (a - b).Add() * n. check that b.Add() * x = b.Add() * n. they can be separate, equal, or intersecting - count how many times each case occurs - a * b = 0. a = b, else. [https://github.com/emil-e/rapidcheck/blob/master/doc/distribution.md]+*/
 void backMax(const Game& game) {
 	rc::check("backMax...",
 		[&](int i, int j) {
-		std::cout << "Cudd_ReadNodeCount(manager.getManager()): " << Cudd_ReadNodeCount(game.attractors.manager.getManager()) << std::endl;;
-		ADD n = game.attractors.manager.constant(std::min(i, j));
-		ADD m = game.attractors.manager.constant(std::max(i, j));
+
+		i = abs(i);
+		j = abs(j);
+		std::cout << "i: " << i << " j: " << j << "std::min(i,j): " << std::min(i, j) << "std::max(i, j): " << std::max(i, j) << std::endl;
+
+		//std::cout << "Cudd_ReadNodeCount(manager.getManager()): " << Cudd_ReadNodeCount(game.attractors.manager.getManager()) << std::endl;;
+		int ii = std::min(i, j);
+		int jj = std::max(i, j);
+		ADD n = game.attractors.manager.constant(ii);
+		ADD m = game.attractors.manager.constant(jj);
+
+		//// temp, checking this makes it fail
+		//ADD m = game.attractors.manager.constant(std::min(i, j));
+		//ADD n = game.attractors.manager.constant(std::max(i, j));
+
 
 		BDD S = game.attractors.manager.bddOne();
 
-		std::cout << "here1" << std::endl;
+		//std::cout << "here1" << std::endl;
 
 		game.removeInvalidTreatmentBitCombinations(S); // refacotr this out.. can be computed once too
 		game.removeInvalidMutationBitCombinations(S);
 		game.forceMutationLexicographicalOrdering(S);
 		game.attractors.removeInvalidBitCombinations(S);
 
-		std::cout << "here2" << std::endl;
-		std::cout << "Cudd_ReadNodeCount(manager.getManager()): " << Cudd_ReadNodeCount(game.attractors.manager.getManager()) << std::endl;;
+		RC_ASSERT(!S.IsZero());
+
+		//std::cout << "here2" << std::endl;
+		//std::cout << "Cudd_ReadNodeCount(manager.getManager()): " << Cudd_ReadNodeCount(game.attractors.manager.getManager()) << std::endl;;
 
 		// unsure if the two other params are required
 		BDD variablesToAdd = game.attractors.manager.bddOne(); // ?
 
+		// maybe what we sgould do is pick a random state, run it forwards to an attractor, then pick one of those..
+
 		BDD state1 = game.attractors.randomState(S) * variablesToAdd; // hangs
-		std::cout << "here3" << std::endl;
+		//std::cout << "here3" << std::endl;
 		BDD state2 = game.attractors.randomState(S) * variablesToAdd;
 
-		std::cout << "here4" << std::endl;
+		//std::cout << "here4" << std::endl;
 
 		RC_PRE(state1 != state2);
+		RC_ASSERT(!state1.IsZero());
+		RC_ASSERT(!state2.IsZero());
+		
 
 		std::cout << "here5" << std::endl;
 
 		BDD back1 = game.attractors.backwardReachableStates(game.mutantTransitionRelation, state1);
 		BDD back2 = game.attractors.backwardReachableStates(game.mutantTransitionRelation, state2);
+		/*BDD back1 = backwardReachableStates2(game.attractors, game.mutantTransitionRelation, state1);
+		BDD back2 = backwardReachableStates2(game.attractors, game.mutantTransitionRelation, state2);*/
 
-		ADD scoredState1 = state1.Add() * game.attractors.manager.constant(n);
-		ADD scoredState2 = state2.Add() * game.attractors.manager.constant(m);
 
+		//RC_ASSERT(!(back1.IsZero())); // fails. implies buildMutantSyncQNTransitionRelation is broken. maybe. or maybe no states transition to state1 in this model. try different params
+		//RC_ASSERT(!(back2.IsZero()));
+
+		ADD scoredState1 = state1.Add() * n;
+		ADD scoredState2 = state2.Add() * m;
+
+		std::cout << "here6" << std::endl;
+		//std::cout << "scoredState1 + scoredState2:" << (scoredState1 + scoredState2).PrintMinterm();
 		ADD scoredBack = game.backMax(scoredState1 + scoredState2);
+		std::cout << "here7" << std::endl;
 
 		// count whether equal, separate, intersecting
 		// temp
-		if (back1 == back2) {
-			std::cout << "Equal" << std::endl;
-		}
-		else if ((back1 * !back2).IsZero()) {
-			std::cout << "Separate" << std::endl;
-		}
-		else if (!(back1 * !back2).IsZero()) {
-			std::cout << "Intersecting" << std::endl;
-		}
+		//if (back1 == back2) {
+		//	std::cout << "Equal" << std::endl;
+		//}
+		//else if ((back1 * !back2).IsZero()) {
+		//	std::cout << "Separate" << std::endl;
+		//}
+		//else if (!(back1 * !back2).IsZero()) {
+		//	std::cout << "Intersecting" << std::endl;
+		//}
 		// count whether equal, separate, intersecting
+		RC_CLASSIFY(back1.IsZero(), "back1 Zero"); // fails. implies buildMutantSyncQNTransitionRelation is broken
+		RC_CLASSIFY(back2.IsZero(), "back2 Zero");
+		RC_CLASSIFY(back1 == state1, "back1 == state1");
+		RC_CLASSIFY(back2 == state2, "back2 == state2");
 		RC_CLASSIFY(back1 == back2, "Equal");
 		RC_CLASSIFY((back1 * !back2).IsZero(), "Separate");
 		RC_CLASSIFY(!(back1 * !back2).IsZero(), "Intersecting");
 
 		RC_ASSERT(scoredBack.BddPattern() == back1 + back2); // states reachable are same
+		RC_ASSERT(scoredBack.IsZero() || scoredBack.FindMax() == m); // redundant??
+
 		RC_ASSERT((back1 * !back2).Add() * scoredBack == (back1 * !back2).Add() * n); // set difference is scored right
 		RC_ASSERT((back2 * !back1).Add() * scoredBack == (back2 * !back1).Add() * m); // set difference is scored right
 		RC_ASSERT((back1 * back2).Add() * scoredBack == (back1 * back2).Add() * m); // intersection is max
@@ -236,6 +284,7 @@ void backMax(const Game& game) {
 	});
 }
 
+// update this inline with backMax
 void backMin(const Game& game) {
 	rc::check("backMin...",
 		[&](int i, int j) {
@@ -259,8 +308,8 @@ void backMin(const Game& game) {
 		BDD back1 = game.attractors.backwardReachableStates(game.mutantTransitionRelation, state1);
 		BDD back2 = game.attractors.backwardReachableStates(game.mutantTransitionRelation, state2);
 
-		ADD scoredState1 = state1.Add() * game.attractors.manager.constant(n);
-		ADD scoredState2 = state2.Add() * game.attractors.manager.constant(m);
+		ADD scoredState1 = state1.Add() * n;
+		ADD scoredState2 = state2.Add() * m;
 
 		ADD scoredBack = game.backMin(scoredState1 + scoredState2);
 
@@ -587,6 +636,52 @@ void oneZeroMaximum(const Game& game) {
 	});
 }
 
+void backMaxNew(const Game& game) {
+	int max = 0;
+
+	ADD scoredAtts = game.attractors.manager.addZero();
+	std::list<BDD> unscoredAtts = game.attractors.attractors(game.mutantTransitionRelation, game.attractors.manager.bddZero(), game.attractors.manager.bddOne());
+	std::cout << "#attractors: " << unscoredAtts.size() << std::endl;
+	BDD unscoredBack = game.attractors.manager.bddZero();
+	
+
+	std::random_device rd;     // only used once to initialise (seed) engine
+	std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
+	std::uniform_int_distribution<int> uni(1, 1000); // guaranteed unbiased
+	
+
+	for (auto & a : unscoredAtts) {
+		const auto n = uni(rng);
+		max = std::max(max, n);
+
+		ADD scoredAttractor = a.Add() * game.attractors.manager.constant(n);
+		scoredAtts += scoredAttractor;
+
+		BDD back = game.attractors.backwardReachableStates(game.mutantTransitionRelation, a);
+		unscoredBack += back;
+
+		// temp
+		BDD immediateBack = game.attractors.immediatePredecessorStates(game.mutantTransitionRelation, a); // also need to switch back buildMutant........
+		ADD scoredImmediate = game.immediateBackMax(a.Add());
+
+		std::cout << "immediateBack == scoredImmediate.BddPattern(): " << (immediateBack == scoredImmediate.BddPattern()) << std::endl; // ok so this is good
+	}
+	// do previously written test on all pairs of attractors
+
+	ADD scoredBack = game.backMax(scoredAtts);
+	BDD back2 = game.attractors.backwardReachableStates(game.mutantTransitionRelation, scoredAtts.BddPattern());
+	std::cout << "scoredBack.BddPattern() == unscoredBack: " << (scoredBack.BddPattern() == unscoredBack) << std::endl; // states reachable are same. FAILS..
+	
+
+	std::cout << "scoredBack: " << scoredBack.BddPattern().FactoredFormString() << std::endl;
+
+	std::cout << "unscoredBack: " << unscoredBack.FactoredFormString() << std::endl;
+
+	std::cout << "back2: " << back2.FactoredFormString() << std::endl;
+}
+
+
+
 // cd C:\Users\steve\Documents\Game\src\BioCheckConsole\bin\x64\Release
 // .\BioCheckConsole.exe -model Game_Benchmark.json -engine GAME -mutate 0 0 -mutate 1 0 -treat 2 1 -treat 3 1 - apopVar 4 - height 4
 
@@ -640,6 +735,10 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	QNTable qn = QNTable(std::move(inputVarsV), std::move(inputValuesV), std::move(outputValuesV));
 
 	test1();
+
+	std::sort(mutationVarsV.begin(), mutationVarsV.end());
+	std::sort(treatmentVarsV.begin(), treatmentVarsV.end());
+
 	Game game(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
 	std::cout << "Cudd_ReadNodeCount(manager.getManager()): " << Cudd_ReadNodeCount(game.attractors.manager.getManager()) << std::endl;;
 	std::cout << "indicesAreSequential: " << indicesAreSequential(game) << std::endl;
@@ -661,9 +760,10 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	
 	
 	// failure of backMax/backMin can be explained by above indexing problems. untreat/unmutate too
-	backMax(game); // hanging.. and using a lot of memory
+	//backMax(game); // hanging.. and using a lot of memory
 	//backMin(game);
 	
+	backMaxNew(game);
 	
 	
 	// mutationLexicographicalOrdering(game); // do this too?

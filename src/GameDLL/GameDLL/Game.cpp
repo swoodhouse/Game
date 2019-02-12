@@ -280,7 +280,35 @@ ADD Game::untreat(int level, const ADD& states) const {
     return states.Permute(&permute[0]);
 }
 
+
+//BDD Attractors::representSyncQNTransitionRelation(const QNTable& qn) const {
+//	BDD bdd = manager.bddOne();
+//
+//	for (int v = 0; v < ranges.size(); v++) {
+//		if (ranges[v] > 0) {
+//			const auto& iVars = qn.inputVars[v];
+//			const auto& iValues = qn.inputValues[v];
+//			const auto& oValues = qn.outputValues[v];
+//
+//			std::vector<BDD> states(ranges[v] + 1, manager.bddZero());
+//			for (int i = 0; i < oValues.size(); i++) {
+//				states[oValues[i]] += representStateQN(iVars, iValues[i]);
+//			}
+//			for (int val = 0; val <= ranges[v]; val++) {
+//				BDD vPrime = representPrimedVarQN(v, val);
+//				bdd *= logicalEquivalence(states[val], vPrime);
+//			}
+//		}
+//	}
+//	return bdd;
+//}
+
+
 BDD Game::buildMutantSyncQNTransitionRelation() const {
+	// TEMP!!!
+	return attractors.representSyncQNTransitionRelation(attractors.qn);
+
+
     BDD bdd = attractors.manager.bddOne();
 
 	std::cout << "buildMutation start Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
@@ -306,6 +334,7 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				targetFunction *= logicalEquivalence(states[val], vPrime);
 			}
     
+			// WAIT............... WE ARE ASSUMING SORTED??????????????????????????????????????????????????????
 			// assuming koVars and oeVars are disjoint. and sorted. so at some point we need to call sort
 			if (koVars[k] == v) {
 				BDD isMutated = attractors.manager.bddZero();
@@ -332,6 +361,9 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 
 	std::cout << "buildMutation end Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
 
+	std::cout << "bdd.IsZero" << bdd.IsZero() << std::endl;
+	std::cout << "bdd.IsOne" << bdd.IsOne() << std::endl;
+
     return bdd;
 }
 
@@ -340,12 +372,18 @@ ADD binaryMaximum(const ADD& a, const ADD& b) {
 	return a.Maximum(b).BddPattern().Add();
 }
 
+// we want if a > b then a else 0
 ADD addSetDiffMax(const ADD& a, const ADD& b) {
 	return binaryMaximum(a, b) * a + binaryMaximum(b, a) * b;
     //return a.OneZeroMaximum(b) * a + b.OneZeroMaximum(a) * b;
     // if a = b = 0 then this gives zero
     // if a > b then a + 0 = a
     // if b > a then 0 + b = b
+}
+
+ADD addSetDiffMaxNew(const ADD& a, const ADD& b) {
+	// we want..
+	return binaryMaximum(a, b) * a + binaryMaximum(b, a) * b;
 }
 
 ADD addSetDiffMin(const ADD& a, const ADD& b) {
@@ -384,18 +422,86 @@ ADD Game::immediateBackMin(const ADD& states) const {
     add *= mutantTransitionRelation.Add();
     return -((-add).MaxAbstract(attractors.primeVariables.Add()));
 }
+// hangs.. you could check if reachable == old reachable
+//ADD Game::backMax(const ADD& states) const {
+//    ADD reachable = attractors.manager.addZero(); // ???
+//	//ADD reachable = states;
+//    ADD frontier = states;
+//
+//    while (!frontier.IsZero()) {
+//        ADD back = immediateBackMax(frontier);
+//		frontier = addSetDiffMax(back, reachable); // this is wrong, we want back - reachable. not this symmetric ooeration
+//		reachable = reachable.Maximum(back);
+//    }
+//    return reachable;
+//}
+
+
+//BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) const {
+//	BDD reachable = manager.bddZero();
+//	BDD frontier = valuesBdd;
+//
+//	while (!frontier.IsZero()) {
+//		frontier = immediatePredecessorStates(transitionBdd, frontier) * !reachable;
+//		reachable += frontier;
+//	}
+//	return reachable;
+//}
+//
 
 ADD Game::backMax(const ADD& states) const {
-    ADD reachable = attractors.manager.addZero();
-    ADD frontier = states;
+	ADD reachable = attractors.manager.addZero();
+	ADD frontier = states;
 
-    while (!frontier.IsZero()) {
-        ADD back = immediateBackMax(frontier);
-		frontier = addSetDiffMax(back, reachable);
-		reachable = reachable.Maximum(back);
-    }
-    return reachable;
+	while (!frontier.IsZero()) {
+		frontier = immediateBackMax(frontier) * (!(reachable.BddPattern())).Add();
+		reachable = reachable.Maximum(frontier);
+	}
+	return reachable;
 }
+
+//ADD Game::backMax(const ADD& states) const {
+//	ADD reachable = attractors.manager.addZero();
+//	ADD frontier = states;
+//
+//	while (!frontier.IsZero()) {
+//		ADD back = immediateBackMax(frontier);
+//		reachable = reachable.Maximum(back);
+//		frontier = back * (!(reachable.BddPattern())).Add();
+//	}
+//	return reachable;
+//}
+//
+//ADD Game::backMax(const ADD& states) const {
+//	ADD reachable = states;
+//	ADD back = attractors.manager.addZero();
+//	while (back != reachable) { // ah.. set diff
+//	    back = immediateBackMax(reachable);
+//		reachable = reachable.Maximum(back);
+//	}
+//	return reachable;
+//}
+
+//// hacky
+//ADD Game::backMax(const ADD& states) const {
+//	std::cout << "here6.1" << std::endl;
+//	ADD max = states.FindMax();
+//	std::cout << "here6.2" << std::endl;
+//	BDD reachable = states.BddPattern(); // does this help?
+//	std::cout << "here6.3" << std::endl;
+//	BDD frontier = reachable;
+//	std::cout << "here6.4" << std::endl;
+//	while (!frontier.IsZero()) {
+//		std::cout << "here6.4.1" << std::endl;
+//		BDD frontier = attractors.immediatePredecessorStates(mutantTransitionRelation, frontier) * !reachable;
+//		std::cout << "here6.5" << std::endl;
+//		reachable += frontier;
+//		std::cout << "here6.6" << std::endl;
+//	}
+//	std::cout << "here6.7" << std::endl;
+//	return reachable.Add() * max;
+//}
+
 
 //// eventually want to replace with immediateForwardMean
 //ADD Game::immediateForwardMaxOnLoop(const ADD& states) const {
