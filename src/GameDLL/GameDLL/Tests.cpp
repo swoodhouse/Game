@@ -636,11 +636,27 @@ void oneZeroMaximum(const Game& game) {
 	});
 }
 
+// this test doesn't really do much in synchronous mode
 void backMaxNew(const Game& game) {
 	int max = 0;
 
 	ADD scoredAtts = game.attractors.manager.addZero();
-	std::list<BDD> atts = game.attractors.attractors(game.mutantTransitionRelation, game.attractors.manager.bddZero(), game.attractors.manager.bddOne());
+	
+
+	BDD treatment = game.representTreatmentNone(); // 0 treatments
+	BDD initial = game.nMutations(0) * treatment; // 0 attractors
+	//BDD initial = game.attractors.manager.bddOne();
+
+	//game.removeInvalidTreatmentBitCombinations(initial); // refacotr this out.. can be computed once too
+	//game.removeInvalidMutationBitCombinations(initial);
+	//game.forceMutationLexicographicalOrdering(initial);
+
+	//std::list<BDD> atts = game.attractors.attractors(game.mutantTransitionRelation, !initial, game.attractors.manager.bddOne());
+
+	// TODO: variables to keep implementation breaks this. each BDD now represents N attractors.
+	// but.. iterative max computation would work
+	std::list<BDD> atts = game.attractors.attractors(game.mutantTransitionRelation, !initial, initial);
+	
 	std::cout << "#attractors: " << atts.size() << std::endl;
 	//BDD unscoredBack = game.attractors.manager.bddZero();
 	
@@ -666,10 +682,14 @@ void backMaxNew(const Game& game) {
 			std::cout << min << std::endl;
 			std::cout << max << std::endl;*/
 
-			
 			BDD back1 = game.attractors.backwardReachableStates(game.mutantTransitionRelation, a1);
 			BDD back2 = game.attractors.backwardReachableStates(game.mutantTransitionRelation, a2);
 
+			// temp!!!
+/*
+			BDD back1 = game.attractors.backwardReachableStates(game.attractors.representSyncQNTransitionRelation(game.attractors.qn), a1);
+			BDD back2 = game.attractors.backwardReachableStates(game.attractors.representSyncQNTransitionRelation(game.attractors.qn), a2);*/
+			
 			ADD scored1 = a1.Add() * min;
 			ADD scored2 = a2.Add() * max;
 
@@ -688,6 +708,7 @@ void backMaxNew(const Game& game) {
 			}
 			//else if ((back1 * !back2).IsZero()) {
 			else if ((back1 * back2).IsZero()) {
+				// this makes sense in a synchronous network. all of this stuff only really comes into play in async mode...
 				std::cout << "Separate" << std::endl;
 			}
 			else {
@@ -722,9 +743,8 @@ void backMaxNew(const Game& game) {
 // cd C:\Users\steve\Documents\Game\src\BioCheckConsole\bin\x64\Release
 // .\BioCheckConsole.exe -model Game_Benchmark.json -engine GAME -mutate 0 0 -mutate 1 0 -treat 2 1 -treat 3 1 - apopVar 4 - height 4
 
-extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
+extern "C" __declspec(dllexport) int minimax2(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
     int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
-//extern "C" __declspec(dllexport) int test(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[], int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar) {
 
 	std::vector<int> rangesV(ranges, ranges + numVars);
 	std::vector<int> minValuesV(minValues, minValues + numVars);

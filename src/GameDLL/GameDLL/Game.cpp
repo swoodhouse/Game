@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "Attractors.h"
 #include "Game.h"
+#include <set>
 
 inline BDD logicalImplication(const BDD& a, const BDD& b) {
     return (!a) + b;
@@ -306,7 +307,8 @@ ADD Game::untreat(int level, const ADD& states) const {
 
 BDD Game::buildMutantSyncQNTransitionRelation() const {
 	// TEMP!!!
-	return attractors.representSyncQNTransitionRelation(attractors.qn);
+	//return attractors.representSyncQNTransitionRelation(attractors.qn);
+	std::cout << "start of build mutant tr" << std::endl;
 
 
     BDD bdd = attractors.manager.bddOne();
@@ -316,7 +318,10 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
     int k = 0;
     int o = 0;
     
-    for (std::vector<int>::size_type v = 0; v < attractors.ranges.size(); v++) {
+	std::set<int> oeVarsSet(oeVars.begin(), oeVars.end()); // if this works refacotr
+	std::set<int> koVarsSet(koVars.begin(), koVars.end());
+
+    for (int v = 0; v < attractors.ranges.size(); v++) {
 		std::cout << "buildMutation iterationCudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
 		if (attractors.ranges[v] > 0) {
 			const auto& iVars = attractors.qn.inputVars[v];
@@ -336,22 +341,46 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
     
 			// WAIT............... WE ARE ASSUMING SORTED??????????????????????????????????????????????????????
 			// assuming koVars and oeVars are disjoint. and sorted. so at some point we need to call sort
-			if (koVars[k] == v) {
+			
+			// temp!!!!
+			if (false && (koVarsSet.find(v) != koVarsSet.end())) { //(k < koVars.size() && koVars[k] == v) {
 				BDD isMutated = attractors.manager.bddZero();
+				
 				for (int lvl = 0; lvl < numMutations; lvl++) {
 					isMutated += representMutation(lvl, v);
 				}
+
+				// temp!!
+			    //BDD isMutated = attractors.manager.bddOne(); // with this it throws an exception..
+
+				//bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0) * attractors.representUnprimedVarQN(v, 0), targetFunction);
 				bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0) * attractors.representUnprimedVarQN(v, 0), targetFunction);
-				k++;
-				// do i need to also set unprimed........... if you don't, when you run backwards you can unmutate spontanously
+
+				//// temp!!
+				//std::cout << "v:" << v << std::endl;
+				//std::cout << "range(v):" << attractors.ranges[v] << std::endl;
+				//bdd *= attractors.representPrimedVarQN(v, 0) * attractors.representUnprimedVarQN(v, 0);
+				//bdd *= attractors.representPrimedVarQN(v, 0);
+				//bdd *= attractors.representUnprimedVarQN(v, 0); // this is the bit that crashes.. but primed is fine
+				//std::cout << "here12" << std::endl;
+				//BDD temp = attractors.representUnprimedVarQN(v, 1);
+				//std::cout << "here13" << std::endl;
+				//bdd *= temp; // temp. also crashes.. wtf
+
+				////bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
+				//k++;
+				// do i need to also set unprimed........... if you don't, when you run backwards you can unmutate spontanously................................
 				// if you do.. 
 			}
-			else if (oeVars[o] == v) {
-				BDD isTreated = attractors.manager.bddZero();
-				isTreated += representTreatment(v);
-				int max = *std::max_element(attractors.ranges.begin(), attractors.ranges.end());
+			else if (false && (oeVarsSet.find(v) != oeVarsSet.end())) { // doesn't help
+				BDD isTreated = representTreatment(v);
+				//BDD isTreated = attractors.manager.bddZero();// temp!!!!!!!
+				//int max = *std::max_element(attractors.ranges.begin(), attractors.ranges.end()); // very wrong...
+				int max = attractors.ranges[v];
+				//std::cout << "max:" << max << std::endl;
 				bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max) * attractors.representUnprimedVarQN(v, max), targetFunction);
-				o++;
+				//bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
+				//o++;
 			}
 			else {
 				bdd *= targetFunction;
@@ -363,6 +392,8 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 
 	std::cout << "bdd.IsZero" << bdd.IsZero() << std::endl;
 	std::cout << "bdd.IsOne" << bdd.IsOne() << std::endl;
+
+	std::cout << "end of build mutant tr" << std::endl;
 
     return bdd;
 }
@@ -549,6 +580,7 @@ ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
 }
 
 ADD Game::scoreAttractors(int numMutations) const {
+	std::cout << "in scoreAttractors" << std::endl;
    ADD states = attractors.manager.addZero();
 
    BDD treatment = maximisingPlayerLast ? !representTreatmentNone() : representTreatmentNone();
@@ -560,7 +592,9 @@ ADD Game::scoreAttractors(int numMutations) const {
    
    // TODO: variables to keep implementation breaks this. each BDD now represents N attractors.
    // but.. iterative max computation would work
-   std::list<BDD> att = attractors.attractors(mutantTransitionRelation, !initial, attractors.manager.bddOne());
+   //std::list<BDD> att = attractors.attractors(mutantTransitionRelation, !initial, attractors.manager.bddOne());
+   std::list<BDD> att = attractors.attractors(mutantTransitionRelation, !initial, initial);
+   //std::list<BDD> att = attractors.attractors(mutantTransitionRelation, attractors.manager.bddZero(), attractors.manager.bddOne());
 
    for (const BDD& a : att) {
 	   // existmax out bdd vars, leaving just mutvars
@@ -568,6 +602,7 @@ ADD Game::scoreAttractors(int numMutations) const {
 	   states += scoreLoop(a, scoreRelation);
    }
 
+   std::cout << "leaving scoreAttractors" << std::endl;
    return states;
 }
 
@@ -575,6 +610,7 @@ ADD Game::scoreAttractors(int numMutations) const {
 
 // go over comments in github version
 ADD Game::minimax() const {
+	std::cout << "in minimax" << std::endl;
     int height = this->height;
     int numTreatments = this->numTreatments;
     int numMutations = this->numMutations;
@@ -585,6 +621,7 @@ ADD Game::minimax() const {
     for (; height > 0; height--) { // do i have an off by one error
         if (maximisingPlayer) {
             numTreatments--;
+			std::cout << "numTreatments:" << numTreatments << std::endl;
             states = backMin(states);
             states = untreat(numTreatments, states);
 
@@ -603,6 +640,7 @@ ADD Game::minimax() const {
         }
         else {
             numMutations--;
+			std::cout << "numMutations" << numMutations << std::endl;
             states = backMax(states);
 			states = unmutate(numMutations, states);
 

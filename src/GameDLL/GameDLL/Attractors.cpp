@@ -74,18 +74,29 @@ inline int Attractors::countBits(int end) const {
 }
 
 BDD Attractors::representUnprimedVarQN(int var, int val) const {
+	//std::cout << "here1" << std::endl;
     BDD bdd = manager.bddOne();
+	//std::cout << "here2" << std::endl;
     int i = countBits(var);
-
+	//std::cout << "here3" << std::endl;
     int b = bits(ranges[var]);
+	//std::cout << "here4" << std::endl;
     for (int n = 0; n < b; n++) {
+		//std::cout << "here5" << std::endl;
+		//std::cout << "i:" << i << std::endl;
         BDD var = manager.bddVar(i);
+		//std::cout << "here6" << std::endl;
         if (!nthBitSet(val, n)) {
+			//std::cout << "here7" << std::endl;
             var = !var;
+			//std::cout << "here8" << std::endl;
         }
+	//	std::cout << "here9" << std::endl;
         bdd *= var;
+		//std::cout << "here10" << std::endl;
         i++;
     }
+	//std::cout << "here11" << std::endl;
 
     return bdd;
 }
@@ -260,7 +271,9 @@ BDD Attractors::randomState(const BDD& S) const {
 //return states.Permute(&permute[0]);
 
 BDD Attractors::randomState(const BDD& S) const {
-	char *out = new char[Cudd_ReadSize(manager.getManager())];
+	//char *out = new char[Cudd_ReadSize(manager.getManager())];
+	// TEMP HACK, THE ABOVE DOESN'T GIVE THE RIGHT NUMBER
+	char *out = new char[49];
 	
 	//std::cout << "Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(manager.getManager()) << std::endl;
 	S.PickOneCube(out);
@@ -368,8 +381,11 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
 	    BDD S = manager.bddOne();
 	    removeInvalidBitCombinations(S);
 	    S *= !statesToRemove;
+
+		std::cout << "here1:" << S.IsZero() << std::endl;
 	
 	    while (!S.IsZero()) {
+			std::cout << "here2:" << S.IsZero() << std::endl;
 	        BDD s = randomState(S) * variablesToAdd; // variab
 	
 	        for (int i = 0; i < ranges.size(); i++) { // unrolling by ranges.size() may not be the perfect choice of number
@@ -381,8 +397,10 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
 	        BDD br = backwardReachableStates(transitionBdd, s);
 	
 	        if ((fr * !br).IsZero()) {
+				std::cout << "pushing attractor" << std::endl; // ok.. so we keep hitting this..
 	            attractors.push_back(fr);
 	        }
+			//std::cout << "here3:" << S.IsZero() << std::endl;
 	
 	        S *= !(s + br);
 	    }
