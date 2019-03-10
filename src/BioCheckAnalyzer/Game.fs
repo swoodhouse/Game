@@ -50,7 +50,7 @@ let extendQN qn mutations treatments = // eventually needs to be two classes of 
     let qn = qn @ koVars @ oeVars
     qn
 
-let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatments : (QN.var * int) list) apopVar height maximisingPlayerGoesLast =
+let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatments : (QN.var * int) list) (apopVar : int) height maximisingPlayerGoesLast =
 
     // temp!!!!
     let mutations = List.unzip mutations |> fst
@@ -59,6 +59,7 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
 
     let qn = qn |> List.sortBy (fun (n : QN.node) -> n.var) // important to sort to match ranges map ordering
     let qnVars = qn |> List.map (fun n -> n.var)
+    let apopVar = qn |> List.findIndex (fun n -> n.var = apopVar)
     let variables = qn |> List.map (fun n -> n.name)
 
     printfn "Running VMCAI..."

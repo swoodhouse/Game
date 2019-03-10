@@ -63,7 +63,13 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
     Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
 	std::cout << "game.chosenMutationsIndices().back():" << g.chosenMutationsIndices().back();
+
+	std::cout << "apopVar: " << apopVar << std::endl;
+
 	ADD out = g.minimax();
+
+	std::cout << "out is zero?" << out.IsZero() << std::endl;
+	out.PrintMinterm();
 
     return 0;
 }

@@ -269,36 +269,73 @@ BDD Attractors::randomState(const BDD& S) const {
 //}
 //
 //return states.Permute(&permute[0]);
+//
+//BDD Attractors::randomState(const BDD& S) const {
+//	//char *out = new char[Cudd_ReadSize(manager.getManager())];
+//	// TEMP HACK, THE ABOVE DOESN'T GIVE THE RIGHT NUMBER
+//	char *out = new char[49];
+//	
+//	//std::cout << "Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(manager.getManager()) << std::endl;
+//	S.PickOneCube(out);
+//	std::vector<bool> values;
+//	for (int i = 0; i < numUnprimedBDDVars; i++) {
+//		if (out[i] == 0) {
+//			//std::cout << false << std::endl;
+//			values.push_back(false);
+//		}
+//		else {
+//			//std::cout << true << std::endl;
+//			values.push_back(true);
+//		}
+//	}
+//	//std::cout << "before delete" << std::endl;
+//
+//	delete[] out; // temp
+//
+//	//std::cout << "after delete" << std::endl;
+//	BDD temp = representState(values);
+//
+//	//std::cout << "after temp" << std::endl;
+//
+//	return temp;
+//}
+//
 
-BDD Attractors::randomState(const BDD& S) const {
+
+// hack, getting to work with mut vars, etc
+BDD Attractors::randomState(const BDD& S/*,const std::vector<int> indicesTokeep, int numBddVars*/) const {
 	//char *out = new char[Cudd_ReadSize(manager.getManager())];
 	// TEMP HACK, THE ABOVE DOESN'T GIVE THE RIGHT NUMBER
-	char *out = new char[49];
-	
-	//std::cout << "Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(manager.getManager()) << std::endl;
+	BDD bdd = manager.bddOne();
+
+	char *out = new char[49]; // 50?
+
 	S.PickOneCube(out);
-	std::vector<bool> values;
-	for (int i = 0; i < numUnprimedBDDVars; i++) {
+
+	for (int i = 0; i < numUnprimedBDDVars; i++) { // change to only keep indices i care about
 		if (out[i] == 0) {
-			//std::cout << false << std::endl;
-			values.push_back(false);
+			bdd *= !manager.bddVar(i);
 		}
 		else {
-			//std::cout << true << std::endl;
-			values.push_back(true);
+			bdd *= manager.bddVar(i);
 		}
 	}
-	//std::cout << "before delete" << std::endl;
+
+	// hard coded treatment and mut vars for one specific model
+	//for (int i = 32; i <= 37; i++) { // change to only keep indices i care about
+	//	if (out[i] == 0) {
+	//		bdd *= !manager.bddVar(i);
+	//	}
+	//	else {
+	//		bdd *= manager.bddVar(i);
+	//	}
+	//}
 
 	delete[] out; // temp
 
-	//std::cout << "after delete" << std::endl;
-	BDD temp = representState(values);
-
-	//std::cout << "after temp" << std::endl;
-
-	return temp;
+	return bdd;
 }
+
 
 
 void Attractors::removeInvalidBitCombinations(BDD& S) const {
@@ -376,28 +413,28 @@ BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& val
 //}
 
 // i don't think this is an optimal implementation, will do repeated work - if state a is ruled out under mutations X but not Y, will be run again under X and Y
-std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& variablesToAdd) const {
+std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove /*, const BDD& variablesToAdd*/) const {
 	    std::list<BDD> attractors;
 	    BDD S = manager.bddOne();
 	    removeInvalidBitCombinations(S);
 	    S *= !statesToRemove;
 
-		std::cout << "here1:" << S.IsZero() << std::endl;
+		//std::cout << "here1:" << S.IsZero() << std::endl;
 	
 	    while (!S.IsZero()) {
-			std::cout << "here2:" << S.IsZero() << std::endl;
-	        BDD s = randomState(S) * variablesToAdd; // variab
+			//std::cout << "here2:" << S.IsZero() << std::endl;
+			BDD s = randomState(S); // *variablesToAdd; // variab
 	
-	        for (int i = 0; i < ranges.size(); i++) { // unrolling by ranges.size() may not be the perfect choice of number
+	        for (int i = 0; i < ranges.size() ; i++) { // unrolling by ranges.size() may not be the perfect choice of number
 	            BDD sP = immediateSuccessorStates(transitionBdd, s); // variables to add here???
-	            s = randomState(sP) * variablesToAdd;
+				s = randomState(sP); //* variablesToAdd;
 	        }
 	
 	        BDD fr = forwardReachableStates(transitionBdd, s);
 	        BDD br = backwardReachableStates(transitionBdd, s);
 	
 	        if ((fr * !br).IsZero()) {
-				std::cout << "pushing attractor" << std::endl; // ok.. so we keep hitting this..
+				//std::cout << "pushing attractor" << std::endl; // ok.. so we keep hitting this..
 	            attractors.push_back(fr);
 	        }
 			//std::cout << "here3:" << S.IsZero() << std::endl;

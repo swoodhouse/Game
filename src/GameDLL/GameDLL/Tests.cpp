@@ -166,6 +166,8 @@ void scoreLoop(const Game& game) {
 		std::cout << (loop.Add() * scoreRelation).BddPattern().FactoredFormString() << std::endl;
 		std::cout << loop.FactoredFormString() << std::endl;
 
+		std::cout << "pass?:" << (game.scoreLoop(loop, scoreRelation) == (loop.Add() * game.attractors.manager.constant(max + 1))) << std::endl;
+
 		RC_ASSERT(game.scoreLoop(loop, scoreRelation) == (loop.Add() * game.attractors.manager.constant(max + 1)));
 	});
 
@@ -655,7 +657,7 @@ void backMaxNew(const Game& game) {
 
 	// TODO: variables to keep implementation breaks this. each BDD now represents N attractors.
 	// but.. iterative max computation would work
-	std::list<BDD> atts = game.attractors.attractors(game.mutantTransitionRelation, !initial, initial);
+	std::list<BDD> atts = game.attractors.attractors(game.mutantTransitionRelation, !initial/*, initial*/);
 	
 	std::cout << "#attractors: " << atts.size() << std::endl;
 	//BDD unscoredBack = game.attractors.manager.bddZero();
@@ -745,7 +747,8 @@ void backMaxNew(const Game& game) {
 
 extern "C" __declspec(dllexport) int minimax2(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
     int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
-
+//extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
+//	    int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
 	std::vector<int> rangesV(ranges, ranges + numVars);
 	std::vector<int> minValuesV(minValues, minValues + numVars);
 	std::vector<int> mutationVarsV(mutationVars, mutationVars + numMutations);
@@ -797,18 +800,18 @@ extern "C" __declspec(dllexport) int minimax2(int numVars, int ranges[], int min
 	std::sort(treatmentVarsV.begin(), treatmentVarsV.end());
 
 	Game game(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
-	std::cout << "Cudd_ReadNodeCount(manager.getManager()): " << Cudd_ReadNodeCount(game.attractors.manager.getManager()) << std::endl;;
-	std::cout << "indicesAreSequential: " << indicesAreSequential(game) << std::endl;
-	std::cout << "game.chosenMutationsIndices().back():" << game.chosenMutationsIndices().back();
+	//std::cout << "Cudd_ReadNodeCount(manager.getManager()): " << Cudd_ReadNodeCount(game.attractors.manager.getManager()) << std::endl;;
+	//std::cout << "indicesAreSequential: " << indicesAreSequential(game) << std::endl;
+	//std::cout << "game.chosenMutationsIndices().back():" << game.chosenMutationsIndices().back();
 	//maximum(game); // passes
 	////oneZeroMaximum(game); // fails: test works, reveals that oneZeroMaximum doesn't work how I think it does - so replace it
-	//bddPattern(game); // passes
-	//findMax(game); // passes. but we don't even seem to be using? maybe we should
-	//scoreFixpoint(game); // passes
-	//renameMutVarsRemovingPrimes(game); // passes
-	//scoreLoop(game); // passes
-	//untreat(game); // passes
-	//unmutate(game); // not a complete test but passes....
+	bddPattern(game); // passes
+	findMax(game); // passes. but we don't even seem to be using? maybe we should
+	scoreFixpoint(game); // passes
+	renameMutVarsRemovingPrimes(game); // passes
+	scoreLoop(game); // passes
+	untreat(game); // passes
+	unmutate(game); // not a complete test but passes....
 
 	//calcNumMutations(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
 	//calcNumTreatments(); // code to calculate num mutations/num treatments is incorrect. hard coded to '2' right now to hack around
@@ -820,7 +823,7 @@ extern "C" __declspec(dllexport) int minimax2(int numVars, int ranges[], int min
 	//backMax(game); // hanging.. and using a lot of memory
 	//backMin(game);
 	
-	backMaxNew(game);
+	//backMaxNew(game);
 	
 	
 	// mutationLexicographicalOrdering(game); // do this too?
