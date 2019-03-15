@@ -328,7 +328,7 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 	std::set<int> koVarsSet(koVars.begin(), koVars.end());
 
     for (int v = 0; v < attractors.ranges.size(); v++) {
-		std::cout << "buildMutation iterationCudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
+		//std::cout << "buildMutation iterationCudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
 		if (attractors.ranges[v] > 0) {
 			const auto& iVars = attractors.qn.inputVars[v];
 			const auto& iValues = attractors.qn.inputValues[v];
@@ -350,6 +350,7 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 			
 			// temp!!!!
 			if ((koVarsSet.find(v) != koVarsSet.end())) { //(k < koVars.size() && koVars[k] == v) {
+				std::cout << "KO BRANCH EXECUTED" << std::endl;
 				BDD isMutated = attractors.manager.bddZero();
 				
 				for (int lvl = 0; lvl < numMutations; lvl++) {
@@ -379,17 +380,22 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				// do i need to also set unprimed........... if you don't, when you run backwards you can unmutate spontanously................................
 				// if you do.. 
 			}
-			else if ((oeVarsSet.find(v) != oeVarsSet.end())) { // doesn't help
-				BDD isTreated = representTreatment(v);
-				//BDD isTreated = attractors.manager.bddZero();// temp!!!!!!!
+			// TEMP!!!
+			else if (true) { //((oeVarsSet.find(v) != oeVarsSet.end())) { // doesn't help
+				//BDD isTreated = representTreatment(v);
+				BDD isTreated = attractors.manager.bddOne();// temp!!!!!!!
 				//int max = *std::max_element(attractors.ranges.begin(), attractors.ranges.end()); // very wrong...
 				int max = attractors.ranges[v];
 				//std::cout << "max:" << max << std::endl;
 				//bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max) * attractors.representUnprimedVarQN(v, max), targetFunction);
 				bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
+
+				std::cout << "the treatment part of tr is built.." << std::endl;
+
 				//o++;
 			}
 			else {
+				std::cout << "thenormal target function part of tr is built.." << std::endl;
 				bdd *= targetFunction;
 			}
 		}
@@ -587,19 +593,35 @@ ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
 }
 
 ADD Game::scoreAttractors(int numMutations) const {
-	std::cout << "in scoreAttractors" << std::endl;
+	std::cout << "in scoreAttractors. treatmentVar indices:" << std::endl;
+	for (auto i : this->treatmentVarIndices()) std::cout << i << " ";
+	std::cout << std::endl;
+
+	std::cout << "attractorsIndicies():" << std::endl;
+	for (auto i : this->attractorsIndicies()) std::cout << i << " ";
+	std::cout << std::endl;
+
+	std::cout << "attractors.ranges:" << std::endl;
+	for (auto i : this->attractors.ranges) std::cout << i << " ";
+	std::cout << std::endl;
+
    ADD states = attractors.manager.addZero();
 
    //BDD treatment = maximisingPlayerLast ? !representTreatmentNone() : representTreatmentNone();
    //BDD initial = attractors.manager.bddOne();// temp
-   BDD initial = representTreatmentNone() * nMutations(0);// temp
+   //BDD initial = representTreatmentNone() * nMutations(0);// temp
+   BDD initial = !representTreatmentNone() * nMutations(0);// temp
+   std::cout << "initial:" << initial.FactoredFormString() << std::endl;
+   initial.PrintMinterm();
    //std::cout << "numMutations:" << numMutations << std::endl;
    //BDD initial = nMutations(numMutations) * treatment;
 
+   // temp. need this
    removeInvalidTreatmentBitCombinations(initial); // refacotr this out.. can be computed once too
-   removeInvalidMutationBitCombinations(initial);
-   forceMutationLexicographicalOrdering(initial);
-   
+   //removeInvalidMutationBitCombinations(initial);
+   //forceMutationLexicographicalOrdering(initial);
+
+   //
    // TODO: variables to keep implementation breaks this. each BDD now represents N attractors.
    // but.. iterative max computation would work
    std::list<BDD> att = attractors.attractors(mutantTransitionRelation, !initial/*, attractors.manager.bddOne()*/);
@@ -612,19 +634,11 @@ ADD Game::scoreAttractors(int numMutations) const {
 	   // call findmax
 	  // std::cout << "attractor" << std::endl;
 	   states += scoreLoop(a, scoreRelation);
-
-	   std::cout << "a is zero?:" << a.IsZero() << std::endl;
-	   std::cout << " scoreLoop(a, scoreRelation) is zero?:" << scoreLoop(a, scoreRelation).IsZero() << std::endl;
-
 	   file << attractors.prettyPrint(a) << std::endl;
    }
-   std::cout << "#attractors:" << att.size();
-   std::cout << "leaving scoreAttractors" << std::endl;
 
-   std::cout << "writing scored attractors" << std::endl;
    std::ofstream file2("scoredAttractors.csv");
-   std::cout << "states.BddPattern().IsZero()?:" << states.BddPattern().IsZero();
-   file << attractors.prettyPrint(states.BddPattern()) << std::endl;
+   file2 << attractors.prettyPrint(states.BddPattern()) << std::endl;
 
    return states;
 }

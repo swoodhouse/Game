@@ -423,11 +423,15 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
 	
 	    while (!S.IsZero()) {
 			//std::cout << "here2:" << S.IsZero() << std::endl;
-			BDD s = randomState(S); // *variablesToAdd; // variab
+			BDD s = randomState(S) * S; // new idea
+			//BDD s = randomState(S);
+			//BDD s = randomState(S); // *variablesToAdd; // variab
 	
 	        for (int i = 0; i < ranges.size() ; i++) { // unrolling by ranges.size() may not be the perfect choice of number
 	            BDD sP = immediateSuccessorStates(transitionBdd, s); // variables to add here???
-				s = randomState(sP); //* variablesToAdd;
+				s = randomState(S) * S; // new idea
+				//s = randomState(sP);
+				//s = randomState(sP); //* variablesToAdd;
 	        }
 	
 	        BDD fr = forwardReachableStates(transitionBdd, s);
