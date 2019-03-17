@@ -239,7 +239,7 @@ void Game::removeInvalidTreatmentBitCombinations(BDD& S) const {
 }
 
 void Game::removeInvalidMutationBitCombinations(BDD& S) const {
-	int b = bits(oeVars.size() + 1);
+	int b = bits(koVars.size() + 1);
 	int theoreticalMax = (1 << b) - 1;
 
     for (int var = 0; var < numMutations; var++) {
