@@ -382,9 +382,10 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				// if you do.. 
 			}
 			// TEMP!!!
-			else if (true) { //((oeVarsSet.find(v) != oeVarsSet.end())) { // doesn't help
-				//BDD isTreated = representTreatment(v);
-				BDD isTreated = attractors.manager.bddOne();// temp!!!!!!!
+			//else if (true) { //
+			else if (oeVarsSet.find(v) != oeVarsSet.end()) { // doesn't help
+				BDD isTreated = representTreatment(v);
+				//BDD isTreated = attractors.manager.bddOne();// temp!!!!!!!
 				//int max = *std::max_element(attractors.ranges.begin(), attractors.ranges.end()); // very wrong...
 				int max = attractors.ranges[v];
 				//std::cout << "max:" << max << std::endl;
