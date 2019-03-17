@@ -381,20 +381,14 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				// do i need to also set unprimed........... if you don't, when you run backwards you can unmutate spontanously................................
 				// if you do.. 
 			}
-			// TEMP!!!
-			//else if (true) { //
 			else if (oeVarsSet.find(v) != oeVarsSet.end()) { // doesn't help
 				BDD isTreated = representTreatment(v);
-				//BDD isTreated = attractors.manager.bddOne();// temp!!!!!!!
-				//int max = *std::max_element(attractors.ranges.begin(), attractors.ranges.end()); // very wrong...
 				int max = attractors.ranges[v];
 				//std::cout << "max:" << max << std::endl;
 				//bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max) * attractors.representUnprimedVarQN(v, max), targetFunction);
 				bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
 
 				std::cout << "the treatment part of tr is built.." << std::endl;
-
-				//o++;
 			}
 			else {
 				std::cout << "thenormal target function part of tr is built.." << std::endl;
