@@ -325,8 +325,8 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
     int k = 0;
     int o = 0;
     
-	std::set<int> oeVarsSet(oeVars.begin(), oeVars.end()); // if this works refacotr
-	std::set<int> koVarsSet(koVars.begin(), koVars.end());
+	//std::set<int> oeVarsSet(oeVars.begin(), oeVars.end()); // if this works refacotr
+	//std::set<int> koVarsSet(koVars.begin(), koVars.end());
 
     for (int v = 0; v < attractors.ranges.size(); v++) {
 		//std::cout << "buildMutation iterationCudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
@@ -350,12 +350,14 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 			// assuming koVars and oeVars are disjoint. and sorted. so at some point we need to call sort
 			
 			// temp!!!!
-			if ((koVarsSet.find(v) != koVarsSet.end())) { //(k < koVars.size() && koVars[k] == v) {
+			//if ((koVarsSet.find(v) != koVarsSet.end())) { //
+			if (k < koVars.size() && koVars[k] == v) {
 				std::cout << "KO BRANCH EXECUTED" << std::endl;
 				BDD isMutated = attractors.manager.bddZero();
 				
 				for (int lvl = 0; lvl < numMutations; lvl++) {
-					isMutated += representMutation(lvl, v);
+					//isMutated += representMutation(lvl, v);
+					isMutated += representMutation(lvl, k);
 				}
 
 				// temp!!
@@ -377,18 +379,21 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				//bdd *= temp; // temp. also crashes.. wtf
 
 				////bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
-				//k++;
+				k++;
 				// do i need to also set unprimed........... if you don't, when you run backwards you can unmutate spontanously................................
 				// if you do.. 
 			}
-			else if (oeVarsSet.find(v) != oeVarsSet.end()) { // doesn't help
-				BDD isTreated = representTreatment(v);
+			//else if (oeVarsSet.find(v) != oeVarsSet.end()) { // doesn't help
+			else if (o < oeVars.size() && oeVars[o] == v) {
+				//BDD isTreated = representTreatment(v);
+				BDD isTreated = representTreatment(o);
 				int max = attractors.ranges[v];
 				//std::cout << "max:" << max << std::endl;
 				//bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max) * attractors.representUnprimedVarQN(v, max), targetFunction);
 				bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
 
 				std::cout << "the treatment part of tr is built.." << std::endl;
+				o++;
 			}
 			else {
 				std::cout << "thenormal target function part of tr is built.." << std::endl;
