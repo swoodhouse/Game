@@ -229,20 +229,21 @@ void Game::forceMutationLexicographicalOrdering(BDD& S) const {
 }
 
 void Game::removeInvalidTreatmentBitCombinations(BDD& S) const {
-    int b = bits(oeVars.size()); // no + 1 needed here
+	int b = bits(oeVars.size() + 1);
     int theoreticalMax = (1 << b) - 1;
 
-    for (int val = oeVars.size(); val <= theoreticalMax; val++) {
+    for (int val = oeVars.size(); val <= theoreticalMax - 1; val++) { // theoreticalMAx - 1 here because we already use 0 for no treatment
+		std::cout << "removing val = " << val << std::endl;
         S *= !representTreatment(val);
     }
 }
 
 void Game::removeInvalidMutationBitCombinations(BDD& S) const {
-    int b = bits(koVars.size()); // no + 1 needed here
-    int theoreticalMax = (1 << b) - 1;
+	int b = bits(oeVars.size() + 1);
+	int theoreticalMax = (1 << b) - 1;
 
     for (int var = 0; var < numMutations; var++) {
-        for (int val = koVars.size(); val <= theoreticalMax; val++) {
+        for (int val = koVars.size(); val <= theoreticalMax - 1; val++) { // theoreticalMAx - 1 here because we already use 0 for no mutation
             S *= !representMutation(var, val);
 		}
     }
@@ -611,15 +612,28 @@ ADD Game::scoreAttractors(int numMutations) const {
    //BDD initial = attractors.manager.bddOne();// temp
    //BDD initial = representTreatmentNone() * nMutations(0);// temp
    BDD initial = !representTreatmentNone() * nMutations(0);// temp
-   std::cout << "initial:" << initial.FactoredFormString() << std::endl;
+   
    initial.PrintMinterm();
    //std::cout << "numMutations:" << numMutations << std::endl;
    //BDD initial = nMutations(numMutations) * treatment;
 
    // temp. need this
    removeInvalidTreatmentBitCombinations(initial); // refacotr this out.. can be computed once too
+   std::cout << "initial after remvoing invalid treatments:" << initial.FactoredFormString() << std::endl;
+   initial.PrintMinterm();
    //removeInvalidMutationBitCombinations(initial);
    //forceMutationLexicographicalOrdering(initial);
+
+
+   // ***************************
+   // print out removeInvalidTreatmentBitCombinations and !representTreatment(val);
+
+   std::cout << "representTreatmentNone()" << representTreatmentNone().FactoredFormString() << std::endl;
+   representTreatmentNone().PrintMinterm();
+   for (int i = 0; i <= 2; i++) {
+	   std::cout << "representTreatment(" << i << "):" << representTreatment(i).FactoredFormString() << std::endl;
+	   representTreatment(i).PrintMinterm();
+   }
 
    //
    // TODO: variables to keep implementation breaks this. each BDD now represents N attractors.
