@@ -611,7 +611,49 @@ ADD Game::scoreAttractors(int numMutations) const {
    //BDD treatment = maximisingPlayerLast ? !representTreatmentNone() : representTreatmentNone();
    //BDD initial = attractors.manager.bddOne();// temp
    //BDD initial = representTreatmentNone() * nMutations(0);// temp
-   BDD initial = !representTreatmentNone() * nMutations(0);// temp
+  // BDD initial = !representTreatmentNone() * nMutations(0);// temp
+   //BDD initial = !representTreatmentNone() * nMutations(2);// temp
+
+   std::cout << "representTreatmentNone():" << std::endl;
+   representTreatmentNone().PrintMinterm();
+   std::cout << "nMutations(0):" << std::endl;
+   nMutations(0).PrintMinterm();
+   std::cout << "nMutations(1):" << std::endl;
+   nMutations(1).PrintMinterm();
+   std::cout << "nMutations(2):" << std::endl;
+   nMutations(2).PrintMinterm();
+   std::cout << "representMutationNone(0):" << std::endl;
+   representMutationNone(0).PrintMinterm();
+   std::cout << "!representMutationNone(0):" << std::endl;
+   (!representMutationNone(0)).PrintMinterm();
+   std::cout << "representMutationNone(1):" << std::endl;
+   representMutationNone(1).PrintMinterm();
+   std::cout << "!representMutationNone(1):" << std::endl;
+   (!representMutationNone(1)).PrintMinterm();
+   std::cout << "representMutationNone(2):" << std::endl;
+   representMutationNone(2).PrintMinterm();
+   std::cout << "!representMutationNone(2):" << std::endl;
+   (!representMutationNone(2)).PrintMinterm();
+
+   std::cout << "alternate nMutations(0):" << std::endl;
+   (representMutationNone(0) * representMutationNone(1)).PrintMinterm();
+   std::cout << "alternate nMutations(1):" << std::endl;
+   ((!representMutationNone(0) * representMutationNone(1)) + (representMutationNone(0) * !representMutationNone(1))).PrintMinterm();
+   std::cout << "alternate nMutations(2):" << std::endl;
+   (!representMutationNone(0) * !representMutationNone(1)).PrintMinterm();
+
+   std::cout << "another alternate nMutations(1):" << std::endl;
+   ((!representMutationNone(0) * representMutationNone(1))).PrintMinterm();
+   
+
+   //need to check remove invalid too... best is to hard code it:
+   std::cout << "another alternate nMutations(1):" << std::endl;
+   (((representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1))).PrintMinterm();
+   std::cout << "another alternate nMutations(2):" << std::endl;
+   (representMutation(0, 0) * representMutation(1, 1)).PrintMinterm();
+   // go with these^^^^^^^^^^^^^^^^^^^^
+
+   BDD initial = representTreatmentNone() * nMutations(2);// temp
    
    initial.PrintMinterm();
    //std::cout << "numMutations:" << numMutations << std::endl;
@@ -621,7 +663,7 @@ ADD Game::scoreAttractors(int numMutations) const {
    removeInvalidTreatmentBitCombinations(initial); // refacotr this out.. can be computed once too
    std::cout << "initial after remvoing invalid treatments:" << initial.FactoredFormString() << std::endl;
    initial.PrintMinterm();
-   //removeInvalidMutationBitCombinations(initial);
+   removeInvalidMutationBitCombinations(initial);
    //forceMutationLexicographicalOrdering(initial);
 
 
@@ -686,7 +728,7 @@ ADD Game::minimax() const {
 			BDD variablesToAdd = initial; // ?
 			removeInvalidTreatmentBitCombinations(initial); // refacotr this out.. can be computed once too
 			removeInvalidMutationBitCombinations(initial);
-			forceMutationLexicographicalOrdering(initial);
+			//forceMutationLexicographicalOrdering(initial); // temp
 
             for (const BDD& a : attractors.attractors(mutantTransitionRelation, !initial/*, variablesToAdd*/)) {
                 att += a;
@@ -711,7 +753,7 @@ ADD Game::minimax() const {
 			BDD variablesToAdd = initial;
 			removeInvalidTreatmentBitCombinations(initial); // move all these out to one function
 			removeInvalidMutationBitCombinations(initial);
-			forceMutationLexicographicalOrdering(initial);
+			//forceMutationLexicographicalOrdering(initial);
 
             for (const BDD& a : attractors.attractors(mutantTransitionRelation, !initial/*, variablesToAdd*/)) {
                 att += a;
