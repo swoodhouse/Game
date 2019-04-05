@@ -384,7 +384,7 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				//bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0) * attractors.representUnprimedVarQN(v, 0), targetFunction);
 				//bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0) * attractors.representUnprimedVarQN(v, 0), targetFunction);
 				bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
-				std::cout << "KO BRANCH  EXECUTED" << std::endl;
+				std::cout << "KO BRANCH  EXECUTED for v =" << v << std::endl;
 
 				//// temp!!
 				//std::cout << "v:" << v << std::endl;
@@ -612,18 +612,18 @@ ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
 	return max * a;
 }
 
-ADD Game::scoreAttractors(int numMutations) const {
-	std::cout << "in scoreAttractors. treatmentVar indices:" << std::endl;
-	for (auto i : this->treatmentVarIndices()) std::cout << i << " ";
-	std::cout << std::endl;
+ADD Game::scoreAttractors(bool maximisingPlayer, int numMutations) const {
+	//std::cout << "in scoreAttractors. treatmentVar indices:" << std::endl;
+	//for (auto i : this->treatmentVarIndices()) std::cout << i << " ";
+	//std::cout << std::endl;
 
-	std::cout << "attractorsIndicies():" << std::endl;
-	for (auto i : this->attractorsIndicies()) std::cout << i << " ";
-	std::cout << std::endl;
+	//std::cout << "attractorsIndicies():" << std::endl;
+	//for (auto i : this->attractorsIndicies()) std::cout << i << " ";
+	//std::cout << std::endl;
 
-	std::cout << "attractors.ranges:" << std::endl;
-	for (auto i : this->attractors.ranges) std::cout << i << " ";
-	std::cout << std::endl;
+	//std::cout << "attractors.ranges:" << std::endl;
+	//for (auto i : this->attractors.ranges) std::cout << i << " ";
+	//std::cout << std::endl;
 
    ADD states = attractors.manager.addZero();
 
@@ -688,7 +688,15 @@ ADD Game::scoreAttractors(int numMutations) const {
    //
    //BDD initial = representTreatmentNone() * nMutations(2);// temp
    //BDD initial = representTreatment(0) * nMutations(2);// temp
-   BDD initial = representSomeTreatment() * nMutations(2);// temp
+
+   BDD initial = attractors.manager.bddOne();
+
+   if (maximisingPlayer) {
+	   initial = representSomeTreatment() * nMutations(numMutations);// temp
+   }
+   else {
+	   initial = representTreatmentNone() * nMutations(numMutations);// temp
+   }
    
    //initial.PrintMinterm();
    //std::cout << "numMutations:" << numMutations << std::endl;
@@ -744,7 +752,7 @@ ADD Game::minimax() const {
     int numMutations = this->numMutations;
     bool maximisingPlayer = this->maximisingPlayerLast;
 	 
-    ADD states = scoreAttractors(numMutations);
+    ADD states = scoreAttractors(maximisingPlayer, numMutations);
 	std::cout << "states is zero?" << states.IsZero();
 
 

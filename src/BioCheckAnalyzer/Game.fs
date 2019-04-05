@@ -26,14 +26,16 @@ extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, 
                    int numMutations, int numTreatments, int[] mutationVars, int[] treatmentVars, int apopVar, int depth, bool maximisingPlayerGoesLast)
 
 let extendQN qn mutations treatments = // eventually needs to be two classes of mutations, and treatments needs to be ko not oe
-    let lastId  = qn |> List.map (fun (n : QN.node) -> n.var) |> List.max
+    let lastId = qn |> List.map (fun (n : QN.node) -> n.var) |> List.max |> ((+) 1)
+
+    printfn "lastId: %i" lastId
 
     let mkNode tag id =
         {QN.var = id; QN.f = Expr.Var id; QN.inputs = [id]; QN.range = (0, 1); QN.name = tag + "_" + string id; QN.nature = Map.ofList [(id, QN.Act)];
          QN.number = 0; QN.defaultF = false; QN.tags = [(0, "")]}
 
-    let koVars = lastId + 1 |> Seq.unfold (fun id -> Some (mkNode "ko" id, id + 1)) |> Seq.take (Set.count mutations) |> List.ofSeq
-    let oeVars = lastId + Set.count mutations + 1 |>  Seq.unfold (fun id -> Some (mkNode "oe" id, id + 1)) |> Seq.take (Set.count treatments) |> List.ofSeq
+    let koVars = lastId |> Seq.unfold (fun id -> Some (mkNode "ko" id, id + 1)) |> Seq.take (Set.count mutations) |> List.ofSeq
+    let oeVars = lastId + Set.count mutations |>  Seq.unfold (fun id -> Some (mkNode "oe" id, id + 1)) |> Seq.take (Set.count treatments) |> List.ofSeq
 
     let extendTFwithKo (node : QN.node) (koNode : QN.node) = 
         let range = snd node.range
@@ -42,10 +44,24 @@ let extendQN qn mutations treatments = // eventually needs to be two classes of 
     let extendTFwithOe (n : QN.node) (oeNode : QN.node) =
         let range = snd n.range
         Expr.Plus(Expr.Times(Expr.Const range, Expr.Var oeNode.var), Expr.Times(n.f, Expr.Minus(Expr.Const 1, Expr.Var oeNode.var)))
+//
+//    let qn = qn |> List.mapi (fun i n -> if Set.contains n.var mutations then { n with f = extendTFwithKo n (mkNode "ko" <| lastId + i); inputs = (lastId + i) :: n.inputs}
+//                                         elif Set.contains n.var treatments then { n with f = extendTFwithOe n (mkNode "oe" <| lastId + Set.count mutations + i); inputs = (lastId + Set.count mutations + i) :: n.inputs}
+//                                         else n)
 
-    let qn = qn |> List.mapi (fun i n -> if Set.contains n.var mutations then { n with f = extendTFwithKo n (mkNode "ko" <| lastId + i); inputs = (lastId + i) :: n.inputs}
-                                         elif Set.contains n.var treatments then { n with f = extendTFwithOe n (mkNode "oe" <| lastId + Set.count mutations + i); inputs = (lastId + Set.count mutations + i) :: n.inputs}
-                                         else n)
+                                         // need to do ko then oe
+
+    let mutable i = 0 // hack
+    let qn = qn |> List.map (fun n -> if Set.contains n.var mutations then
+                                          let r = { n with defaultF = false; f = extendTFwithKo n (mkNode "ko" <| lastId + i); inputs = (lastId + i) :: n.inputs}
+                                          i <- i + 1
+                                          r
+                                       else n) 
+    let qn = qn |> List.map (fun n -> if Set.contains n.var treatments then
+                                          let r = { n with defaultF = false; f = extendTFwithOe n (mkNode "oe" <| lastId + i); inputs = (lastId + i) :: n.inputs}
+                                          i <- i + 1
+                                          r
+                                       else n)
 
     let qn = qn @ koVars @ oeVars
     qn
@@ -62,22 +78,26 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     let apopVar = qn |> List.findIndex (fun n -> n.var = apopVar)
     let variables = qn |> List.map (fun n -> n.name)
 
+    
+
     printfn "Running VMCAI..."
     // this is the key..... we need to add special vars, corresponding target functions, then run vmcai, then remove special vars
     // basically.. maintain qn and extendedQn. ranges come from extendedQn, table from qn
-//    let extendedQn = extendQN qn (Set.ofList mutations) (Set.ofList treatments)
-//    let ranges, _ = Attractors.runVMCAI extendedQn
-//    let ranges = ranges |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars))
-//    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
-//    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
+    let extendedQn = extendQN qn (Set.ofList mutations) (Set.ofList treatments)
+    printfn "qn: %A" qn
+    printfn "extendedQn: %A" extendedQn
 
-    // temp: turning off vmcai for Tests.cpp
-    printfn "TEMP: TURNING OFF VMCAI FOR TESTING..."
-    let ranges = qn |> List.map (fun n -> n.var, Attractors.rangeToList n.range) |> Map.ofList
+
+    let ranges, _ = Attractors.runVMCAI extendedQn
+    let ranges = ranges |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars)) // you need to trim ^ these to remove ko vars and oe vars................
     let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
     let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
 
-    // you need to trim ^ these to remove ko vars and oe vars................
+//    // temp: turning off vmcai for Tests.cpp
+//    printfn "TEMP: TURNING OFF VMCAI FOR TESTING..."
+//    let ranges = qn |> List.map (fun n -> n.var, Attractors.rangeToList n.range) |> Map.ofList
+//    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
+//    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
 
     printfn "Building QN table..."
     let inputValues, outputValues = qn |> List.map (Attractors.generateQNTable qn ranges) |> List.unzip
@@ -90,9 +110,12 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     let inputValues' = List.reduce (@) inputValues |> List.reduce (@) |> Array.ofList
     let outputValues' = List.reduce (@) outputValues |> Array.ofList
 
+    let mutations' = mutations |> List.map (fun n -> List.findIndex ((=) n) qnVars)
+    let treatments' = treatments |> List.map (fun n -> List.findIndex ((=) n) qnVars)
+
     printfn "Calling DLL..."
     minimax(List.length qn, ranges', minValues, numInputs, inputVars', numUpdates, inputValues', outputValues',
-            List.length mutations, List.length treatments, Array.ofList mutations, Array.ofList treatments, apopVar, height, maximisingPlayerGoesLast) |> ignore
+            List.length mutations', List.length treatments', Array.ofList mutations', Array.ofList treatments', apopVar, height, maximisingPlayerGoesLast) |> ignore
     printfn "finishing"
 
 
