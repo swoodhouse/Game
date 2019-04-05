@@ -249,18 +249,37 @@ void Game::removeInvalidMutationBitCombinations(BDD& S) const {
     }
 }
 
+// temp: hard coded for now
 BDD Game::nMutations(int n) const {
-    BDD bdd = attractors.manager.bddOne();
+	if (koVars.size() > 2) {
+		std::cout << "nmutations with size(koVars) > 2 not implemented" << std::endl;
+		throw std::runtime_error("nmutations with size(koVars) > 2 not implemented");
+	}
+	else if (n == 0) {
+		return representMutationNone(0) * representMutationNone(1);
+	}
+	else if (n == 1) {
+		return (representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1);
+	}
+	else if (n == 2) {
+		return representMutation(0, 0) * representMutation(1, 1);
+	}
+	else {
+		std::cout << "nmutations > 2 not implemented" << std::endl;
+		throw std::runtime_error("nmutations > 2 not implemented");
+	}
 
-    for (int var = 0; var < n; var++) {
-        BDD isMutated = !representMutationNone(var);
-        bdd *= isMutated;
-    }
-    for (std::vector<int>::size_type var = n; var < koVars.size(); var++) {
-        BDD isNotMutated = representMutationNone(var);
-        bdd *= isNotMutated;
-    }
-    return bdd;
+    //BDD bdd = attractors.manager.bddOne();
+
+    //for (int var = 0; var < n; var++) {
+    //    BDD isMutated = !representMutationNone(var);
+    //    bdd *= isMutated;
+    //}
+    //for (std::vector<int>::size_type var = n; var < koVars.size(); var++) {
+    //    BDD isNotMutated = representMutationNone(var);
+    //    bdd *= isNotMutated;
+    //}
+    //return bdd;
 }
 
 ADD Game::untreat(int level, const ADD& states) const {
@@ -309,18 +328,18 @@ ADD Game::untreat(int level, const ADD& states) const {
 BDD Game::buildMutantSyncQNTransitionRelation() const {
 	// TEMP!!!
 	//return attractors.representSyncQNTransitionRelation(attractors.qn);
-	std::cout << "start of build mutant tr" << std::endl;
+	/*std::cout << "start of build mutant tr" << std::endl;
 
 	std::cout << "treatmentVarIndices.front()" << treatmentVarIndices().front();
 	std::cout << "treatmentVarIndices.back()" << treatmentVarIndices().back();
 	std::cout << "unprimedMutationVarsIndices.front()" << unprimedMutationVarsIndices().front();
 	std::cout << "unprimedMutationVarsIndices.back()" << unprimedMutationVarsIndices().back();
 
-		
+	*/	
 
     BDD bdd = attractors.manager.bddOne();
 
-	std::cout << "buildMutation start Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
+	//std::cout << "buildMutation start Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
 
     int k = 0;
     int o = 0;
@@ -352,7 +371,6 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 			// temp!!!!
 			//if ((koVarsSet.find(v) != koVarsSet.end())) { //
 			if (k < koVars.size() && koVars[k] == v) {
-				std::cout << "KO BRANCH EXECUTED" << std::endl;
 				BDD isMutated = attractors.manager.bddZero();
 				
 				for (int lvl = 0; lvl < numMutations; lvl++) {
@@ -366,6 +384,7 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				//bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0) * attractors.representUnprimedVarQN(v, 0), targetFunction);
 				//bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0) * attractors.representUnprimedVarQN(v, 0), targetFunction);
 				bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
+				std::cout << "KO BRANCH  EXECUTED" << std::endl;
 
 				//// temp!!
 				//std::cout << "v:" << v << std::endl;
@@ -392,7 +411,7 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				//bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max) * attractors.representUnprimedVarQN(v, max), targetFunction);
 				bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
 
-				std::cout << "the treatment part of tr is built.." << std::endl;
+				std::cout << "OE BRANCH EXECUTED for v =" << v << std::endl;
 				o++;
 			}
 			else {
@@ -402,13 +421,13 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 		}
 	}
 
-	std::cout << "buildMutation end Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
+	/*std::cout << "buildMutation end Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
 
 	std::cout << "bdd.IsZero" << bdd.IsZero() << std::endl;
 	std::cout << "bdd.IsOne" << bdd.IsOne() << std::endl;
 
 	std::cout << "end of build mutant tr" << std::endl;
-
+*/
     return bdd;
 }
 
@@ -614,28 +633,28 @@ ADD Game::scoreAttractors(int numMutations) const {
   // BDD initial = !representTreatmentNone() * nMutations(0);// temp
    //BDD initial = !representTreatmentNone() * nMutations(2);// temp
 
-   std::cout << "representTreatmentNone():" << std::endl;
-   representTreatmentNone().PrintMinterm();
-   std::cout << "nMutations(0):" << std::endl;
-   nMutations(0).PrintMinterm();
-   std::cout << "nMutations(1):" << std::endl;
-   nMutations(1).PrintMinterm();
-   std::cout << "nMutations(2):" << std::endl;
-   nMutations(2).PrintMinterm();
-   std::cout << "representMutationNone(0):" << std::endl;
-   representMutationNone(0).PrintMinterm();
-   std::cout << "!representMutationNone(0):" << std::endl;
-   (!representMutationNone(0)).PrintMinterm();
-   std::cout << "representMutationNone(1):" << std::endl;
-   representMutationNone(1).PrintMinterm();
-   std::cout << "!representMutationNone(1):" << std::endl;
-   (!representMutationNone(1)).PrintMinterm();
-   std::cout << "representMutationNone(2):" << std::endl;
-   representMutationNone(2).PrintMinterm();
-   std::cout << "!representMutationNone(2):" << std::endl;
-   (!representMutationNone(2)).PrintMinterm();
+   //std::cout << "representTreatmentNone():" << std::endl;
+   //representTreatmentNone().PrintMinterm();
+   //std::cout << "nMutations(0):" << std::endl;
+   //nMutations(0).PrintMinterm();
+   //std::cout << "nMutations(1):" << std::endl;
+   //nMutations(1).PrintMinterm();
+   //std::cout << "nMutations(2):" << std::endl;
+   //nMutations(2).PrintMinterm();
+   //std::cout << "representMutationNone(0):" << std::endl;
+   //representMutationNone(0).PrintMinterm();
+   //std::cout << "!representMutationNone(0):" << std::endl;
+   //(!representMutationNone(0)).PrintMinterm();
+   //std::cout << "representMutationNone(1):" << std::endl;
+   //representMutationNone(1).PrintMinterm();
+   //std::cout << "!representMutationNone(1):" << std::endl;
+   //(!representMutationNone(1)).PrintMinterm();
+   //std::cout << "representMutationNone(2):" << std::endl;
+   //representMutationNone(2).PrintMinterm();
+   //std::cout << "!representMutationNone(2):" << std::endl;
+   //(!representMutationNone(2)).PrintMinterm();
 
-   std::cout << "alternate nMutations(0):" << std::endl;
+   /*std::cout << "alternate nMutations(0):" << std::endl;
    (representMutationNone(0) * representMutationNone(1)).PrintMinterm();
    std::cout << "alternate nMutations(1):" << std::endl;
    ((!representMutationNone(0) * representMutationNone(1)) + (representMutationNone(0) * !representMutationNone(1))).PrintMinterm();
@@ -643,39 +662,55 @@ ADD Game::scoreAttractors(int numMutations) const {
    (!representMutationNone(0) * !representMutationNone(1)).PrintMinterm();
 
    std::cout << "another alternate nMutations(1):" << std::endl;
-   ((!representMutationNone(0) * representMutationNone(1))).PrintMinterm();
+   ((!representMutationNone(0) * representMutationNone(1))).PrintMinterm();*/
    
 
    //need to check remove invalid too... best is to hard code it:
-   std::cout << "another alternate nMutations(1):" << std::endl;
-   (((representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1))).PrintMinterm();
-   std::cout << "another alternate nMutations(2):" << std::endl;
-   (representMutation(0, 0) * representMutation(1, 1)).PrintMinterm();
-   // go with these^^^^^^^^^^^^^^^^^^^^
+   //std::cout << "another alternate nMutations(1):" << std::endl;
+   //(((representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1))).PrintMinterm();
+   //std::cout << "another alternate nMutations(2):" << std::endl;
+   //(representMutation(0, 0) * representMutation(1, 1)).PrintMinterm(); // defintely wrong.......
+			//														   // go with these^^^^^^^^^^^^^^^^^^^^
 
-   BDD initial = representTreatmentNone() * nMutations(2);// temp
+
+   //std::cout << "(representMutation(0, 0)):" << std::endl;
+   //(representMutation(0, 0)).PrintMinterm();
+   //std::cout << "(representMutation(0, 1)):" << std::endl;
+   //(representMutation(0, 1)).PrintMinterm();
+
+   //std::cout << "(representMutation(1, 0)):" << std::endl;
+   //(representMutation(1, 0)).PrintMinterm();
+
+   //std::cout << "(representMutation(1, 1)):" << std::endl;
+   //(representMutation(1, 1)).PrintMinterm();
+
+   //std::cout << ".." << std::endl;
+   //
+   //BDD initial = representTreatmentNone() * nMutations(2);// temp
+   //BDD initial = representTreatment(0) * nMutations(2);// temp
+   BDD initial = representSomeTreatment() * nMutations(2);// temp
    
-   initial.PrintMinterm();
+   //initial.PrintMinterm();
    //std::cout << "numMutations:" << numMutations << std::endl;
    //BDD initial = nMutations(numMutations) * treatment;
 
    // temp. need this
-   removeInvalidTreatmentBitCombinations(initial); // refacotr this out.. can be computed once too
-   std::cout << "initial after remvoing invalid treatments:" << initial.FactoredFormString() << std::endl;
-   initial.PrintMinterm();
-   removeInvalidMutationBitCombinations(initial);
+   //removeInvalidTreatmentBitCombinations(initial); // refacotr this out.. can be computed once too
+   //std::cout << "initial after remvoing invalid treatments:" << initial.FactoredFormString() << std::endl;
+   //initial.PrintMinterm();
+   //removeInvalidMutationBitCombinations(initial); // temp
    //forceMutationLexicographicalOrdering(initial);
 
 
    // ***************************
    // print out removeInvalidTreatmentBitCombinations and !representTreatment(val);
 
-   std::cout << "representTreatmentNone()" << representTreatmentNone().FactoredFormString() << std::endl;
-   representTreatmentNone().PrintMinterm();
-   for (int i = 0; i <= 2; i++) {
-	   std::cout << "representTreatment(" << i << "):" << representTreatment(i).FactoredFormString() << std::endl;
-	   representTreatment(i).PrintMinterm();
-   }
+   //std::cout << "representTreatmentNone()" << representTreatmentNone().FactoredFormString() << std::endl;
+   //representTreatmentNone().PrintMinterm();
+   //for (int i = 0; i <= 2; i++) {
+	  // std::cout << "representTreatment(" << i << "):" << representTreatment(i).FactoredFormString() << std::endl;
+	  // representTreatment(i).PrintMinterm();
+   //}
 
    //
    // TODO: variables to keep implementation breaks this. each BDD now represents N attractors.
@@ -787,6 +822,16 @@ BDD Game::representTreatment(int treatment) const {
 
 BDD Game::representTreatmentNone() const {
 	return representTreatment(-1); // not the most clear implementation
+}
+
+BDD Game::representSomeTreatment() const {
+	BDD bdd = attractors.manager.bddZero();
+
+	for (int i = 0; i < oeVars.size(); i++) {
+		bdd += representTreatment(i);
+	}
+
+	return bdd;
 }
 
 BDD Game::representMutation(int var, int mutation) const {
@@ -902,8 +947,8 @@ BDD Game::representChosenMutation(int level, int mutation) const { // in this ca
 }
 
 ADD Game::buildScoreRelation(int apopVar) const {
-	std::cout << "buildScoreRelation start Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
-
+	/*std::cout << "buildScoreRelation start Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
+*/
     ADD score = attractors.manager.addZero();
 
     for (int val = 0; val <= attractors.ranges[apopVar]; val++) { // what if it is a ko/oe var with a range of 0?
@@ -912,7 +957,7 @@ ADD Game::buildScoreRelation(int apopVar) const {
         // PRETTY SURE IT WILL HAVE TO BE VAL + 1, ZERO IS FOR UNREACHED STATES
     }
 
-	std::cout << "buildScoreRelation end Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
+	//std::cout << "buildScoreRelation end Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
 
     return score;
 }

@@ -49,8 +49,8 @@ public: // move this
         manager(numUnprimedBDDVars * 2),
         nonPrimeVariables(representNonPrimeVariables()), primeVariables(representPrimeVariables())
     {
-		std::cout << "numUnprimedBDDVars:" << numUnprimedBDDVars << std::endl;
-		std::cout << "Attractors ctor: Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(manager.getManager()) << std::endl;
+		/*std::cout << "numUnprimedBDDVars:" << numUnprimedBDDVars << std::endl;
+		std::cout << "Attractors ctor: Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(manager.getManager()) << std::endl;*/
         manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
     };
 };

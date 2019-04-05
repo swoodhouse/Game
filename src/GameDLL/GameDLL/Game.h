@@ -185,6 +185,7 @@ public: // temp
     BDD buildMutantSyncQNTransitionRelation() const; // done.. except no.. i need zero to mean no mutation i think!!!
     BDD representTreatment(int val) const; // done.. including zero mut and bits
 	BDD representTreatmentNone() const; //	done
+	BDD representSomeTreatment() const;
     BDD representMutation(int var, int val) const; // done.. including zero mut and bits
 	BDD representMutationNone(int var) const; // done
     BDD representPrimedMutation(int var, int val) const; // done.. including zero mut and bits
