@@ -5,6 +5,87 @@
 #include "Attractors.h"
 #include "Game.h"
 
+// TEMP ///////////////
+#include <rapidcheck.h>
+#include <random>
+#include <chrono>
+#include <vector>
+#include <algorithm>
+#include <functional>
+
+void unmutate2(const Game& game) {
+	rc::check("unmutate",
+		[&]() {
+		const auto v = *rc::gen::container<std::vector<bool>>(game.attractors.numUnprimedBDDVars, rc::gen::arbitrary<bool>()); // temp
+		//const auto level = *rc::gen::inRange(1, game.numMutations);//*rc::gen::inRange(0, game.numMutations); // or 0 to mut???
+		const auto level = *rc::gen::inRange(0, game.numMutations);
+		const auto mutValues = *rc::gen::unique<std::vector<int>>(rc::gen::inRange(0, game.numMutations));
+		//const auto mutValues = *rc::gen::container<std::vector<int>>(level, rc::gen::inRange(0, static_cast<int>(game.koVars.size())));
+		//const auto mutValues = *rc::gen::container<std::vector<int>>(level, rc::gen::inRange(0, static_cast<int>(game.koVars.size())));
+		//const auto mutValues = *rc::gen::container<std::vector<int>>(level + 1, rc::gen::inRange(0, static_cast<int>(game.koVars.size())));
+
+		//const auto mutation = *rc::gen::inRange(0, static_cast<int>(game.koVars.size()));
+
+		BDD states = game.attractors.manager.bddVar(0);
+		if (v[0]) states = !states;
+
+		for (int i = 1; i < v.size(); i++) {
+			BDD s = game.attractors.manager.bddVar(i);
+
+			if (v[i]) s = !s;
+
+			if (*rc::gen::arbitrary<bool>()) {
+				states *= s;
+			}
+			else {
+				states += s;
+			}
+		}
+
+		const int mutation = mutValues[0];
+
+		BDD otherMutations = game.attractors.manager.bddOne();
+		// this loop was commented out
+		for (int i = 0; i < level; i++) {
+			//int m = *rc::gen::inRange(0, static_cast<int>(game.koVars.size()));
+			//int m = *rc::gen::elementOf()
+			otherMutations *= game.representMutation(i, m[i]);
+		}
+
+		// right?
+		//otherMutations = game.nMutations(level - 1);
+		
+		/*	std::cout << "game.representChosenMutation(level, mutation):" << game.representChosenMutation(level, mutation).FactoredFormString() << std::endl;
+		std::cout << "game.representMutation(level, mutation):" << game.representMutation(level, mutation).FactoredFormString() << std::endl;
+		std::cout << "game.representMutationNone(level):" << game.representMutationNone(level).FactoredFormString() << std::endl;*/
+		// ^ representNone seems to be what we are missing, maybe indexing errors in chooseRelation
+
+		// temp!!
+		BDD unmutated = states * otherMutations * game.representChosenMutation(level, mutation) *  game.representMutationNone(level); //game.representMutationNone(level - 1);
+		BDD mutated = states * otherMutations * game.representMutation(level, mutation);
+
+		//std::cout << "states:" << states.FactoredFormString() << std::endl;
+		//std::cout << "mutated:" << mutated.FactoredFormString() << std::endl;
+		//std::cout << "unmutated:" << unmutated.FactoredFormString() << std::endl;
+		//std::cout << "transformed:" << game.unmutate(level, mutated.Add()).BddPattern().FactoredFormString() << std::endl; // this is 1. like its removed everything
+
+		//std::cout << "equal bdds?:" << (game.unmutate(level, mutated.Add()).BddPattern() == unmutated);
+		//std::cout << "equal adds?:" << (game.unmutate(level, mutated.Add()) == unmutated.Add());
+
+		// actually looks right now. but still failing.. some maybe the terminal node value is different?
+		// ah.. could come from exist abstract
+		// should i replace with max abstract then?? do i need a version for max and min?
+		// you get rid of the mutation but you tag with a new choice var. so should only be only possibility?
+		// chooseRelation => probably the bug
+
+		RC_ASSERT(game.unmutate(level, mutated.Add()) == unmutated.Add());
+	});
+}
+
+
+
+////////////////
+
 extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
     int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
 //extern "C" __declspec(dllexport) int minimax2(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
@@ -66,10 +147,14 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 	std::cout << "apopVar: " << apopVar << std::endl;
 
-	ADD out = g.minimax();
+
+	// TEMP: RUN TEST
+	unmutate2(g); // ..........
+
+	/*ADD out = g.minimax();
 
 	std::cout << "out is zero?" << out.IsZero() << std::endl;
 	out.PrintMinterm();
-
+*/
     return 0;
 }

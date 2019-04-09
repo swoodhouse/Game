@@ -5,42 +5,42 @@
 #include "Attractors.h"
 
 std::string printRange(const std::list<int>& values) {
-    std::string s("[");
-    s += std::to_string(values.front());
-    std::for_each(std::next(values.begin()), values.end(), [&s](int b) { s += ";"; s += std::to_string(b); });
-    s += "]";
-    return s;
+	std::string s("[");
+	s += std::to_string(values.front());
+	std::for_each(std::next(values.begin()), values.end(), [&s](int b) { s += ";"; s += std::to_string(b); });
+	s += "]";
+	return s;
 }
 
 std::vector<int> parseRange(const std::string& range) {
-    if (range.at(0) != '[') return std::vector<int>(1, std::stoi(range));
+	if (range.at(0) != '[') return std::vector<int>(1, std::stoi(range));
 
-    std::string copy = range.substr(1, range.size() - 2);
-    std::vector<int> result;
-    std::istringstream iss(copy);
-    std::string s;
-    while (std::getline(iss, s, ';')) result.push_back(std::stoi(s));
+	std::string copy = range.substr(1, range.size() - 2);
+	std::vector<int> result;
+	std::istringstream iss(copy);
+	std::string s;
+	while (std::getline(iss, s, ';')) result.push_back(std::stoi(s));
 
-    return result;
+	return result;
 }
 
 std::string fromBinary(const std::string& bits, int offset) {
-    int i = 0;
-    auto lambda = [&i](int a) { return a + std::pow(2.0f, i); };
-    std::list<int> values{ offset };
+	int i = 0;
+	auto lambda = [&i](int a) { return a + std::pow(2.0f, i); };
+	std::list<int> values{ offset };
 
-    for (auto it = std::begin(bits); it < std::end(bits); ++it) {
-        if (*it == '-') {
-            std::list<int> copy(values);
-            std::transform(copy.begin(), copy.end(), copy.begin(), lambda);
-            values.splice(values.end(), copy);
-        }
-        else if (*it == '1') {
-            std::transform(values.begin(), values.end(), values.begin(), lambda);
-        }
-        i++;
-    }
-    return values.size() > 1 ? printRange(values) : std::to_string(values.front());
+	for (auto it = std::begin(bits); it < std::end(bits); ++it) {
+		if (*it == '-') {
+			std::list<int> copy(values);
+			std::transform(copy.begin(), copy.end(), copy.begin(), lambda);
+			values.splice(values.end(), copy);
+		}
+		else if (*it == '1') {
+			std::transform(values.begin(), values.end(), values.begin(), lambda);
+		}
+		i++;
+	}
+	return values.size() > 1 ? printRange(values) : std::to_string(values.front());
 }
 
 BDD Attractors::representState(const std::vector<bool>& values) const {
@@ -427,18 +427,23 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
 			//BDD s = randomState(S);
 			//BDD s = randomState(S); // *variablesToAdd; // variab
 	
-	        for (int i = 0; i < ranges.size() ; i++) { // unrolling by ranges.size() may not be the perfect choice of number
+/*
+			std::cout << "here1" << std::endl;*/
+	        for (int i = 0; i < ranges.size() /*10000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number
 	            BDD sP = immediateSuccessorStates(transitionBdd, s); // variables to add here???
 				s = randomState(S) * S; // new idea
 				//s = randomState(sP);
 				//s = randomState(sP); //* variablesToAdd;
 	        }
+/*
+			std::cout << "here2" << std::endl;*/
 	
 	        BDD fr = forwardReachableStates(transitionBdd, s);
 	        BDD br = backwardReachableStates(transitionBdd, s);
 	
 	        if ((fr * !br).IsZero()) {
 				//std::cout << "pushing attractor" << std::endl; // ok.. so we keep hitting this..
+
 	            attractors.push_back(fr);
 	        }
 			//std::cout << "here3:" << S.IsZero() << std::endl;

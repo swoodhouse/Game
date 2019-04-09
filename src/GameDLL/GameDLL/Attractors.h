@@ -72,3 +72,5 @@ inline bool nthBitSet(int i, int n) {
 inline BDD logicalEquivalence(const BDD& a, const BDD& b) {
     return !(a ^ b);
 }
+
+std::string fromBinary(const std::string& bits, int offset);
