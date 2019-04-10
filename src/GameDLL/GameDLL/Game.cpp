@@ -233,10 +233,16 @@ BDD Game::nMutations(int n) const {
 		return representMutationNone(0) * representMutationNone(1);
 	}
 	else if (n == 1) {
-		return (representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1);
+		// this won't work for current unmutate implementation
+		//return (representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1);
+		return ((representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1)) +
+			   ((representMutation(1, 0) + representMutation(1, 1)) * representMutationNone(0));
 	}
 	else if (n == 2) {
-		return representMutation(0, 0) * representMutation(1, 1);
+		// this won't work for current unmutate implementation
+		//return representMutation(0, 0) * representMutation(1, 1);
+		return (representMutation(0, 0) * representMutation(1, 1)) +
+			   (representMutation(0, 1) * representMutation(1, 0));
 	}
 	else {
 		std::cout << "nmutations > 2 not implemented" << std::endl;
