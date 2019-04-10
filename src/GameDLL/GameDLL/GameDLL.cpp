@@ -49,7 +49,7 @@ void unmutate2(const Game& game) {
 		for (int i = 0; i < level; i++) {
 			//int m = *rc::gen::inRange(0, static_cast<int>(game.koVars.size()));
 			//int m = *rc::gen::elementOf()
-			otherMutations *= game.representMutation(i, m[i]);
+			otherMutations *= game.representMutation(i, mutValues[i]);
 		}
 
 		// right?
@@ -149,12 +149,12 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 
 	// TEMP: RUN TEST
-	unmutate2(g); // ..........
+	//unmutate2(g); // ..........
 
-	/*ADD out = g.minimax();
+	ADD out = g.minimax();
 
 	std::cout << "out is zero?" << out.IsZero() << std::endl;
 	out.PrintMinterm();
-*/
+
     return 0;
 }

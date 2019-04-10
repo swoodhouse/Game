@@ -857,20 +857,36 @@ ADD Game::minimax() const {
 	for (; height > 0; height--) { // do i have an off by one error
 		std::cout << "height:" << height << std::endl;
 		if (maximisingPlayer) {
-			numTreatments--;
+			
 			std::cout << "numTreatments:" << numTreatments << std::endl;
 			std::cout << "numMutations" << numMutations << std::endl;
-			
+			numTreatments--;
 			//states = backMin(states);
 			states = backMax(states); // backmax will work for sync networks
+
+			std::cout << "before untreating:" << std::endl;
+			states.PrintMinterm();
+
 			states = untreat(numTreatments, states);
+
+			std::cout << "after untreating:" << std::endl;
+			states.PrintMinterm();
+
 			BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+
+			std::cout << "new atts:" << std::endl; 
+			att.PrintMinterm();
+
 			states *= att.Add();
+
+			std::cout << "after intersecting with new atts:" << std::endl;
+			states.PrintMinterm();			
 		}
 		else {
 			std::cout << "numTreatments:" << numTreatments << std::endl;
 			std::cout << "numMutations" << numMutations << std::endl;
-			numMutations--; // here or after unmutate?
+			
+			numMutations--; // here or after unmutate? here
 			std::cout << "states is zero@1?" << states.IsZero() << std::endl;
 			states = backMax(states);
 			std::cout << "states is zero@2?" << states.IsZero() << std::endl;
