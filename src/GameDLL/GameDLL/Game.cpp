@@ -975,7 +975,7 @@ ADD Game::minimax() const {
 			std::cout << "after intersecting with new atts:" << std::endl;
 			states.PrintMinterm();
 
-			std::cout << "PRINT JUST MUTVARS/CHOICEVARS/TREATVARS" << std::endl;
+			//std::cout << "PRINT JUST MUTVARS/CHOICEVARS/TREATVARS" << std::endl;
 		}
 
 		maximisingPlayer = !maximisingPlayer;

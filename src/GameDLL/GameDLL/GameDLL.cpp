@@ -153,7 +153,7 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 	ADD out = g.minimax();
 
-	std::cout << "out is zero?" << out.IsZero() << std::endl;
+	std::cout << "\nFinal output of minimax:" << out.IsZero() << std::endl;
 	out.PrintMinterm();
 
     return 0;
