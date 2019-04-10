@@ -171,21 +171,6 @@ BDD Game::chooseRelation(int level) const {
     return bdd;
 }
 
-ADD Game::unmutate(int level, const ADD& states) const {
-	std::cout << "states is zero@1.0?" << states.IsZero() << std::endl;
-
-	std::cout << "chooseRelation(" << level << ") is zero?" << chooseRelation(level).IsZero() << std::endl;
-
-    ADD add = states * chooseRelation(level).Add();
-	std::cout << "add is zero@1.1?" << add.IsZero() << std::endl;
-    //add = add.ExistAbstract(representNonPrimedMutVars().Add()); // not sure if this will work. not sure if maxabstract will either.. might have to implement my own exist abstract again here which returns 0 or .. or use clever min/max/negation..
-	add = add.MaxAbstract(representNonPrimedMutVars().Add());
-	std::cout << "add is zero@1.2?" << add.IsZero() << std::endl;
-    add = renameMutVarsRemovingPrimes(add);
-	std::cout << "add is zero@1.3?" << add.IsZero() << std::endl;
-    return add;
-}
-
 void Game::forceMutationLexicographicalOrdering(BDD& S) const {
     BDD ordering = attractors.manager.bddOne();
 
@@ -289,6 +274,39 @@ ADD Game::untreat(int level, const ADD& states) const {
 
     return states.Permute(&permute[0]);
 }
+
+// new implementation. doesn't obey lexicographical ordering. removes need for primed mutations too.. maybe better implementation after all, eliminates an exist
+ADD Game::unmutate(int level, const ADD& states) const {
+	// undone
+	std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
+	std::iota(permute.begin(), permute.end(), 0);
+
+	const auto indices = unprimedMutationVarsIndicesWindowed()[level];
+
+	int i = indices.front();
+	int j = chosenMutationsIndices().front() + level * indices.size(); // refactor
+
+	for (int n = 0; n < indices.size(); n++) { // duplication
+		permute[n + i] = n + j;
+	}
+
+	return states.Permute(&permute[0]);
+}
+
+//ADD Game::unmutate(int level, const ADD& states) const {
+//	std::cout << "states is zero@1.0?" << states.IsZero() << std::endl;
+//
+//	std::cout << "chooseRelation(" << level << ") is zero?" << chooseRelation(level).IsZero() << std::endl;
+//
+//    ADD add = states * chooseRelation(level).Add();
+//	std::cout << "add is zero@1.1?" << add.IsZero() << std::endl;
+//    //add = add.ExistAbstract(representNonPrimedMutVars().Add()); // not sure if this will work. not sure if maxabstract will either.. might have to implement my own exist abstract again here which returns 0 or .. or use clever min/max/negation..
+//	add = add.MaxAbstract(representNonPrimedMutVars().Add());
+//	std::cout << "add is zero@1.2?" << add.IsZero() << std::endl;
+//    add = renameMutVarsRemovingPrimes(add);
+//	std::cout << "add is zero@1.3?" << add.IsZero() << std::endl;
+//    return add;
+//}
 
 
 //BDD Attractors::representSyncQNTransitionRelation(const QNTable& qn) const {
@@ -851,8 +869,45 @@ ADD Game::minimax() const {
 	maximisingPlayer = true; // temp
 	std::cout << "here1" << std::endl;
 
-	ADD states = scoreAttractors(maximisingPlayer, numMutations);
+	//ADD states = scoreAttractors(maximisingPlayer, numMutations);
+	ADD states = scoreAttractors(true, numMutations);
+	//ADD states = scoreAttractors(false, numMutations);
 	std::cout << "here2" << std::endl;
+
+	//std::cout << "TRY UNMUTATING THIS DIRECTLY: level = 2" << std::endl;
+	//unmutate(2, states).PrintMinterm();
+	//std::cout << (2, states).BddPattern().FactoredFormString() << std::endl;
+
+	std::cout << "TRY UNMUTATING THIS DIRECTLY: level = 1" << std::endl;
+	unmutate(1, states).PrintMinterm();
+
+	std::cout << "TRY UNMUTATING THIS DIRECTLY: level = 0" << std::endl;
+	unmutate(0, states).PrintMinterm();
+
+	std::cout << "representChosenTreatment(0, 0).PrintMinterm();" << std::endl;
+	representChosenTreatment(0, 0).PrintMinterm();
+	std::cout << "representChosenTreatment(0, 1).PrintMinterm();" << std::endl;
+	representChosenTreatment(0, 1).PrintMinterm();
+	std::cout << "representChosenTreatment(1, 0).PrintMinterm();" << std::endl;
+	representChosenTreatment(1, 0).PrintMinterm();
+	std::cout << "representChosenTreatment(1, 1).PrintMinterm();" << std::endl;
+	representChosenTreatment(1, 1).PrintMinterm();
+
+	std::cout << "representChosenMutation(0, 0).PrintMinterm();" << std::endl;
+	representChosenMutation(0, 0).PrintMinterm();
+	std::cout << "representChosenMutation(0, 1).PrintMinterm();" << std::endl;
+	representChosenMutation(0, 1).PrintMinterm();
+	std::cout << "representChosenMutation(1, 0).PrintMinterm();" << std::endl;
+	representChosenMutation(1, 0).PrintMinterm();
+	std::cout << "representChosenMutation(1, 1).PrintMinterm();" << std::endl;	
+	representChosenMutation(1, 1).PrintMinterm();
+
+
+	//states.ExistAbstract
+
+	//height = -1; // TEMP!
+
+	
 
 	for (; height > 0; height--) { // do i have an off by one error
 		std::cout << "height:" << height << std::endl;
@@ -860,7 +915,7 @@ ADD Game::minimax() const {
 			
 			std::cout << "numTreatments:" << numTreatments << std::endl;
 			std::cout << "numMutations" << numMutations << std::endl;
-			numTreatments--;
+			//numTreatments--;
 			//states = backMin(states);
 			states = backMax(states); // backmax will work for sync networks
 
@@ -871,8 +926,9 @@ ADD Game::minimax() const {
 
 			std::cout << "after untreating:" << std::endl;
 			states.PrintMinterm();
-
-			BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+			numTreatments--; // HERE OR BEFORE?
+			//BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+			BDD att = scoreAttractors(false, numMutations).BddPattern(); //THIS MAY HAVE BEEN A BUG
 
 			std::cout << "new atts:" << std::endl; 
 			att.PrintMinterm();
@@ -884,18 +940,36 @@ ADD Game::minimax() const {
 		}
 		else {
 			std::cout << "numTreatments:" << numTreatments << std::endl;
-			std::cout << "numMutations" << numMutations << std::endl;
+			std::cout << "numMutations: " << numMutations << std::endl;
 			
 			numMutations--; // here or after unmutate? here
 			std::cout << "states is zero@1?" << states.IsZero() << std::endl;
+			
 			states = backMax(states);
 			std::cout << "states is zero@2?" << states.IsZero() << std::endl;
+			std::cout << "before unmutating:" << std::endl;
+			states.PrintMinterm();
+
 			states = unmutate(numMutations, states);
 			//numMutations--; // temp
 			std::cout << "states is zero@3?" << states.IsZero() << std::endl;
-			BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+
+			std::cout << "afer unmutating:" << std::endl;
+			states.PrintMinterm();
+
+			//BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+			BDD att = scoreAttractors(false, numMutations).BddPattern(); // THIS MAY HAVE BEEN A BUG
+
+			std::cout << "new atts:" << std::endl;
+			att.PrintMinterm();
+
 			std::cout << "states is zero@4?" << states.IsZero() << std::endl;
 			states *= att.Add();
+
+			std::cout << "after intersecting with new atts:" << std::endl;
+			states.PrintMinterm();
+
+			std::cout << "PRINT JUST MUTVARS/CHOICEVARS/TREATVARS" << std::endl;
 		}
 
 		maximisingPlayer = !maximisingPlayer;
