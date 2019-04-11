@@ -281,62 +281,20 @@ ADD Game::untreat(int level, const ADD& states) const {
     return states.Permute(&permute[0]);
 }
 
-// new implementation. doesn't obey lexicographical ordering. removes need for primed mutations too.. maybe better implementation after all, eliminates an exist
+// alternate unmutate, just copying untreat for now. ideally you would use indices() functions.
 ADD Game::unmutate(int level, const ADD& states) const {
-	// undone
 	std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
 	std::iota(permute.begin(), permute.end(), 0);
 
-	const auto indices = unprimedMutationVarsIndicesWindowed()[level];
-
-	int i = indices.front();
-	int j = chosenMutationsIndices().front() + level * indices.size(); // refactor
-
-	for (int n = 0; n < indices.size(); n++) { // duplication
+	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + level * bits(koVars.size() + 1); // is this correct?
+	int j = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + numMutations * 2 * bits(koVars.size() + 1) + numTreatments * bits(oeVars.size() + 1) + level * bits(koVars.size() + 1); // is this correct?
+																																																  // * 2 will need to be removed when I remove primed muts
+	for (int n = 0; n < bits(koVars.size() + 1); n++) { // duplication
 		permute[n + i] = n + j;
 	}
 
 	return states.Permute(&permute[0]);
 }
-
-//ADD Game::unmutate(int level, const ADD& states) const {
-//	std::cout << "states is zero@1.0?" << states.IsZero() << std::endl;
-//
-//	std::cout << "chooseRelation(" << level << ") is zero?" << chooseRelation(level).IsZero() << std::endl;
-//
-//    ADD add = states * chooseRelation(level).Add();
-//	std::cout << "add is zero@1.1?" << add.IsZero() << std::endl;
-//    //add = add.ExistAbstract(representNonPrimedMutVars().Add()); // not sure if this will work. not sure if maxabstract will either.. might have to implement my own exist abstract again here which returns 0 or .. or use clever min/max/negation..
-//	add = add.MaxAbstract(representNonPrimedMutVars().Add());
-//	std::cout << "add is zero@1.2?" << add.IsZero() << std::endl;
-//    add = renameMutVarsRemovingPrimes(add);
-//	std::cout << "add is zero@1.3?" << add.IsZero() << std::endl;
-//    return add;
-//}
-
-
-//BDD Attractors::representSyncQNTransitionRelation(const QNTable& qn) const {
-//	BDD bdd = manager.bddOne();
-//
-//	for (int v = 0; v < ranges.size(); v++) {
-//		if (ranges[v] > 0) {
-//			const auto& iVars = qn.inputVars[v];
-//			const auto& iValues = qn.inputValues[v];
-//			const auto& oValues = qn.outputValues[v];
-//
-//			std::vector<BDD> states(ranges[v] + 1, manager.bddZero());
-//			for (int i = 0; i < oValues.size(); i++) {
-//				states[oValues[i]] += representStateQN(iVars, iValues[i]);
-//			}
-//			for (int val = 0; val <= ranges[v]; val++) {
-//				BDD vPrime = representPrimedVarQN(v, val);
-//				bdd *= logicalEquivalence(states[val], vPrime);
-//			}
-//		}
-//	}
-//	return bdd;
-//}
-
 
 BDD Game::buildMutantSyncQNTransitionRelation() const {
 	// TEMP!!!
