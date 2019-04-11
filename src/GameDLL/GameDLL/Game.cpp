@@ -120,51 +120,6 @@ BDD Game::representNonPrimedMutVars() const {
 	return bdd;
 }
 
-ADD Game::renameMutVarsRemovingPrimes(const ADD& states) const {
-	std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
-	std::iota(permute.begin(), permute.end(), 0);
-
-	std::vector<int> primedIndices(primedMutationVarsIndices());
-	std::vector<int> unprimedIndices(unprimedMutationVarsIndices());
-
-	for (int i = 0; i < primedIndices.size(); i++) {
-		permute[primedIndices[i]] = unprimedIndices[i];
-	}
-
-	return states.Permute(&permute[0]);
-}
-
-void Game::forceMutationLexicographicalOrdering(BDD& S) const {
-	BDD ordering = attractors.manager.bddOne();
-
-	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1);
-	int b = bits(koVars.size() + 1); // you actually can use fewer bits that this, as you can represent one fewer choice each time
-	for (int m = 0; m < numMutations - 1; m++) {
-		BDD var1 = attractors.manager.bddVar(i);
-		BDD var2 = attractors.manager.bddVar(i + b);
-		S *= logicalImplication(!var1, !var2);
-
-		// as a test of this function print out the indices it goes through
-
-		int stop = i + b - 1;
-		int j = i;
-		for (; i < stop; i++) {
-			BDD varA2 = attractors.manager.bddVar(i + 1);
-			BDD varB2 = attractors.manager.bddVar(i + b + 1);
-
-			for (; j < i; j++) {
-				BDD varA1 = attractors.manager.bddVar(j);
-				BDD varB1 = attractors.manager.bddVar(j + b);
-				// this is currently a non-strict ordering, allows equality.
-				//S *= logicalImplication(logicalEquivalence(varA1, varB1), logicalImplication(!varA2, !varB2));
-				S *= logicalImplication(logicalEquivalence(varA1, varB1), (!varA2) * varB2);
-			}
-		}
-	}
-
-	S *= ordering;
-}
-
 void Game::removeInvalidTreatmentBitCombinations(BDD& S) const {
 	int b = bits(oeVars.size() + 1);
 	int theoreticalMax = (1 << b) - 1;
@@ -299,26 +254,14 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				targetFunction *= logicalEquivalence(states[val], vPrime);
 			}
 
-			// WAIT............... WE ARE ASSUMING SORTED??????????????????????????????????????????????????????
-			// assuming koVars and oeVars are disjoint. and sorted. so at some point we need to call sort
+			// assuming koVars and oeVars are disjoint. and sorted. we call sort in entry point
 
-			// temp!!!!
-			//if ((koVarsSet.find(v) != koVarsSet.end())) { //
 			if (k < koVars.size() && koVars[k] == v) {
 				BDD isMutated = attractors.manager.bddZero();
 
 				for (int lvl = 0; lvl < numMutations; lvl++) {
-					//isMutated += representMutation(lvl, v);
 					isMutated += representMutation(lvl, k);
 				}
-
-				// temp!!
-				//BDD isMutated = attractors.manager.bddOne(); // with this it throws an exception..
-
-				//bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0) * attractors.representUnprimedVarQN(v, 0), targetFunction);
-				//bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0) * attractors.representUnprimedVarQN(v, 0), targetFunction);
-
-
 				int max = attractors.ranges[v];
 				bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
 				std::cout << "MUTATION BRANCH  EXECUTED for v =" << v << std::endl;

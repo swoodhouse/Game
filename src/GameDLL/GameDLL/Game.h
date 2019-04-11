@@ -10,9 +10,8 @@ public: // temp
 	const std::vector<int> koVars;
 	const std::vector<int> oeVars;
 
-
 	const BDD mutantTransitionRelation;
-	const BDD unmutateRelation; // needed? // removing this is breaking..
+	const BDD unmutateRelation; // needed? // removing this is breaking.. think the num bdd vars will change
 	const ADD scoreRelation;
 
 	static int calcNumMutations(int height, bool maximisingPlayerGoesLast);
@@ -55,9 +54,7 @@ public: // temp
 	ADD untreat(int level, const ADD& states) const; // done
 	void removeInvalidTreatmentBitCombinations(BDD& S) const; // done
 	void removeInvalidMutationBitCombinations(BDD& S) const; // done
-	void forceMutationLexicographicalOrdering(BDD& S) const; // done.. but i suspect bugs
 	BDD representNonPrimedMutVars() const; // done
-	ADD renameMutVarsRemovingPrimes(const ADD& states) const; // done
 	ADD unmutate(int level, const ADD& states) const; // done
 
 	Game(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qn, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, int depth,

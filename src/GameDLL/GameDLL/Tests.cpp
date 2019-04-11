@@ -422,51 +422,51 @@ void unmutate(const Game& game) {
 		RC_ASSERT(game.unmutate(level, mutated.Add()) == unmutated.Add());
 	});
 }
-
-// generate N random pairs of vals. call representMutation(var, val). if -1 call representMutationNone(var). flip a coin to add or multiply to state[skipping this at the moment]. in parallel build a state2 doing representPrimedMutation(var, val), if -1 then representPrimedMutationNone(var). then, check state1 == state2
-void renameMutVarsRemovingPrimes(const Game& game) {
-	rc::check("rename...",
-		[&](std::vector<int> unused) {
-
-		//std::vector
-		//if (v.size() > game.numMutations) {
-		//	v.resize(game.numMutations);
-		//}
-		//for (int i : v) {
-		//	RC_PRE(i > 0);
-		//	RC_PRE(i < game.koVars.size());
-		//}
-		
-		// report length
-		BDD state1 = game.attractors.manager.bddOne();
-		BDD state2 = game.attractors.manager.bddOne();
-
-		std::random_device rd;     // only used once to initialise (seed) engine
-		std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
-		std::uniform_int_distribution<int> uni(-1, game.koVars.size() - 1); // guaranteed unbiased
-
-
-		const auto v = *rc::gen::container<std::vector<int>>(rc::gen::inRange(0, game.numMutations)); // temp
-
-		for (int i : v) {
-			int val = uni(rng); // report this value
-			if (val == -1) { // report
-				state1 *= game.representMutationNone(i);
-				state2 *= game.representPrimedMutationNone(i);
-			}
-			else {
-				state1 *= game.representMutation(i, val);
-				state2 *= game.representPrimedMutation(i, val);
-			}
-		}
-		std::cout << state1.FactoredFormString() << std::endl;
-		std::cout << state2.FactoredFormString() << std::endl;
-		//std::cout << game.renameMutVarsRemovingPrimes(state2.Add()).BddPattern().FactoredFormString() << std::endl;
-
-		RC_ASSERT(state1.Add() == game.renameMutVarsRemovingPrimes(state2.Add()));
-		RC_ASSERT(state1.Add() == game.renameMutVarsRemovingPrimes(state1.Add()));
-	});
-}
+//
+//// generate N random pairs of vals. call representMutation(var, val). if -1 call representMutationNone(var). flip a coin to add or multiply to state[skipping this at the moment]. in parallel build a state2 doing representPrimedMutation(var, val), if -1 then representPrimedMutationNone(var). then, check state1 == state2
+//void renameMutVarsRemovingPrimes(const Game& game) {
+//	rc::check("rename...",
+//		[&](std::vector<int> unused) {
+//
+//		//std::vector
+//		//if (v.size() > game.numMutations) {
+//		//	v.resize(game.numMutations);
+//		//}
+//		//for (int i : v) {
+//		//	RC_PRE(i > 0);
+//		//	RC_PRE(i < game.koVars.size());
+//		//}
+//		
+//		// report length
+//		BDD state1 = game.attractors.manager.bddOne();
+//		BDD state2 = game.attractors.manager.bddOne();
+//
+//		std::random_device rd;     // only used once to initialise (seed) engine
+//		std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
+//		std::uniform_int_distribution<int> uni(-1, game.koVars.size() - 1); // guaranteed unbiased
+//
+//
+//		const auto v = *rc::gen::container<std::vector<int>>(rc::gen::inRange(0, game.numMutations)); // temp
+//
+//		for (int i : v) {
+//			int val = uni(rng); // report this value
+//			if (val == -1) { // report
+//				state1 *= game.representMutationNone(i);
+//				state2 *= game.representPrimedMutationNone(i);
+//			}
+//			else {
+//				state1 *= game.representMutation(i, val);
+//				state2 *= game.representPrimedMutation(i, val);
+//			}
+//		}
+//		std::cout << state1.FactoredFormString() << std::endl;
+//		std::cout << state2.FactoredFormString() << std::endl;
+//		//std::cout << game.renameMutVarsRemovingPrimes(state2.Add()).BddPattern().FactoredFormString() << std::endl;
+//
+//		RC_ASSERT(state1.Add() == game.renameMutVarsRemovingPrimes(state2.Add()));
+//		RC_ASSERT(state1.Add() == game.renameMutVarsRemovingPrimes(state1.Add()));
+//	});
+//}
 
 // findmax works as expected - make n constant 0/N ADDs. ITE together. FindMax should give you back whichever the largest constant is
 void findMax(const Game& game) {
@@ -808,7 +808,7 @@ extern "C" __declspec(dllexport) int minimax2(int numVars, int ranges[], int min
 	bddPattern(game); // passes
 	findMax(game); // passes. but we don't even seem to be using? maybe we should
 	scoreFixpoint(game); // passes
-	renameMutVarsRemovingPrimes(game); // passes
+	//renameMutVarsRemovingPrimes(game); // passes
 	scoreLoop(game); // passes
 	untreat(game); // passes
 	unmutate(game); // not a complete test but passes....
