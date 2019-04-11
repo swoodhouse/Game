@@ -508,60 +508,27 @@ ADD Game::minimax() const {
 			//numTreatments--;
 			//states = backMin(states);
 			states = backMax(states); // backmax will work for sync networks
-
-			std::cout << "before untreating:" << std::endl;
-			states.PrintMinterm();
-
+			
 			states = untreat(numTreatments, states);
 
-			std::cout << "after untreating:" << std::endl;
-			states.PrintMinterm();
 			numTreatments--; // HERE OR BEFORE?
 							 //BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
 			BDD att = scoreAttractors(false, numMutations).BddPattern(); //THIS MAY HAVE BEEN A BUG
-
-			std::cout << "new atts:" << std::endl;
-			att.PrintMinterm();
-
 			states *= att.Add();
-
-			std::cout << "after intersecting with new atts:" << std::endl;
-			states.PrintMinterm();
 		}
 		else {
 			std::cout << "numTreatments:" << numTreatments << std::endl;
 			std::cout << "numMutations: " << numMutations << std::endl;
 
 			numMutations--; // here or after unmutate? here
-			std::cout << "states is zero@1?" << states.IsZero() << std::endl;
-
+			
 			states = backMax(states);
-			std::cout << "states is zero@2?" << states.IsZero() << std::endl;
-			std::cout << "before unmutating:" << std::endl;
-			states.PrintMinterm();
-
 			states = unmutate(numMutations, states);
 			//numMutations--; // temp
-			std::cout << "states is zero@3?" << states.IsZero() << std::endl;
-
-			std::cout << "afer unmutating:" << std::endl;
-			states.PrintMinterm();
 
 			//BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
 			BDD att = scoreAttractors(true, numMutations).BddPattern(); // THIS MAY HAVE BEEN A BUG
-			// TEMP, TREATMENTS NEEDS TO BE ADDED HERE..
-
-			std::cout << "new atts:" << std::endl;
-			att.PrintMinterm();
-
-			std::cout << "states is zero@4?" << states.IsZero() << std::endl;
-			//states *= att.Add();
-			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // temp
-			
-			std::cout << "after intersecting with new atts:" << std::endl;
-			states.PrintMinterm();
-
-			//std::cout << "PRINT JUST MUTVARS/CHOICEVARS/TREATVARS" << std::endl;
+			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // score again here??
 		}
 
 		maximisingPlayer = !maximisingPlayer;
