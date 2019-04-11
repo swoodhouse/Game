@@ -782,11 +782,11 @@ std::string Game::prettyPrint(const ADD& states) const {
 
 
 // TODO: exception being thrown somwhere in here
-ADD Game::scoreAttractors(bool maximisingPlayer, int numMutations) const {
+ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	ADD states = attractors.manager.addZero();
 
 
-	BDD treatment = maximisingPlayer ? representSomeTreatment() : representTreatmentNone();
+	BDD treatment = applyTreatments ? representSomeTreatment() : representTreatmentNone();
 	BDD mutsAndTreats = treatment * nMutations(numMutations);
 	// temp. need this
 	//removeInvalidTreatmentBitCombinations(mutsAndTreats); // refacotr this out.. can be computed once too
@@ -923,6 +923,7 @@ ADD Game::minimax() const {
 
 			//BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
 			BDD att = scoreAttractors(false, numMutations).BddPattern(); // THIS MAY HAVE BEEN A BUG
+			// TEMP, TREATMENTS NEEDS TO BE ADDED HERE..
 
 			std::cout << "new atts:" << std::endl;
 			att.PrintMinterm();
