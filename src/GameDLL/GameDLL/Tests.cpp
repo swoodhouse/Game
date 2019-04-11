@@ -213,7 +213,7 @@ void backMax(const Game& game) {
 
 		game.removeInvalidTreatmentBitCombinations(S); // refacotr this out.. can be computed once too
 		game.removeInvalidMutationBitCombinations(S);
-		game.forceMutationLexicographicalOrdering(S);
+		//game.forceMutationLexicographicalOrdering(S);
 		game.attractors.removeInvalidBitCombinations(S);
 
 		RC_ASSERT(!S.IsZero());
@@ -297,7 +297,7 @@ void backMin(const Game& game) {
 
 		game.removeInvalidTreatmentBitCombinations(S); // refacotr this out.. can be computed once too
 		game.removeInvalidMutationBitCombinations(S);
-		game.forceMutationLexicographicalOrdering(S);
+//		game.forceMutationLexicographicalOrdering(S);
 		game.attractors.removeInvalidBitCombinations(S);
 
 		// unsure if the two other params are required

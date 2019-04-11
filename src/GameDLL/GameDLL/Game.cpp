@@ -49,16 +49,6 @@ std::vector<std::vector<int>> Game::unprimedMutationVarsIndicesWindowed() const 
 }
 
 std::vector<int> Game::unprimedMutationVarsIndices() const {
-	//std::vector<std::vector<int>> result(numMutations);
-
-	//for (int i = 0; i < numMutations; i++) {
-	//	std::vector<int> v(koVars.size() + 1);
-	//	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
-	//	result.push_back(v);
-	//}
-
-	//return result;
-
 	std::vector<int> v(numMutations * bits(koVars.size() + 1));
 	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
 	return v;
@@ -132,74 +122,6 @@ ADD Game::renameMutVarsRemovingPrimes(const ADD& states) const {
     }
 
     return states.Permute(&permute[0]);
-}
-// maybe do purely at the level of bits?
-BDD Game::chooseRelation(int level) const {
-    //BDD bdd = attractors.manager.bddZero();
-	BDD bdd = attractors.manager.bddOne();
-
-	const auto unprimedMuts = unprimedMutationVarsIndicesWindowed(); // use const auto more
-	const auto primedMuts = unprimedMutationVarsIndicesWindowed();
-	BDD choiceMustBeMade = attractors.manager.bddZero();
-
-    for (int var = 0; var < numMutations; var++) {
-        for (int val = 0; val < koVars.size(); val++) {
-			BDD unprimedMutVal = representMutation(var, val);
-            BDD choice = representChosenMutation(level, val);
-			choiceMustBeMade += choice;
-			BDD primedMutZero = representPrimedMutationNone(var);
-
-            BDD otherPrimedUnchanged = attractors.manager.bddOne();
-			for (int var2 = 0; var2 < numMutations; var2++) {
-				if (var2 != var) {
-					for (int i = 0; i < unprimedMuts[var2].size(); i++) {
-						BDD unprimeBit = attractors.manager.bddVar(unprimedMuts[var2][i]);
-						BDD primedBit = attractors.manager.bddVar(primedMuts[var2][i]);
-						otherPrimedUnchanged *= logicalEquivalence(unprimeBit, primedBit);
-					}
-				}
-			}
-
-			//bdd += logicalEquivalence(choice, unprimedMutVal * primedMutZero * otherPrimedUnchanged); // we also need to say that a choice has to be made
-			bdd *= logicalEquivalence(unprimedMutVal, choice * primedMutZero * otherPrimedUnchanged); // also should be *=?
-		}
-    }
-    // choice_level = unprimedMut_n  /\ primedMut_n = 0 /\ primedMut_i/=n = unprimedMut_i
-    
-	bdd *= choiceMustBeMade;
-
-    return bdd;
-}
-
-void Game::forceMutationLexicographicalOrdering(BDD& S) const {
-    BDD ordering = attractors.manager.bddOne();
-
-    int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1);
-    int b = bits(koVars.size() + 1); // you actually can use fewer bits that this, as you can represent one fewer choice each time
-    for (int m = 0; m < numMutations - 1; m++) {
-        BDD var1 = attractors.manager.bddVar(i);
-        BDD var2 = attractors.manager.bddVar(i + b);
-        S *= logicalImplication(!var1, !var2);
-
-    // as a test of this function print out the indices it goes through
-
-        int stop = i + b - 1;
-        int j = i;
-        for(; i < stop; i++) {
-            BDD varA2 = attractors.manager.bddVar(i + 1);
-            BDD varB2 = attractors.manager.bddVar(i + b + 1);
-
-            for (; j < i; j++) {
-                BDD varA1 = attractors.manager.bddVar(j);
-                BDD varB1 = attractors.manager.bddVar(j + b);
-                // this is currently a non-strict ordering, allows equality.
-                //S *= logicalImplication(logicalEquivalence(varA1, varB1), logicalImplication(!varA2, !varB2));
-                S *= logicalImplication(logicalEquivalence(varA1, varB1), (!varA2) * varB2);
-            }
-        }
-    }
-
-    S *= ordering;
 }
 
 void Game::removeInvalidTreatmentBitCombinations(BDD& S) const {
@@ -281,62 +203,20 @@ ADD Game::untreat(int level, const ADD& states) const {
     return states.Permute(&permute[0]);
 }
 
-// new implementation. doesn't obey lexicographical ordering. removes need for primed mutations too.. maybe better implementation after all, eliminates an exist
+// alternate unmutate, just copying untreat for now. ideally you would use indices() functions.
 ADD Game::unmutate(int level, const ADD& states) const {
-	// undone
 	std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
 	std::iota(permute.begin(), permute.end(), 0);
 
-	const auto indices = unprimedMutationVarsIndicesWindowed()[level];
-
-	int i = indices.front();
-	int j = chosenMutationsIndices().front() + level * indices.size(); // refactor
-
-	for (int n = 0; n < indices.size(); n++) { // duplication
+	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + level * bits(koVars.size() + 1); // is this correct?
+	int j = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + numMutations * 2 * bits(koVars.size() + 1) + numTreatments * bits(oeVars.size() + 1) + level * bits(koVars.size() + 1); // is this correct?
+																																																  // * 2 will need to be removed when I remove primed muts
+	for (int n = 0; n < bits(koVars.size() + 1); n++) { // duplication
 		permute[n + i] = n + j;
 	}
 
 	return states.Permute(&permute[0]);
 }
-
-//ADD Game::unmutate(int level, const ADD& states) const {
-//	std::cout << "states is zero@1.0?" << states.IsZero() << std::endl;
-//
-//	std::cout << "chooseRelation(" << level << ") is zero?" << chooseRelation(level).IsZero() << std::endl;
-//
-//    ADD add = states * chooseRelation(level).Add();
-//	std::cout << "add is zero@1.1?" << add.IsZero() << std::endl;
-//    //add = add.ExistAbstract(representNonPrimedMutVars().Add()); // not sure if this will work. not sure if maxabstract will either.. might have to implement my own exist abstract again here which returns 0 or .. or use clever min/max/negation..
-//	add = add.MaxAbstract(representNonPrimedMutVars().Add());
-//	std::cout << "add is zero@1.2?" << add.IsZero() << std::endl;
-//    add = renameMutVarsRemovingPrimes(add);
-//	std::cout << "add is zero@1.3?" << add.IsZero() << std::endl;
-//    return add;
-//}
-
-
-//BDD Attractors::representSyncQNTransitionRelation(const QNTable& qn) const {
-//	BDD bdd = manager.bddOne();
-//
-//	for (int v = 0; v < ranges.size(); v++) {
-//		if (ranges[v] > 0) {
-//			const auto& iVars = qn.inputVars[v];
-//			const auto& iValues = qn.inputValues[v];
-//			const auto& oValues = qn.outputValues[v];
-//
-//			std::vector<BDD> states(ranges[v] + 1, manager.bddZero());
-//			for (int i = 0; i < oValues.size(); i++) {
-//				states[oValues[i]] += representStateQN(iVars, iValues[i]);
-//			}
-//			for (int val = 0; val <= ranges[v]; val++) {
-//				BDD vPrime = representPrimedVarQN(v, val);
-//				bdd *= logicalEquivalence(states[val], vPrime);
-//			}
-//		}
-//	}
-//	return bdd;
-//}
-
 
 BDD Game::buildMutantSyncQNTransitionRelation() const {
 	// TEMP!!!
@@ -630,136 +510,6 @@ ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
 	return max * a;
 }
 
-//ADD Game::scoreAttractors(bool maximisingPlayer, int numMutations) const {
-//	//std::cout << "in scoreAttractors. treatmentVar indices:" << std::endl;
-//	//for (auto i : this->treatmentVarIndices()) std::cout << i << " ";
-//	//std::cout << std::endl;
-//
-//	//std::cout << "attractorsIndicies():" << std::endl;
-//	//for (auto i : this->attractorsIndicies()) std::cout << i << " ";
-//	//std::cout << std::endl;
-//
-//	//std::cout << "attractors.ranges:" << std::endl;
-//	//for (auto i : this->attractors.ranges) std::cout << i << " ";
-//	//std::cout << std::endl;
-//
-//   ADD states = attractors.manager.addZero();
-//
-//   //BDD treatment = maximisingPlayerLast ? !representTreatmentNone() : representTreatmentNone();
-//   //BDD initial = attractors.manager.bddOne();// temp
-//   //BDD initial = representTreatmentNone() * nMutations(0);// temp
-//  // BDD initial = !representTreatmentNone() * nMutations(0);// temp
-//   //BDD initial = !representTreatmentNone() * nMutations(2);// temp
-//
-//   //std::cout << "representTreatmentNone():" << std::endl;
-//   //representTreatmentNone().PrintMinterm();
-//   //std::cout << "nMutations(0):" << std::endl;
-//   //nMutations(0).PrintMinterm();
-//   //std::cout << "nMutations(1):" << std::endl;
-//   //nMutations(1).PrintMinterm();
-//   //std::cout << "nMutations(2):" << std::endl;
-//   //nMutations(2).PrintMinterm();
-//   //std::cout << "representMutationNone(0):" << std::endl;
-//   //representMutationNone(0).PrintMinterm();
-//   //std::cout << "!representMutationNone(0):" << std::endl;
-//   //(!representMutationNone(0)).PrintMinterm();
-//   //std::cout << "representMutationNone(1):" << std::endl;
-//   //representMutationNone(1).PrintMinterm();
-//   //std::cout << "!representMutationNone(1):" << std::endl;
-//   //(!representMutationNone(1)).PrintMinterm();
-//   //std::cout << "representMutationNone(2):" << std::endl;
-//   //representMutationNone(2).PrintMinterm();
-//   //std::cout << "!representMutationNone(2):" << std::endl;
-//   //(!representMutationNone(2)).PrintMinterm();
-//
-//   /*std::cout << "alternate nMutations(0):" << std::endl;
-//   (representMutationNone(0) * representMutationNone(1)).PrintMinterm();
-//   std::cout << "alternate nMutations(1):" << std::endl;
-//   ((!representMutationNone(0) * representMutationNone(1)) + (representMutationNone(0) * !representMutationNone(1))).PrintMinterm();
-//   std::cout << "alternate nMutations(2):" << std::endl;
-//   (!representMutationNone(0) * !representMutationNone(1)).PrintMinterm();
-//
-//   std::cout << "another alternate nMutations(1):" << std::endl;
-//   ((!representMutationNone(0) * representMutationNone(1))).PrintMinterm();*/
-//   
-//
-//   //need to check remove invalid too... best is to hard code it:
-//   //std::cout << "another alternate nMutations(1):" << std::endl;
-//   //(((representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1))).PrintMinterm();
-//   //std::cout << "another alternate nMutations(2):" << std::endl;
-//   //(representMutation(0, 0) * representMutation(1, 1)).PrintMinterm(); // defintely wrong.......
-//			//														   // go with these^^^^^^^^^^^^^^^^^^^^
-//
-//
-//   //std::cout << "(representMutation(0, 0)):" << std::endl;
-//   //(representMutation(0, 0)).PrintMinterm();
-//   //std::cout << "(representMutation(0, 1)):" << std::endl;
-//   //(representMutation(0, 1)).PrintMinterm();
-//
-//   //std::cout << "(representMutation(1, 0)):" << std::endl;
-//   //(representMutation(1, 0)).PrintMinterm();
-//
-//   //std::cout << "(representMutation(1, 1)):" << std::endl;
-//   //(representMutation(1, 1)).PrintMinterm();
-//
-//   //std::cout << ".." << std::endl;
-//   //
-//   //BDD initial = representTreatmentNone() * nMutations(2);// temp
-//   //BDD initial = representTreatment(0) * nMutations(2);// temp
-//
-//   BDD initial = attractors.manager.bddOne();
-//
-//   if (maximisingPlayer) {
-//	   initial = representSomeTreatment() * nMutations(numMutations);// temp
-//   }
-//   else {
-//	   initial = representTreatmentNone() * nMutations(numMutations);// temp
-//   }
-//   
-//   //initial.PrintMinterm();
-//   //std::cout << "numMutations:" << numMutations << std::endl;
-//   //BDD initial = nMutations(numMutations) * treatment;
-//
-//   // temp. need this
-//   //removeInvalidTreatmentBitCombinations(initial); // refacotr this out.. can be computed once too
-//   //std::cout << "initial after remvoing invalid treatments:" << initial.FactoredFormString() << std::endl;
-//   //initial.PrintMinterm();
-//   //removeInvalidMutationBitCombinations(initial); // temp
-//   //forceMutationLexicographicalOrdering(initial);
-//
-//
-//   // ***************************
-//   // print out removeInvalidTreatmentBitCombinations and !representTreatment(val);
-//
-//   //std::cout << "representTreatmentNone()" << representTreatmentNone().FactoredFormString() << std::endl;
-//   //representTreatmentNone().PrintMinterm();
-//   //for (int i = 0; i <= 2; i++) {
-//	  // std::cout << "representTreatment(" << i << "):" << representTreatment(i).FactoredFormString() << std::endl;
-//	  // representTreatment(i).PrintMinterm();
-//   //}
-//
-//   //
-//   // TODO: variables to keep implementation breaks this. each BDD now represents N attractors.
-//   // but.. iterative max computation would work
-//   std::list<BDD> att = attractors.attractors(mutantTransitionRelation, !initial/*, attractors.manager.bddOne()*/);
-//   //std::list<BDD> att = attractors.attractors(mutantTransitionRelation, !initial, initial);
-//   //std::list<BDD> att = attractors.attractors(mutantTransitionRelation, attractors.manager.bddZero(), attractors.manager.bddOne());
-//
-//   std::ofstream file("Attractors.csv");
-//   for (const BDD& a : att) {
-//	   // existmax out bdd vars, leaving just mutvars
-//	   // call findmax
-//	  // std::cout << "attractor" << std::endl;
-//	   states += scoreLoop(a, scoreRelation);
-//	   file << attractors.prettyPrint(a) << std::endl;
-//   }
-//
-//   std::ofstream file2("scoredAttractors.csv");
-//   file2 << attractors.prettyPrint(states.BddPattern()) << std::endl;
-//
-//   return states;
-//}
-
 BDD Game::fixpoints(const BDD& mutsAndTreats) const {
 	BDD fixpoint = attractors.manager.bddOne();
 	for (int i = 0; i < attractors.numUnprimedBDDVars; i++) {
@@ -772,7 +522,6 @@ BDD Game::fixpoints(const BDD& mutsAndTreats) const {
 	attractors.removeInvalidBitCombinations(bdd);
 	return bdd;
 }
-
 
 ADD Game::scoreFixpoints(const BDD& fix) const {
 	return fix.Add() * scoreRelation;
