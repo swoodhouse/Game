@@ -474,9 +474,18 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 
 	return states;
 }
+
+BDD Game::representTreatmentVariables() const {
+	BDD bdd = attractors.manager.bddOne();
+	for (auto i : treatmentVarIndices()) {
+		BDD var = attractors.manager.bddVar(i);
+		bdd *= var;
+	}
+	return bdd;
+}
+
 ADD Game::minimax() const {
 	std::cout << "\n\n\nin minimax" << std::endl;
-	//int height = 4; // temp
 	int height = this->height;
 	int numTreatments = this->numTreatments;
 	int numMutations = this->numMutations;
@@ -539,15 +548,16 @@ ADD Game::minimax() const {
 			states.PrintMinterm();
 
 			//BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
-			BDD att = scoreAttractors(false, numMutations).BddPattern(); // THIS MAY HAVE BEEN A BUG
+			BDD att = scoreAttractors(true, numMutations).BddPattern(); // THIS MAY HAVE BEEN A BUG
 			// TEMP, TREATMENTS NEEDS TO BE ADDED HERE..
 
 			std::cout << "new atts:" << std::endl;
 			att.PrintMinterm();
 
 			std::cout << "states is zero@4?" << states.IsZero() << std::endl;
-			states *= att.Add();
-
+			//states *= att.Add();
+			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // temp
+			
 			std::cout << "after intersecting with new atts:" << std::endl;
 			states.PrintMinterm();
 

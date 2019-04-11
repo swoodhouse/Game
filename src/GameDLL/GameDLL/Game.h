@@ -37,6 +37,7 @@ public: // temp
 	ADD backMax(const ADD& states) const; // done
 	ADD scoreLoop(const BDD& loop, const ADD& scoreRelation) const;
 	ADD scoreAttractors(bool maximisingPlayer, int numMutations) const; // done.. except taking max not mean
+	BDD representTreatmentVariables() const;
 	ADD scoreFixpoints(const BDD & fix) const;
 	std::string prettyPrint(const ADD & states) const;
 	BDD fixpoints(const BDD & mutsAndTreats) const;
