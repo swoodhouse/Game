@@ -12,7 +12,7 @@ public: // temp
 
 
 	const BDD mutantTransitionRelation;
-	const BDD unmutateRelation; // needed?
+	const BDD unmutateRelation; // needed? // removing this is breaking..
 	const ADD scoreRelation;
 
 	static int calcNumMutations(int height, bool maximisingPlayerGoesLast);
@@ -59,7 +59,6 @@ public: // temp
 	BDD representNonPrimedMutVars() const; // done
 	ADD renameMutVarsRemovingPrimes(const ADD& states) const; // done
 	ADD unmutate(int level, const ADD& states) const; // done
-	BDD chooseRelation(int level) const; 
 
 	Game(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qn, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, int depth,
 		bool maximisingPlayerGoesLast) :
