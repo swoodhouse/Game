@@ -32,23 +32,17 @@ std::vector<int> Game::treatmentVarIndices() const {
 	return v;
 }
 
+// RENAME.......
 std::vector<int> Game::unprimedMutationVarsIndices() const {
 	std::vector<int> v(numMutations * bits(koVars.size() + 1));
 	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
 	return v;
 }
 
-// THIS NEEDS TO BE DELETED WHEN WE REMOVE PRIMED
-std::vector<int> Game::primedMutationVarsIndices() const {
-	std::vector<int> v(numMutations * bits(koVars.size() + 1));
-	std::iota(v.begin(), v.end(), unprimedMutationVarsIndices().back() + 1);
-	return v;
-}
-
 // probably take level as param...
 std::vector<int> Game::chosenTreatmentsIndices() const {
 	std::vector<int> v(numTreatments * bits(oeVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
-	std::iota(v.begin(), v.end(), primedMutationVarsIndices().back() + 1); // THIS NEEDS TO CHANGE WHEN WE REMOVE PRIMED
+	std::iota(v.begin(), v.end(), unprimedMutationVarsIndices().back() + 1);
 	return v;
 }
 
@@ -154,7 +148,7 @@ ADD Game::unmutate(int level, const ADD& states) const {
 	std::iota(permute.begin(), permute.end(), 0);
 
 	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + level * bits(koVars.size() + 1); // is this correct?
-	int j = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + numMutations * 2 * bits(koVars.size() + 1) + numTreatments * bits(oeVars.size() + 1) + level * bits(koVars.size() + 1); // is this correct?
+	int j = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + numMutations * bits(koVars.size() + 1) + numTreatments * bits(oeVars.size() + 1) + level * bits(koVars.size() + 1); // is this correct?
 																																																  // * 2 will need to be removed when I remove primed muts
 																																																  // THIS NEEDS TO CHANGE WHEN WE REMOVE PRIMED// THIS NEEDS TO CHANGE WHEN WE REMOVE PRIMED
 	for (int n = 0; n < bits(koVars.size() + 1); n++) { // duplication
@@ -494,9 +488,8 @@ BDD Game::representChosenTreatment(int level, int treatment) const { // in this 
 
 	int i = attractors.numUnprimedBDDVars * 2 +
 		bits(oeVars.size() + 1) +
-		numMutations * 2 * bits(koVars.size() + 1) + // THIS NEEDS TO CHANGE WHEN WE REMOVE PRIMED
+		numMutations * bits(koVars.size() + 1) +
 		level * bits(oeVars.size() + 1);
-	// * 2 to allow space for primed mutation //countBitsMutVar(var); // different for tre
 
 	int b = bits(oeVars.size() + 1); // don't actually need +1 because don't need to represent zero, but easier this way
 
@@ -521,7 +514,7 @@ BDD Game::representChosenMutation(int level, int mutation) const { // in this ca
 	// refactor out
 	int i = attractors.numUnprimedBDDVars * 2 +
 		bits(oeVars.size()) +
-		numMutations * 2 * bits(koVars.size()) + // * 2 to allow space for primed mutation
+		numMutations * bits(koVars.size()) +
 		numTreatments * bits(oeVars.size()) +
 		level * bits(koVars.size());
 	int b = bits(koVars.size() + 1); // again, don't need + 1 but easier this way for symmetry with other classes of variables

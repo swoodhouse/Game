@@ -47,7 +47,7 @@ bool indicesAreSequential(const Game& game) {
 		std::vector<int> attractorsIndicies = game.attractorsIndicies();
 		std::vector<int> treatmentVarIndices = game.treatmentVarIndices();
 		std::vector<int> unprimedMutationVarsIndices = game.unprimedMutationVarsIndices(); // colapse
-		std::vector<int> primedMutationVarsIndices = game.primedMutationVarsIndices(); // colapse
+//		std::vector<int> primedMutationVarsIndices = game.primedMutationVarsIndices(); // colapse
 		std::vector<int> chosenTreatmentsIndices = game.chosenTreatmentsIndices();
 		std::vector<int> chosenMutationsIndices = game.chosenMutationsIndices(); // colapse
 
@@ -56,7 +56,6 @@ bool indicesAreSequential(const Game& game) {
 		indices.insert(indices.end(), attractorsIndicies.begin(), attractorsIndicies.end());
 		indices.insert(indices.end(), treatmentVarIndices.begin(), treatmentVarIndices.end());
 		indices.insert(indices.end(), unprimedMutationVarsIndices.begin(), unprimedMutationVarsIndices.end());
-		indices.insert(indices.end(), primedMutationVarsIndices.begin(), primedMutationVarsIndices.end());
 		indices.insert(indices.end(), chosenTreatmentsIndices.begin(), chosenTreatmentsIndices.end());
 		indices.insert(indices.end(), chosenMutationsIndices.begin(), chosenMutationsIndices.end());	
 

@@ -19,7 +19,6 @@ struct Game {
 	std::vector<int> attractorsIndicies() const;
 	std::vector<int> treatmentVarIndices() const;
 	std::vector<int> unprimedMutationVarsIndices() const;
-	std::vector<int> primedMutationVarsIndices() const;
 	std::vector<int> chosenTreatmentsIndices() const;
 	std::vector<int> chosenMutationsIndices() const;
 
