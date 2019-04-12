@@ -38,9 +38,7 @@ public: // temp
 	ADD scoreLoop(const BDD& loop, const ADD& scoreRelation) const;
 	ADD scoreAttractors(bool maximisingPlayer, int numMutations) const; // done.. except taking max not mean
 	BDD representTreatmentVariables() const;
-	ADD scoreFixpoints(const BDD & fix) const;
 	std::string prettyPrint(const ADD & states) const;
-	BDD fixpoints(const BDD & mutsAndTreats) const;
 	BDD buildMutantSyncQNTransitionRelation() const; // done.. except no.. i need zero to mean no mutation i think!!!
 	BDD representTreatment(int val) const; // done.. including zero mut and bits
 	BDD representTreatmentNone() const; //	done
