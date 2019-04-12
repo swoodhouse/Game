@@ -23,8 +23,6 @@ struct Game {
 	std::vector<int> chosenTreatmentsIndices() const;
 	std::vector<int> chosenMutationsIndices() const;
 
-	std::vector<std::vector<int>> unprimedMutationVarsIndicesWindowed() const;
-	std::vector<std::vector<int>> primedMutationVarsIndicesWindowed() const;
 	/*std::vector<std::vector<int>> chosenTreatmentsIndices() const;
 	std::vector<std::vector<int>> chosenMutationsIndices() const;*/
 

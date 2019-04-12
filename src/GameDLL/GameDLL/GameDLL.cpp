@@ -71,5 +71,10 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	std::cout << "\nFinal output of minimax:" << std::endl;
 	out.PrintMinterm();
 
+	//std::ofstream file("Minimax.csv");
+	//file << header << std::endl;
+	//file << prettyPrint(states) << std::endl;
+	//file << attractors.prettyPrint(states.BddPattern()) << std::endl; // TEMP!
+
     return 0;
 }

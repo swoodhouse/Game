@@ -32,42 +32,11 @@ std::vector<int> Game::treatmentVarIndices() const {
 	return v;
 }
 
-// write second in terms of this
-std::vector<std::vector<int>> Game::unprimedMutationVarsIndicesWindowed() const {
-	std::vector<std::vector<int>> result;
-	int start = treatmentVarIndices().back() + 1;
-
-	for (int i = 0; i < numMutations; i++) {
-		std::vector<int> v(koVars.size() + 1);
-		std::iota(v.begin(), v.end(), start);
-		start = v.back() + 1;
-		result.push_back(v);
-	}
-
-	return result;
-}
-
 std::vector<int> Game::unprimedMutationVarsIndices() const {
 	std::vector<int> v(numMutations * bits(koVars.size() + 1));
 	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
 	return v;
 }
-
-// write second in terms of this. at least test unwindowing this gives the same as the other
-std::vector<std::vector<int>> Game::primedMutationVarsIndicesWindowed() const {
-	std::vector<std::vector<int>> result;
-	int start = unprimedMutationVarsIndices().back() + 1;
-
-	for (int i = 0; i < numMutations; i++) {
-		std::vector<int> v(koVars.size() + 1);
-		std::iota(v.begin(), v.end(), start);
-		start = v.back() + 1;
-		result.push_back(v);
-	}
-
-	return result;
-}
-
 
 std::vector<int> Game::primedMutationVarsIndices() const {
 	std::vector<int> v(numMutations * bits(koVars.size() + 1));
@@ -78,7 +47,7 @@ std::vector<int> Game::primedMutationVarsIndices() const {
 // probably take level as param...
 std::vector<int> Game::chosenTreatmentsIndices() const {
 	std::vector<int> v(numTreatments * bits(oeVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
-	std::iota(v.begin(), v.end(), primedMutationVarsIndices().back() + 1);
+	std::iota(v.begin(), v.end(), primedMutationVarsIndices().back() + 1); // THIS NEEDS TO CHANGE WHEN WE REMOVE PRIMED
 	return v;
 }
 
@@ -454,11 +423,6 @@ ADD Game::minimax() const {
 
 		maximisingPlayer = !maximisingPlayer;
 	}
-
-	std::ofstream file("Minimax.csv");
-	//file << header << std::endl;
-	//file << prettyPrint(states) << std::endl;
-	file << attractors.prettyPrint(states.BddPattern()) << std::endl; // TEMP!
 
 	//return states.MaxAbstract(attractors.representNonPrimeVariables().Add()); // should be min anyway but this is very wrong
 	//return backMax(states); // should be min anyway but this is very wrong
