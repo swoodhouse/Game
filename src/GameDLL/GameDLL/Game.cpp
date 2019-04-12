@@ -521,7 +521,7 @@ ADD Game::minimax() const {
 			states = backMax(states);
 			states = unmutate(numMutations, states);
 			BDD att = scoreAttractors(true, numMutations).BddPattern(); // THIS MAY HAVE BEEN A BUG // to score then unscore is not ideal
-			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // score again here?? run backrward?
+			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // score again here?? run backrward and intersect with attractors in between adding treatment and removing mut?
 		}
 
 		maximisingPlayer = !maximisingPlayer;
