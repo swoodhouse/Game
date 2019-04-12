@@ -1,7 +1,6 @@
 #pragma once
 
-class Game {
-public: // temp
+struct Game {
 	const Attractors attractors;
 	const int numMutations;
 	const int numTreatments;
