@@ -267,7 +267,7 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				std::cout << "MUTATION BRANCH  EXECUTED for v =" << v << std::endl;
 				k++;
 			}
-			else if (o < oeVars.size() && oeVars[o] == v) { // rename to treat vars - koing no oe-ing
+			else if (o < oeVars.size() && oeVars[o] == v) { // rename to treat vars - koing not oe-ing
 				BDD isTreated = representTreatment(o);
 				bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
 				std::cout << "TREATMENT BRANCH EXECUTED for v =" << v << std::endl;
@@ -491,43 +491,36 @@ ADD Game::minimax() const {
 	int numMutations = this->numMutations;
 	bool maximisingPlayer = this->maximisingPlayerLast;
 
-	maximisingPlayer = true; // temp
-	std::cout << "here1" << std::endl;
+	maximisingPlayer = false; // temp
 
 	//ADD states = scoreAttractors(maximisingPlayer, numMutations);
-	ADD states = scoreAttractors(true, numMutations);
+	std::cout << "height:" << height << std::endl;
+	std::cout << "treatment?" << false << std::endl;
+	std::cout << "numMutations" << numMutations << std::endl;
+	ADD states = scoreAttractors(false, numMutations);
+	height--;
 	//ADD states = scoreAttractors(false, numMutations);
 
 
 	for (; height > 0; height--) { // do i have an off by one error
 		std::cout << "height:" << height << std::endl;
 		if (maximisingPlayer) {
-
-			std::cout << "numTreatments:" << numTreatments << std::endl;
+			numTreatments--; // HERE OR BEFORE?
+			std::cout << "treatment?" << false << std::endl;
 			std::cout << "numMutations" << numMutations << std::endl;
-			//numTreatments--;
 			//states = backMin(states);
 			states = backMax(states); // backmax will work for sync networks
-			
-			states = untreat(numTreatments, states);
-
-			numTreatments--; // HERE OR BEFORE?
-							 //BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
-			BDD att = scoreAttractors(false, numMutations).BddPattern(); //THIS MAY HAVE BEEN A BUG
+			states = untreat(numTreatments, states);			
+			BDD att = scoreAttractors(false, numMutations).BddPattern(); //THIS MAY HAVE BEEN A BUG // to score then unscore is not ideal
 			states *= att.Add();
 		}
 		else {
-			std::cout << "numTreatments:" << numTreatments << std::endl;
-			std::cout << "numMutations: " << numMutations << std::endl;
-
 			numMutations--; // here or after unmutate? here
-			
+			std::cout << "treatment?" << true << std::endl;
+			std::cout << "numMutations" << numMutations << std::endl;
 			states = backMax(states);
 			states = unmutate(numMutations, states);
-			//numMutations--; // temp
-
-			//BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
-			BDD att = scoreAttractors(true, numMutations).BddPattern(); // THIS MAY HAVE BEEN A BUG
+			BDD att = scoreAttractors(true, numMutations).BddPattern(); // THIS MAY HAVE BEEN A BUG // to score then unscore is not ideal
 			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // score again here??
 		}
 

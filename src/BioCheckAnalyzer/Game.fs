@@ -96,6 +96,8 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
     let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
 
+
+
 //    // temp: turning off vmcai for Tests.cpp
 //    printfn "TEMP: TURNING OFF VMCAI FOR TESTING..."
 //    let ranges = qn |> List.map (fun n -> n.var, Attractors.rangeToList n.range) |> Map.ofList
@@ -111,6 +113,10 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     let inputVars' = List.reduce (@) inputVars |> Array.ofList
     let numUpdates = List.map List.length outputValues |> Array.ofList
     let inputValues' = List.reduce (@) inputValues |> List.reduce (@) |> Array.ofList
+
+    //temp
+    System.IO.File.WriteAllText("table.txt", sprintf "%A" outputValues)
+
     let outputValues' = List.reduce (@) outputValues |> Array.ofList
 
     let mutations' = mutations |> List.map (fun n -> List.findIndex ((=) n) qnVars)
