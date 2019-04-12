@@ -3,7 +3,6 @@
 #include "stdafx.h"
 #include "Attractors.h"
 #include "Game.h"
-#include <set>
 
 inline BDD logicalImplication(const BDD& a, const BDD& b) {
 	return (!a) + b;
@@ -379,8 +378,6 @@ std::string Game::prettyPrint(const ADD& states) const {
 
 ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	ADD states = attractors.manager.addZero();
-
-
 	BDD treatment = applyTreatments ? representSomeTreatment() : representTreatmentNone();
 	BDD mutsAndTreats = treatment * nMutations(numMutations);
 	// temp. need this
