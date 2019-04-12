@@ -133,7 +133,7 @@ ADD Game::untreat(int level, const ADD& states) const {
 	std::iota(permute.begin(), permute.end(), 0);
 
 	int i = attractors.numUnprimedBDDVars * 2; // refactor out
-	int j = i + bits(oeVars.size() + 1) + numMutations * 2 * bits(koVars.size() + 1) + level * bits(oeVars.size() + 1);
+	int j = i + bits(oeVars.size() + 1) + numMutations * bits(koVars.size() + 1) + level * bits(oeVars.size() + 1);
 
 	for (int n = 0; n < bits(oeVars.size() + 1); n++) { // duplication
 		permute[n + i] = n + j;
