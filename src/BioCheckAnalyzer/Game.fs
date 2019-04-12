@@ -62,11 +62,13 @@ let extendQN qn mutations treatments = // eventually needs to be two classes of 
     let qn = qn |> List.map (fun n -> if Set.contains n.var mutations then
                                           let r = { n with defaultF = false; f = extendTFwithKo n (mkNode "ko" <| lastId + i); inputs = (lastId + i) :: n.inputs}
                                           i <- i + 1
+                                          printfn "mutating.."
                                           r
                                        else n) 
     let qn = qn |> List.map (fun n -> if Set.contains n.var treatments then
                                           let r = { n with defaultF = false; f = extendTFwithOe n (mkNode "oe" <| lastId + i); inputs = (lastId + i) :: n.inputs}
                                           i <- i + 1
+                                          printfn "treating.."
                                           r
                                        else n)
 
@@ -115,7 +117,10 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     let inputValues' = List.reduce (@) inputValues |> List.reduce (@) |> Array.ofList
 
     //temp
+    System.IO.File.WriteAllText("ranges.txt", sprintf "%A" outputValues)
     System.IO.File.WriteAllText("table.txt", sprintf "%A" outputValues)
+
+    printfn "outputValues.length: %i"  (List.length outputValues)
 
     let outputValues' = List.reduce (@) outputValues |> Array.ofList
 

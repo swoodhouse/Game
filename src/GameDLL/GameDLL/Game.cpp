@@ -521,7 +521,7 @@ ADD Game::minimax() const {
 			states = backMax(states);
 			states = unmutate(numMutations, states);
 			BDD att = scoreAttractors(true, numMutations).BddPattern(); // THIS MAY HAVE BEEN A BUG // to score then unscore is not ideal
-			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // score again here??
+			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // score again here?? run backrward?
 		}
 
 		maximisingPlayer = !maximisingPlayer;
@@ -531,6 +531,9 @@ ADD Game::minimax() const {
 	//file << header << std::endl;
 	//file << prettyPrint(states) << std::endl;
 	file << attractors.prettyPrint(states.BddPattern()) << std::endl; // TEMP!
+
+	//return states.MaxAbstract(attractors.representNonPrimeVariables().Add()); // should be min anyway but this is very wrong
+	//return backMax(states); // should be min anyway but this is very wrong
 
 	return states;
 }
