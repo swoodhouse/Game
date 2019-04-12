@@ -49,16 +49,6 @@ std::vector<std::vector<int>> Game::unprimedMutationVarsIndicesWindowed() const 
 }
 
 std::vector<int> Game::unprimedMutationVarsIndices() const {
-	//std::vector<std::vector<int>> result(numMutations);
-
-	//for (int i = 0; i < numMutations; i++) {
-	//	std::vector<int> v(koVars.size() + 1);
-	//	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
-	//	result.push_back(v);
-	//}
-
-	//return result;
-
 	std::vector<int> v(numMutations * bits(koVars.size() + 1));
 	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
 	return v;
@@ -81,16 +71,6 @@ std::vector<std::vector<int>> Game::primedMutationVarsIndicesWindowed() const {
 
 
 std::vector<int> Game::primedMutationVarsIndices() const {
-	//std::vector<std::vector<int>> result(numMutations);
-
-	//for (int i = 0; i < numMutations; i++) {
-	//	std::vector<int> v(koVars.size() + 1);
-	//	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
-	//	result.push_back(v);
-	//}
-
-	//return result;
-
 	std::vector<int> v(numMutations * bits(koVars.size() + 1));
 	std::iota(v.begin(), v.end(), unprimedMutationVarsIndices().back() + 1);
 	return v;
@@ -215,29 +195,12 @@ ADD Game::unmutate(int level, const ADD& states) const {
 }
 
 BDD Game::buildMutantSyncQNTransitionRelation() const {
-	// TEMP!!!
-	//return attractors.representSyncQNTransitionRelation(attractors.qn);
-	/*std::cout << "start of build mutant tr" << std::endl;
-
-	std::cout << "treatmentVarIndices.front()" << treatmentVarIndices().front();
-	std::cout << "treatmentVarIndices.back()" << treatmentVarIndices().back();
-	std::cout << "unprimedMutationVarsIndices.front()" << unprimedMutationVarsIndices().front();
-	std::cout << "unprimedMutationVarsIndices.back()" << unprimedMutationVarsIndices().back();
-
-	*/
-
 	BDD bdd = attractors.manager.bddOne();
-
-	//std::cout << "buildMutation start Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
 
 	int k = 0;
 	int o = 0;
 
-	//std::set<int> oeVarsSet(oeVars.begin(), oeVars.end()); // if this works refacotr
-	//std::set<int> koVarsSet(koVars.begin(), koVars.end());
-
 	for (int v = 0; v < attractors.ranges.size(); v++) {
-		//std::cout << "buildMutation iterationCudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(attractors.manager.getManager()) << std::endl;;
 		if (attractors.ranges[v] > 0) {
 			const auto& iVars = attractors.qn.inputVars[v];
 			const auto& iValues = attractors.qn.inputValues[v];
@@ -383,7 +346,6 @@ BDD Game::fixpoints(const BDD& mutsAndTreats) const {
 	return bdd;
 }
 
-
 ADD Game::scoreFixpoints(const BDD& fix) const {
 	return fix.Add() * scoreRelation;
 }
@@ -432,8 +394,6 @@ std::string Game::prettyPrint(const ADD& states) const {
 	return out;
 }
 
-
-// TODO: exception being thrown somwhere in here
 ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	ADD states = attractors.manager.addZero();
 
@@ -493,15 +453,12 @@ ADD Game::minimax() const {
 
 	maximisingPlayer = false; // temp
 
-	//ADD states = scoreAttractors(maximisingPlayer, numMutations);
 	std::cout << "height:" << height << std::endl;
 	std::cout << "treatment?" << false << std::endl;
 	std::cout << "numMutations" << numMutations << std::endl;
 	ADD states = scoreAttractors(false, numMutations);
 	height--;
-	//ADD states = scoreAttractors(false, numMutations);
-
-
+	
 	for (; height > 0; height--) { // do i have an off by one error
 		std::cout << "height:" << height << std::endl;
 		if (maximisingPlayer) {
