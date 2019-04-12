@@ -38,6 +38,7 @@ std::vector<int> Game::unprimedMutationVarsIndices() const {
 	return v;
 }
 
+// THIS NEEDS TO BE DELETED WHEN WE REMOVE PRIMED
 std::vector<int> Game::primedMutationVarsIndices() const {
 	std::vector<int> v(numMutations * bits(koVars.size() + 1));
 	std::iota(v.begin(), v.end(), unprimedMutationVarsIndices().back() + 1);
@@ -155,6 +156,7 @@ ADD Game::unmutate(int level, const ADD& states) const {
 	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + level * bits(koVars.size() + 1); // is this correct?
 	int j = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + numMutations * 2 * bits(koVars.size() + 1) + numTreatments * bits(oeVars.size() + 1) + level * bits(koVars.size() + 1); // is this correct?
 																																																  // * 2 will need to be removed when I remove primed muts
+																																																  // THIS NEEDS TO CHANGE WHEN WE REMOVE PRIMED// THIS NEEDS TO CHANGE WHEN WE REMOVE PRIMED
 	for (int n = 0; n < bits(koVars.size() + 1); n++) { // duplication
 		permute[n + i] = n + j;
 	}
@@ -486,38 +488,13 @@ BDD Game::representMutationNone(int var) const {
 	return representMutation(var, -1); // not the most clear implementation
 }
 
-BDD Game::representPrimedMutation(int var, int mutation) const {
-	mutation++;  // 0 represents no mutation, so n is represented by n+1
-	BDD bdd = attractors.manager.bddOne();
-
-	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + numMutations * bits(koVars.size() + 1) +
-		var * bits(koVars.size() + 1);
-
-	int b = bits(koVars.size() + 1); // + 1 so we can represent no mutation too // you actually can use fewer bits that this, as you can represent one fewer choice each time // you actually can use fewer bits that this, as you can represent one fewer choice each time
-
-	for (int n = 0; n < b; n++) {
-		BDD var = attractors.manager.bddVar(i);
-		if (!nthBitSet(mutation, n)) {
-			var = !var;
-		}
-		bdd *= var;
-		i++;
-	}
-
-	return bdd;
-}
-
-BDD Game::representPrimedMutationNone(int var) const {
-	return representPrimedMutation(var, -1); // not the most clear implementation
-}
-
 BDD Game::representChosenTreatment(int level, int treatment) const { // in this case var is the val..
 	treatment++;  // 0 represents no treatment, so n is represented by n+1. not actually required for choice vars as we don't allow zero, but easier to do this way for symmetry
 	BDD bdd = attractors.manager.bddOne();
 
 	int i = attractors.numUnprimedBDDVars * 2 +
 		bits(oeVars.size() + 1) +
-		numMutations * 2 * bits(koVars.size() + 1) +
+		numMutations * 2 * bits(koVars.size() + 1) + // THIS NEEDS TO CHANGE WHEN WE REMOVE PRIMED
 		level * bits(oeVars.size() + 1);
 	// * 2 to allow space for primed mutation //countBitsMutVar(var); // different for tre
 

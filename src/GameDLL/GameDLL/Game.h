@@ -23,9 +23,6 @@ struct Game {
 	std::vector<int> chosenTreatmentsIndices() const;
 	std::vector<int> chosenMutationsIndices() const;
 
-	/*std::vector<std::vector<int>> chosenTreatmentsIndices() const;
-	std::vector<std::vector<int>> chosenMutationsIndices() const;*/
-
 	ADD buildScoreRelation(int apopVar) const; // done
 	ADD renameBDDVarsAddingPrimes(const ADD& add) const; // done
 	ADD immediateBackMax(const ADD& states) const; // done
@@ -42,8 +39,6 @@ struct Game {
 	BDD representSomeTreatment() const;
 	BDD representMutation(int var, int val) const; // done.. including zero mut and bits
 	BDD representMutationNone(int var) const; // done
-	BDD representPrimedMutation(int var, int val) const; // done.. including zero mut and bits
-	BDD representPrimedMutationNone(int var) const; // done
 	BDD representChosenTreatment(int level, int treatment) const; // done
 	BDD representChosenMutation(int level, int mutation) const; // done
 	BDD nMutations(int n) const; // done
