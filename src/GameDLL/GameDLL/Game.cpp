@@ -33,7 +33,7 @@ std::vector<int> Game::treatmentVarIndices() const {
 }
 
 // RENAME.......
-std::vector<int> Game::unprimedMutationVarsIndices() const {
+std::vector<int> Game::mutationVarsIndices() const {
 	std::vector<int> v(numMutations * bits(koVars.size() + 1));
 	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
 	return v;
@@ -42,7 +42,7 @@ std::vector<int> Game::unprimedMutationVarsIndices() const {
 // probably take level as param...
 std::vector<int> Game::chosenTreatmentsIndices() const {
 	std::vector<int> v(numTreatments * bits(oeVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
-	std::iota(v.begin(), v.end(), unprimedMutationVarsIndices().back() + 1);
+	std::iota(v.begin(), v.end(), mutationVarsIndices().back() + 1);
 	return v;
 }
 
@@ -55,7 +55,7 @@ std::vector<int> Game::chosenMutationsIndices() const {
 BDD Game::representNonPrimedMutVars() const {
 	BDD bdd = attractors.manager.bddOne();
 
-	for (int i : unprimedMutationVarsIndices()) {
+	for (int i : mutationVarsIndices()) {
 		BDD var = attractors.manager.bddVar(i);
 		bdd *= var;
 	}

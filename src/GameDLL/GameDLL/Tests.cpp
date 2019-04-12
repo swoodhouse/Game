@@ -46,8 +46,7 @@ bool indicesAreSequential(const Game& game) {
 		// refactor this stuff out to a function
 		std::vector<int> attractorsIndicies = game.attractorsIndicies();
 		std::vector<int> treatmentVarIndices = game.treatmentVarIndices();
-		std::vector<int> unprimedMutationVarsIndices = game.unprimedMutationVarsIndices(); // colapse
-//		std::vector<int> primedMutationVarsIndices = game.primedMutationVarsIndices(); // colapse
+		std::vector<int> unprimedMutationVarsIndices = game.mutationVarsIndices(); // colapse
 		std::vector<int> chosenTreatmentsIndices = game.chosenTreatmentsIndices();
 		std::vector<int> chosenMutationsIndices = game.chosenMutationsIndices(); // colapse
 
