@@ -132,10 +132,11 @@ ADD Game::untreat(int level, const ADD& states) const {
 	std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
 	std::iota(permute.begin(), permute.end(), 0);
 
+	int b = bits(oeVars.size() + 1);
 	int i = treatmentVarIndices().front();
-	int j = i + bits(oeVars.size() + 1) + numMutations * bits(koVars.size() + 1) + level * bits(oeVars.size() + 1); // refactor this out
+	int j = chosenTreatmentsIndices().front() + level * b;
 
-	for (int n = 0; n < bits(oeVars.size() + 1); n++) { // duplication
+	for (int n = 0; n < b; n++) { // duplication
 		permute[n + i] = n + j;
 	}
 
@@ -147,11 +148,10 @@ ADD Game::unmutate(int level, const ADD& states) const {
 	std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
 	std::iota(permute.begin(), permute.end(), 0);
 
-	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + level * bits(koVars.size() + 1); // is this correct?
-	int j = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) + numMutations * bits(koVars.size() + 1) + numTreatments * bits(oeVars.size() + 1) + level * bits(koVars.size() + 1); // is this correct?
-																																																  // * 2 will need to be removed when I remove primed muts
-																																																  // THIS NEEDS TO CHANGE WHEN WE REMOVE PRIMED// THIS NEEDS TO CHANGE WHEN WE REMOVE PRIMED
-	for (int n = 0; n < bits(koVars.size() + 1); n++) { // duplication
+	int b = bits(koVars.size() + 1);
+	int i = mutationVarsIndices().front() + level * b;
+	int j = chosenMutationsIndices().front() + level * b;
+	for (int n = 0; n < b; n++) { // duplication
 		permute[n + i] = n + j;
 	}
 
