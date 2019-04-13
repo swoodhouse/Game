@@ -132,8 +132,8 @@ ADD Game::untreat(int level, const ADD& states) const {
 	std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
 	std::iota(permute.begin(), permute.end(), 0);
 
-	int i = attractors.numUnprimedBDDVars * 2; // refactor out
-	int j = i + bits(oeVars.size() + 1) + numMutations * bits(koVars.size() + 1) + level * bits(oeVars.size() + 1);
+	int i = treatmentVarIndices().front();
+	int j = i + bits(oeVars.size() + 1) + numMutations * bits(koVars.size() + 1) + level * bits(oeVars.size() + 1); // refactor this out
 
 	for (int n = 0; n < bits(oeVars.size() + 1); n++) { // duplication
 		permute[n + i] = n + j;
@@ -463,9 +463,9 @@ BDD Game::representMutation(int var, int mutation) const {
 	mutation++;  // 0 represents no mutation, so n is represented by n+1
 	BDD bdd = attractors.manager.bddOne();
 
-	int i = attractors.numUnprimedBDDVars * 2 + bits(oeVars.size() + 1) +
-		var * bits(koVars.size() + 1);
 	int b = bits(koVars.size() + 1); // + 1 so we can represent no mutation too // you actually can use fewer bits that this, as you can represent one fewer choice each time
+	int i = mutationVarsIndices().front() + var * b;
+	
 	for (int n = 0; n < b; n++) {
 		BDD var = attractors.manager.bddVar(i);
 		if (!nthBitSet(mutation, n)) {
@@ -485,8 +485,8 @@ BDD Game::representMutationNone(int var) const {
 BDD Game::representChosenTreatment(int level, int treatment) const { // in this case var is the val..
 	treatment++;  // 0 represents no treatment, so n is represented by n+1. not actually required for choice vars as we don't allow zero, but easier to do this way for symmetry
 	BDD bdd = attractors.manager.bddOne();
-	int i = chosenTreatmentsIndices().front();
 	int b = bits(oeVars.size() + 1); // don't actually need +1 because don't need to represent zero, but easier this way
+	int i = chosenTreatmentsIndices().front() + level * b;	
 
 	for (int n = 0; n < b; n++) { // duplication
 		BDD v = attractors.manager.bddVar(i);
@@ -506,8 +506,8 @@ BDD Game::representChosenTreatment(int level, int treatment) const { // in this 
 BDD Game::representChosenMutation(int level, int mutation) const { // in this case var is the val..
 	mutation++;  // 0 represents no mutation, so n is represented by n+1. not actually required for choice vars as we don't allow zero, but easier to do this way for symmetry
 	BDD bdd = attractors.manager.bddOne();
-	int i = chosenMutationsIndices().front();
 	int b = bits(koVars.size() + 1); // again, don't need + 1 but easier this way for symmetry with other classes of variables
+	int i = chosenMutationsIndices().front() + level * b;
 	for (int n = 0; n < b; n++) { // duplication
 		BDD var = attractors.manager.bddVar(i);
 		if (!nthBitSet(mutation, n)) {
