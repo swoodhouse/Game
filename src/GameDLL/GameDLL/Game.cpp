@@ -429,7 +429,7 @@ ADD Game::minimax() const {
 BDD Game::representTreatment(int treatment) const {
 	treatment++; // 0 represents no treatment, so n is represented by n+1
 	BDD bdd = attractors.manager.bddOne();
-	int i = attractors.numUnprimedBDDVars * 2; // refactor out
+	int i = treatmentVarIndices().front();
 
 	int b = bits(oeVars.size() + 1); // + 1 so we can represent no mutation too
 	for (int n = 0; n < b; n++) { // duplication
