@@ -32,7 +32,6 @@ std::vector<int> Game::treatmentVarIndices() const {
 	return v;
 }
 
-// RENAME.......
 std::vector<int> Game::mutationVarsIndices() const {
 	std::vector<int> v(numMutations * bits(koVars.size() + 1));
 	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
