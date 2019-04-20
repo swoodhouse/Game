@@ -38,7 +38,6 @@ std::vector<int> Game::mutationVarsIndices() const {
 	return v;
 }
 
-// probably take level as param...
 std::vector<int> Game::chosenTreatmentsIndices() const {
 	std::vector<int> v(numTreatments * bits(oeVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
 	std::iota(v.begin(), v.end(), mutationVarsIndices().back() + 1);
@@ -262,8 +261,10 @@ ADD Game::immediateBackMax(const ADD& states) const {
 ADD Game::immediateBackMin(const ADD& states) const {
 	ADD add = renameBDDVarsAddingPrimes(states); // uses attractors.primeVariables/nonPrime
 	add *= mutantTransitionRelation.Add();
-	return -((-add).MaxAbstract(attractors.primeVariables.Add()));
+	ADD one = attractors.manager.addOne();
+	return -((-(add + one)).MaxAbstract(attractors.primeVariables.Add())) - one;
 }
+
 
 ADD Game::backMax(const ADD& states) const {
 	ADD reachable = attractors.manager.addZero();
@@ -285,7 +286,8 @@ ADD Game::backMin(const ADD& states) const {
 	while (!frontier.IsZero()) {
 		ADD back = immediateBackMin(frontier);
 		frontier = addSetDiffMin(back, reachable);
-		reachable = -((-reachable).Maximum(-back));
+		ADD one = attractors.manager.addOne();
+		reachable = -((-(reachable + one)).Maximum(-(back + one))) - one;
 	}
 	return reachable;
 }
@@ -393,16 +395,15 @@ ADD Game::minimax() const {
 	std::cout << "numMutations" << numMutations << std::endl;
 	ADD states = scoreAttractors(false, numMutations);
 	height--;
-	
+
 	for (; height > 0; height--) { // do i have an off by one error
 		std::cout << "height:" << height << std::endl;
 		if (maximisingPlayer) {
 			numTreatments--; // HERE OR BEFORE?
 			std::cout << "treatment?" << false << std::endl;
 			std::cout << "numMutations" << numMutations << std::endl;
-			//states = backMin(states);
-			states = backMax(states); // backmax will work for sync networks
-			states = untreat(numTreatments, states);			
+			states = backMax(states);
+			states = untreat(numTreatments, states);
 			BDD att = scoreAttractors(false, numMutations).BddPattern(); //THIS MAY HAVE BEEN A BUG // to score then unscore is not ideal
 			states *= att.Add();
 		}
@@ -410,7 +411,8 @@ ADD Game::minimax() const {
 			numMutations--; // here or after unmutate? here
 			std::cout << "treatment?" << true << std::endl;
 			std::cout << "numMutations" << numMutations << std::endl;
-			states = backMax(states);
+			//states = backMin(states);
+			states = backMax(states); // backmax should work for sync networks
 			states = unmutate(numMutations, states);
 			BDD att = scoreAttractors(true, numMutations).BddPattern(); // THIS MAY HAVE BEEN A BUG // to score then unscore is not ideal
 			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // score again here?? run backrward and intersect with attractors in between adding treatment and removing mut?
@@ -418,9 +420,6 @@ ADD Game::minimax() const {
 
 		maximisingPlayer = !maximisingPlayer;
 	}
-
-	//return states.MaxAbstract(attractors.representNonPrimeVariables().Add()); // should be min anyway but this is very wrong
-	//return backMax(states); // should be min anyway but this is very wrong
 
 	return states;
 }

@@ -75,6 +75,44 @@ let extendQN qn mutations treatments = // eventually needs to be two classes of 
     let qn = qn @ koVars @ oeVars
     qn
 
+// temp
+open Newtonsoft.Json
+open Newtonsoft.Json.Linq
+
+open BioModelAnalyzer 
+
+// temp
+let addVariableNames (model : Model) (layout : Model) =
+    let findVariableName id (model : Model) =
+        let vars = model.Variables
+        let v = Array.find (fun (v : Model.Variable) -> v.Id = id) vars
+        v.Name
+
+    let addNameToVariable (var : Model.Variable) (name : string) =
+        let mutable copy = var
+        copy.Name <- name
+        copy
+
+    let addNameToVariables (vars : Model.Variable []) =
+        Array.map (fun (var : Model.Variable) -> addNameToVariable var (findVariableName var.Id layout)) vars
+
+    let mutable copy = model
+    copy.Variables <- addNameToVariables model.Variables
+    copy
+
+// temp
+let read_ModelFile_as_QN model_fname = 
+    // Read file
+    let jobj = JObject.Parse(System.IO.File.ReadAllText(model_fname))
+    // Extract model from json
+    let model = (jobj.["Model"] :?> JObject).ToObject<Model>()
+    let layout = (jobj.["Layout"] :?> JObject).ToObject<Model>()  
+             
+    let model = addVariableNames model layout
+    // model to QN
+    let qn = Marshal.QN_of_Model model
+    qn
+
 let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatments : (QN.var * int) list) (apopVar : int) height maximisingPlayerGoesLast =
 
     // temp!!!!
@@ -105,6 +143,13 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
 //    let ranges = qn |> List.map (fun n -> n.var, Attractors.rangeToList n.range) |> Map.ofList
 //    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
 //    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
+
+    printfn "TEMP: Running VMCAI on manually mutated model"
+    let ranges_, _ = Attractors.runVMCAI (read_ModelFile_as_QN "GAME_Benchmark_manualmut.json")
+    let ranges_ = ranges |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars)) // you need to trim ^ these to remove ko vars and oe vars................
+    let minValues_ = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
+    let ranges'_ = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
+
 
     printfn "Building QN table..."
     let inputValues, outputValues = qn |> List.map (Attractors.generateQNTable qn ranges) |> List.unzip
