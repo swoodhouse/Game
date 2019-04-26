@@ -309,6 +309,7 @@ BDD Attractors::randomState(const BDD& S/*,const std::vector<int> indicesTokeep,
 	BDD bdd = manager.bddOne();
 
 	char *out = new char[49]; // 50?
+	//char *out = new char[300]; // 50?
 
 	S.PickOneCube(out);
 

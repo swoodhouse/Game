@@ -66,6 +66,7 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 	std::cout << "apopVar: " << apopVar << std::endl;
 	
+
 	ADD out = g.minimax();
 
 	std::cout << "\nFinal output of minimax:" << std::endl;

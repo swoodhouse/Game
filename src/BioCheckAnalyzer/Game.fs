@@ -36,20 +36,20 @@ let extendQN qn mutations treatments = // eventually needs to be two classes of 
     let oeVars = lastId + Set.count mutations |>  Seq.unfold (fun id -> Some (mkNode "oe" id, id + 1)) |> Seq.take (Set.count treatments) |> List.ofSeq
 
     // switching these.. ko should be rename mutation and oe treatment
-//    let extendTFwithKo (node : QN.node) (koNode : QN.node) = 
-//        let range = snd node.range
-//        Expr.Times (Expr.Minus (Expr.Const 1, Expr.Var koNode.var), node.f)
-//    
-//    let extendTFwithOe (n : QN.node) (oeNode : QN.node) =
-//        let range = snd n.range
-//        Expr.Plus(Expr.Times(Expr.Const range, Expr.Var oeNode.var), Expr.Times(n.f, Expr.Minus(Expr.Const 1, Expr.Var oeNode.var)))
-    let extendTFwithKo (n : QN.node) (koNode : QN.node) = 
-        let range = snd n.range
-        Expr.Plus(Expr.Times(Expr.Const range, Expr.Var koNode.var), Expr.Times(n.f, Expr.Minus(Expr.Const 1, Expr.Var koNode.var)))
+    let extendTFwithKo (node : QN.node) (koNode : QN.node) = 
+        let range = snd node.range
+        Expr.Times (Expr.Minus (Expr.Const 1, Expr.Var koNode.var), node.f)
     
     let extendTFwithOe (n : QN.node) (oeNode : QN.node) =
         let range = snd n.range
-        Expr.Times (Expr.Minus (Expr.Const 1, Expr.Var oeNode.var), n.f)
+        Expr.Plus(Expr.Times(Expr.Const range, Expr.Var oeNode.var), Expr.Times(n.f, Expr.Minus(Expr.Const 1, Expr.Var oeNode.var)))
+//    let extendTFwithKo (n : QN.node) (koNode : QN.node) = 
+//        let range = snd n.range
+//        Expr.Plus(Expr.Times(Expr.Const range, Expr.Var koNode.var), Expr.Times(n.f, Expr.Minus(Expr.Const 1, Expr.Var koNode.var)))
+//    
+//    let extendTFwithOe (n : QN.node) (oeNode : QN.node) =
+//        let range = snd n.range
+//        Expr.Times (Expr.Minus (Expr.Const 1, Expr.Var oeNode.var), n.f)
 
 //
 //    let qn = qn |> List.mapi (fun i n -> if Set.contains n.var mutations then { n with f = extendTFwithKo n (mkNode "ko" <| lastId + i); inputs = (lastId + i) :: n.inputs}
@@ -127,14 +127,14 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
 
     
 
-    printfn "Running VMCAI..."
-    // this is the key..... we need to add special vars, corresponding target functions, then run vmcai, then remove special vars
-    // basically.. maintain qn and extendedQn. ranges come from extendedQn, table from qn
-    let extendedQn = extendQN qn (Set.ofList mutations) (Set.ofList treatments)
-    let ranges, _ = Attractors.runVMCAI extendedQn
-    let ranges = ranges |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars)) // you need to trim ^ these to remove ko vars and oe vars................
-    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
-    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
+//    printfn "Running VMCAI..."
+//    // this is the key..... we need to add special vars, corresponding target functions, then run vmcai, then remove special vars
+//    // basically.. maintain qn and extendedQn. ranges come from extendedQn, table from qn
+//    let extendedQn = extendQN qn (Set.ofList mutations) (Set.ofList treatments)
+//    let ranges, _ = Attractors.runVMCAI extendedQn
+//    let ranges = ranges |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars)) // you need to trim ^ these to remove ko vars and oe vars................
+//    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
+//    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
 
 
 
@@ -146,13 +146,21 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
 
     printfn "TEMP: Running VMCAI on manually mutated model"
     let ranges_, _ = Attractors.runVMCAI (read_ModelFile_as_QN "GAME_Benchmark_manualmut.json")
-    let ranges_ = ranges |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars)) // you need to trim ^ these to remove ko vars and oe vars................
-    let minValues_ = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
-    let ranges'_ = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
+    //let ranges_, _ = Attractors.runVMCAI (read_ModelFile_as_QN "Breast-manual-mutation.json")
+    let ranges_ = ranges_ |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars)) // you need to trim ^ these to remove ko vars and oe vars................
+    let minValues_ = Map.toArray ranges_ |> Array.map (fun (_, x) -> List.head x)
+    let ranges'_ = Map.toArray ranges_ |> Array.map (fun (_, x) -> List.length x - 1)
+    let minValues, ranges, ranges' = minValues_, ranges_, ranges'_
+//    System.IO.File.WriteAllLines("manual_ranges.txt", Array.map string ranges'_)
+//    System.IO.File.WriteAllLines("extendQn_ranges.txt", Array.map string ranges')
+//    //let ranges // temp
+//    set to use these temp
+//    let ranges'_ = 
+//    run table building on this too
 
 
     printfn "Building QN table..."
-    let inputValues, outputValues = qn |> List.map (Attractors.generateQNTable qn ranges) |> List.unzip
+    let inputValues, outputValues = qn |> List.map (Attractors.generateQNTable qn ranges) |> List.unzip // ISN'T THIS A BUG.. SHOULD BE RANGES'.. maybe not.. but you would expect a shift to 0.........
     let inputVars = qn |> List.map (fun n -> n.var :: List.filter (fun x -> not (x = n.var)) n.inputs)
                        |> List.map (List.map (fun x -> List.findIndex ((=) x) qnVars)) // convert BMA index to 0-based index
 
@@ -162,10 +170,10 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     let inputValues' = List.reduce (@) inputValues |> List.reduce (@) |> Array.ofList
 
     //temp
-    System.IO.File.WriteAllText("ranges.txt", sprintf "%A" outputValues)
-    System.IO.File.WriteAllText("table.txt", sprintf "%A" outputValues)
-
-    printfn "outputValues.length: %i"  (List.length outputValues)
+//    System.IO.File.WriteAllText("ranges.txt", sprintf "%A" outputValues)
+//    System.IO.File.WriteAllText("table.txt", sprintf "%A" outputValues)
+//
+//    printfn "outputValues.length: %i"  (List.length outputValues)
 
     let outputValues' = List.reduce (@) outputValues |> Array.ofList
 

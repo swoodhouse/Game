@@ -265,6 +265,23 @@ ADD Game::immediateBackMin(const ADD& states) const {
 	return -((-(add + one)).MaxAbstract(attractors.primeVariables.Add())) - one;
 }
 
+BDD Game::fixpoints(const BDD& mutsAndTreats) const {
+	BDD fixpoint = attractors.manager.bddOne();
+	for (int i = 0; i < attractors.numUnprimedBDDVars; i++) {
+		BDD v = attractors.manager.bddVar(i);
+		BDD vPrime = attractors.manager.bddVar(attractors.numUnprimedBDDVars + i);
+		fixpoint *= logicalEquivalence(v, vPrime);
+	}
+
+	BDD bdd = attractors.renameRemovingPrimes(mutantTransitionRelation * fixpoint * mutsAndTreats);
+	attractors.removeInvalidBitCombinations(bdd);
+	return bdd;
+}
+
+
+ADD Game::scoreFixpoints(const BDD& fix) const {
+	return fix.Add() * scoreRelation;
+}
 
 ADD Game::backMax(const ADD& states) const {
 	ADD reachable = attractors.manager.addZero();
@@ -353,9 +370,20 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	std::string header = "";// temp
 
 	BDD statesToRemove = !mutsAndTreats;
+	
+	BDD fix = fixpoints(mutsAndTreats);
+	if (!fix.IsZero()) {
+		states = scoreFixpoints(fix);
+		std::ofstream file("Fixpoints.csv");
+		//file << header << std::endl;
+		//file << prettyPrint(states) << std::endl; // TODO: this must have an indexing bug, it throws an exception
+		file << attractors.prettyPrint(states.BddPattern()) << std::endl; // temp
+		statesToRemove = fix + attractors.backwardReachableStates(mutantTransitionRelation, fix);
+	}
 
 	//std::cout << "hereA" << std::endl;
 	std::list<BDD> loops = attractors.attractors(mutantTransitionRelation, statesToRemove);
+
 	//std::cout << "hereB" << std::endl;
 
 	int i = 0;

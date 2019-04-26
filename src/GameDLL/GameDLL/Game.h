@@ -22,6 +22,9 @@ struct Game {
 	std::vector<int> chosenTreatmentsIndices() const;
 	std::vector<int> chosenMutationsIndices() const;
 
+	ADD scoreFixpoints(const BDD & fix) const;
+	BDD fixpoints(const BDD & mutsAndTreats) const;
+
 	ADD buildScoreRelation(int apopVar) const; // done
 	ADD renameBDDVarsAddingPrimes(const ADD& add) const; // done
 	ADD immediateBackMax(const ADD& states) const; // done
