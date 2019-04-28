@@ -9,29 +9,39 @@ inline BDD logicalImplication(const BDD& a, const BDD& b) {
 }
 
 int Game::calcNumMutations(int height, bool maximisingPlayerGoesLast) {
-	//if (height <= 1) {
-	//	if (maximisingPlayerGoesLast) {
-	//		return 0;
-	//	}
-	//	else {
-	//		return 1;
-	//	}
-	//}
-	//if (maximisingPlayerLast) return 1 + calcNumMutations(height - 1, maximisingPlayerGoesLast);
-	return 2;
+//	return 2;
+	if (height <= 1) return 0;
+	else if (height == 2) {
+		if (maximisingPlayerGoesLast) return 0;
+		return 1;
+	}
+	else if (height == 3) return 1;
+	else if (height == 4) {
+		if (maximisingPlayerGoesLast) return 1;
+		return 2;
+	}
+	else if (height == 5) return 2;
+	
+	throw std::runtime_error("height > 5 not implemented");
 }
 
 int Game::calcNumTreatments(int height, bool maximisingPlayerGoesLast) { // wrong
-	//if (height <= 1) {
-	//	if (maximisingPlayerGoesLast) {
-	//		return 1;
-	//	}
-	//	else {
-	//		return 0;
-	//	}
-	//}
-	//return 1 + calcNumTreatments(height - 1, maximisingPlayerGoesLast);
-	return 2;
+	std::cout << "in calc. height = " << height << std::endl;
+	std::cout << "in calc. maximisingLast = " << maximisingPlayerGoesLast<< std::endl;
+	//return 2;
+	if (height <= 1) return 0;
+	else if (height == 2) {
+		if (maximisingPlayerGoesLast) return 1;
+		return 0;
+	}
+	else if (height == 3) return 1;
+	else if (height == 4) {
+		if (maximisingPlayerGoesLast) return 2;
+		return 1;
+	}
+	else if (height == 5) return 2;
+
+	throw std::runtime_error("height > 5 not implemented");
 }
 
 std::vector<int> Game::attractorsIndicies() const {
@@ -435,10 +445,12 @@ ADD Game::minimax() const {
 
 	std::cout << "maximisingPlayerLast:" << this->maximisingPlayerLast << std::endl;
 	std::cout << "height:" << height << std::endl;
-	//std::cout << "treatment?" << false << std::endl;
+	std::cout << "treatment?" << false << std::endl;
 	std::cout << "numMutations: " << numMutations << std::endl;
 	ADD states = scoreAttractors(false, numMutations);
 	height--;
+
+	maximisingPlayer = true; // temp..............
 
 	for (; height > 0; height--) { // do i have an off by one error
 		std::cout << "height:" << height << std::endl;

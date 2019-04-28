@@ -57,8 +57,8 @@ struct Game {
 		scoreRelation(buildScoreRelation(apopVar)),
 		height(depth),
 		maximisingPlayerLast(maximisingPlayerGoesLast),
-		numMutations(calcNumMutations(height, maximisingPlayerGoesLast)), // test these two lines..
-		numTreatments(calcNumTreatments(height, maximisingPlayerGoesLast))
+		numMutations(calcNumMutations(depth, maximisingPlayerGoesLast)), // test these two lines..
+		numTreatments(calcNumTreatments(depth, maximisingPlayerGoesLast))
 	{
 	}; // done
 

@@ -23,7 +23,7 @@ open BioCheckPlusZ3
 //[<DllImport("Game.dll", CallingConvention=CallingConvention.Cdecl)>]
 [<DllImport("GameDLL.dll", CallingConvention=CallingConvention.Cdecl)>]
 extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
-                   int numMutations, int numTreatments, int[] mutationVars, int[] treatmentVars, int apopVar, int depth, bool maximisingPlayerGoesLast)
+                   int numMutations, int numTreatments, int[] mutationVars, int[] treatmentVars, int apopVar, int height, bool maximisingPlayerGoesLast)
 
 let extendQN qn mutations treatments = // eventually needs to be two classes of mutations, and treatments needs to be ko not oe
     let lastId = qn |> List.map (fun (n : QN.node) -> n.var) |> List.max |> ((+) 1)
@@ -114,6 +114,8 @@ let read_ModelFile_as_QN model_fname =
     qn
 
 let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatments : (QN.var * int) list) (apopVar : int) height maximisingPlayerGoesLast =
+
+    printfn "in playGame. height = %i" height
 
     // temp!!!!
     let mutations = List.unzip mutations |> fst
