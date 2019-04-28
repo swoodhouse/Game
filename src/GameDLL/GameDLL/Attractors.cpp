@@ -308,7 +308,8 @@ BDD Attractors::randomState(const BDD& S/*,const std::vector<int> indicesTokeep,
 	// TEMP HACK, THE ABOVE DOESN'T GIVE THE RIGHT NUMBER
 	BDD bdd = manager.bddOne();
 
-	char *out = new char[49]; // 50?
+	char *out = new char[59]; // 50?
+	//char *out = new char[49]; // 50?
 	//char *out = new char[300]; // 50?
 
 	S.PickOneCube(out);
@@ -414,40 +415,43 @@ BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& val
 //}
 
 // i don't think this is an optimal implementation, will do repeated work - if state a is ruled out under mutations X but not Y, will be run again under X and Y
-std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove /*, const BDD& variablesToAdd*/) const {
+std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& statesToKeep /*, const BDD& variablesToAdd*/) const {
 	    std::list<BDD> attractors;
 	    BDD S = manager.bddOne();
 	    removeInvalidBitCombinations(S);
 	    S *= !statesToRemove;
 
 		//std::cout << "here1:" << S.IsZero() << std::endl;
-	
+
 	    while (!S.IsZero()) {
 			//std::cout << "here2:" << S.IsZero() << std::endl;
-			BDD s = randomState(S) * S; // new idea
+			BDD s = randomState(S) * statesToKeep; // new idea
 			//BDD s = randomState(S);
 			//BDD s = randomState(S); // *variablesToAdd; // variab
 	
-/*
-			std::cout << "here1" << std::endl;*/
+			//std::cout << "here3" << std::endl;
 	        for (int i = 0; i < ranges.size() /*10000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number
 	            BDD sP = immediateSuccessorStates(transitionBdd, s); // variables to add here???
-				s = randomState(S) * S; // new idea
-				//s = randomState(sP);
-				//s = randomState(sP); //* variablesToAdd;
+				s = randomState(sP) * statesToKeep; // new idea
 	        }
-/*
-			std::cout << "here2" << std::endl;*/
+
+			//std::cout << "here4" << std::endl;
 	
 	        BDD fr = forwardReachableStates(transitionBdd, s);
 	        BDD br = backwardReachableStates(transitionBdd, s);
+
+			//std::cout << "fr:" << std::endl;
+			//fr.PrintMinterm();
+
+			//std::cout << "br:" << std::endl;
+			//br.PrintMinterm();
 	
 	        if ((fr * !br).IsZero()) {
 				//std::cout << "pushing attractor" << std::endl; // ok.. so we keep hitting this..
 
 	            attractors.push_back(fr);
 	        }
-			//std::cout << "here3:" << S.IsZero() << std::endl;
+			//std::cout << "here5" << std::endl;
 	
 	        S *= !(s + br);
 	    }

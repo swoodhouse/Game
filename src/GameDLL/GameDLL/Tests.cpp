@@ -655,7 +655,7 @@ void backMaxNew(const Game& game) {
 
 	// TODO: variables to keep implementation breaks this. each BDD now represents N attractors.
 	// but.. iterative max computation would work
-	std::list<BDD> atts = game.attractors.attractors(game.mutantTransitionRelation, !initial/*, initial*/);
+	std::list<BDD> atts = game.attractors.attractors(game.mutantTransitionRelation, !initial, initial/*, initial*/);
 	
 	std::cout << "#attractors: " << atts.size() << std::endl;
 	//BDD unscoredBack = game.attractors.manager.bddZero();

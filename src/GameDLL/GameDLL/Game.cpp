@@ -9,15 +9,29 @@ inline BDD logicalImplication(const BDD& a, const BDD& b) {
 }
 
 int Game::calcNumMutations(int height, bool maximisingPlayerGoesLast) {
-	// temp!!!
+	//if (height <= 1) {
+	//	if (maximisingPlayerGoesLast) {
+	//		return 0;
+	//	}
+	//	else {
+	//		return 1;
+	//	}
+	//}
+	//if (maximisingPlayerLast) return 1 + calcNumMutations(height - 1, maximisingPlayerGoesLast);
 	return 2;
-	//return height % 2 != 0 && !maximisingPlayerGoesLast ? (height / 2) + 1 : (height / 2); // wrong
 }
 
 int Game::calcNumTreatments(int height, bool maximisingPlayerGoesLast) { // wrong
-																		 //temp!!
+	//if (height <= 1) {
+	//	if (maximisingPlayerGoesLast) {
+	//		return 1;
+	//	}
+	//	else {
+	//		return 0;
+	//	}
+	//}
+	//return 1 + calcNumTreatments(height - 1, maximisingPlayerGoesLast);
 	return 2;
-	//return height % 2 != 0 && maximisingPlayerGoesLast ? (height / 2) + 1 : (height / 2);
 }
 
 std::vector<int> Game::attractorsIndicies() const {
@@ -371,20 +385,21 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 
 	BDD statesToRemove = !mutsAndTreats;
 	
-	BDD fix = fixpoints(mutsAndTreats);
-	if (!fix.IsZero()) {
-		states = scoreFixpoints(fix);
-		std::ofstream file("Fixpoints.csv");
-		//file << header << std::endl;
-		//file << prettyPrint(states) << std::endl; // TODO: this must have an indexing bug, it throws an exception
-		file << attractors.prettyPrint(states.BddPattern()) << std::endl; // temp
-		statesToRemove = fix + attractors.backwardReachableStates(mutantTransitionRelation, fix);
-	}
+	//BDD fix = fixpoints(mutsAndTreats);
+	//if (!fix.IsZero()) {
+	//	std::cout << "hereZ" << std::endl;
+	//	states = scoreFixpoints(fix);
+	//	std::ofstream file("Fixpoints.csv");
+	//	//file << header << std::endl;
+	//	//file << prettyPrint(states) << std::endl; // TODO: this must have an indexing bug, it throws an exception
+	//	file << attractors.prettyPrint(states.BddPattern()) << std::endl; // temp
+	//	statesToRemove = fix + attractors.backwardReachableStates(mutantTransitionRelation, fix);
+	//}
 
-	//std::cout << "hereA" << std::endl;
-	std::list<BDD> loops = attractors.attractors(mutantTransitionRelation, statesToRemove);
+	std::cout << "hereA" << std::endl;
+	std::list<BDD> loops = attractors.attractors(mutantTransitionRelation, statesToRemove, mutsAndTreats);
 
-	//std::cout << "hereB" << std::endl;
+	std::cout << "hereB" << std::endl;
 
 	int i = 0;
 	for (const BDD& a : loops) { // loop here and writing to same file is not right.
@@ -416,11 +431,12 @@ ADD Game::minimax() const {
 	int numMutations = this->numMutations;
 	bool maximisingPlayer = this->maximisingPlayerLast;
 
-	maximisingPlayer = false; // temp
+	maximisingPlayer = false; // temp..............
 
+	std::cout << "maximisingPlayerLast:" << this->maximisingPlayerLast << std::endl;
 	std::cout << "height:" << height << std::endl;
-	std::cout << "treatment?" << false << std::endl;
-	std::cout << "numMutations" << numMutations << std::endl;
+	//std::cout << "treatment?" << false << std::endl;
+	std::cout << "numMutations: " << numMutations << std::endl;
 	ADD states = scoreAttractors(false, numMutations);
 	height--;
 

@@ -39,8 +39,9 @@ public: // move this
     BDD forwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
     BDD immediatePredecessorStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
     BDD backwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
-	std::list<BDD> attractors(const BDD& transitionBdd, const BDD& statesToRemove) const;
-    //std::list<BDD> attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& variablesToAdd) const;
+	//std::list<BDD> attractors(const BDD& transitionBdd, const BDD& statesToRemove) const;
+	std::list<BDD> attractors(const BDD & transitionBdd, const BDD & statesToRemove, const BDD & statesToKeep) const;
+	//std::list<BDD> attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& variablesToAdd) const;
     std::string prettyPrint(const BDD& attractor) const;
 
     Attractors(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qnT) :

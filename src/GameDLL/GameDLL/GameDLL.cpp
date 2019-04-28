@@ -62,7 +62,9 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	std::sort(treatmentVarsV.begin(), treatmentVarsV.end());
 
     Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, depth, maximisingPlayerGoesLast);
-	std::cout << "game.chosenMutationsIndices().back():" << g.chosenMutationsIndices().back();
+	std::cout << "game.attractors.ranges.size():" << g.attractors.ranges.size() << std::endl;;
+	std::cout << "g.attractorsIndicies().back()" << g.attractorsIndicies().back() << std::endl;;
+	std::cout << "game.chosenMutationsIndices().back():" << g.chosenMutationsIndices().back() << std::endl;;
 
 	std::cout << "apopVar: " << apopVar << std::endl;
 	
