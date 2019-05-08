@@ -80,11 +80,13 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 	ADD out = g.minimax();
 
-	/*std::cout << "Cudd_ReadNodeCount:" << Cudd_ReadNodeCount(g.attractors.manager.getManager());
-	std::cout << "Cudd_ReadSize:" << Cudd_ReadSize(g.attractors.manager.getManager());*/
 
 	std::cout << "\nFinal output of minimax:" << std::endl;
 	out.PrintMinterm();
+
+/*
+	std::cout << "Cudd_ReadNodeCount:" << Cudd_ReadNodeCount(g.attractors.manager.getManager()) << std::endl;
+	std::cout << "Cudd_ReadSize:" << Cudd_ReadSize(g.attractors.manager.getManager()); << std::endl;*/
 
 	//std::ofstream file;
 	//file.open("Minimax.csv", std::ios_base::app);

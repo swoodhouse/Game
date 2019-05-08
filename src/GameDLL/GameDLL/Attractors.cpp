@@ -301,43 +301,61 @@ BDD Attractors::randomState(const BDD& S) const {
 //}
 //
 
-
-// hack, getting to work with mut vars, etc
-BDD Attractors::randomState(const BDD& S/*,const std::vector<int> indicesTokeep, int numBddVars*/) const {
-	//char *out = new char[Cudd_ReadSize(manager.getManager())];
-	// TEMP HACK, THE ABOVE DOESN'T GIVE THE RIGHT NUMBER
+BDD Attractors::randomState(const BDD& S/*, int numBddVars*/) const {
 	BDD bdd = manager.bddOne();
 
-	char *out = new char[59]; // 50?
-	//char *out = new char[49]; // 50?
-	//char *out = new char[300]; // 50?
-
+	//char *out = new char[Cudd_ReadNodeCount(manager.getManager())];  // does this give the right number.........
+	char *out = new char[Cudd_ReadSize(manager.getManager())]; // Cudd_ReadSize seems like it should actually be correct.. that's not what permute is using though..
+															   //char *out = new char[numBddVars]; // 50?
 	S.PickOneCube(out);
 
-	for (int i = 0; i < numUnprimedBDDVars; i++) { // change to only keep indices i care about
-		if (out[i] == 0) {
-			bdd *= !manager.bddVar(i);
-		}
-		else {
-			bdd *= manager.bddVar(i);
-		}
+	for (int i = 0; i < numUnprimedBDDVars; i++) {
+		if (out[i] == 0) bdd *= !manager.bddVar(i);
+		else bdd *= manager.bddVar(i);
 	}
-
-	// hard coded treatment and mut vars for one specific model
-	//for (int i = 32; i <= 37; i++) { // change to only keep indices i care about
-	//	if (out[i] == 0) {
-	//		bdd *= !manager.bddVar(i);
-	//	}
-	//	else {
-	//		bdd *= manager.bddVar(i);
-	//	}
-	//}
 
 	delete[] out; // temp
 
 	return bdd;
 }
 
+//
+//// hack, getting to work with mut vars, etc
+//BDD Attractors::randomState(const BDD& S/*,const std::vector<int> indicesTokeep, int numBddVars*/) const {
+//	//char *out = new char[Cudd_ReadSize(manager.getManager())];
+//	// TEMP HACK, THE ABOVE DOESN'T GIVE THE RIGHT NUMBER
+//	BDD bdd = manager.bddOne();
+//
+//	char *out = new char[59]; // 50?
+//	//char *out = new char[49]; // 50?
+//	//char *out = new char[300]; // 50?
+//
+//	S.PickOneCube(out);
+//
+//	for (int i = 0; i < numUnprimedBDDVars; i++) { // change to only keep indices i care about
+//		if (out[i] == 0) {
+//			bdd *= !manager.bddVar(i);
+//		}
+//		else {
+//			bdd *= manager.bddVar(i);
+//		}
+//	}
+//
+//	// hard coded treatment and mut vars for one specific model
+//	//for (int i = 32; i <= 37; i++) { // change to only keep indices i care about
+//	//	if (out[i] == 0) {
+//	//		bdd *= !manager.bddVar(i);
+//	//	}
+//	//	else {
+//	//		bdd *= manager.bddVar(i);
+//	//	}
+//	//}
+//
+//	delete[] out; // temp
+//
+//	return bdd;
+//}
+//
 
 
 void Attractors::removeInvalidBitCombinations(BDD& S) const {
@@ -421,22 +439,16 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
 	    removeInvalidBitCombinations(S);
 	    S *= !statesToRemove;
 
-		//std::cout << "here1:" << S.IsZero() << std::endl;
-
 	    while (!S.IsZero()) {
-			//std::cout << "here2:" << S.IsZero() << std::endl;
 			BDD s = randomState(S) * statesToKeep; // new idea
 			//BDD s = randomState(S);
 			//BDD s = randomState(S); // *variablesToAdd; // variab
 	
-			//std::cout << "here3" << std::endl;
 	        for (int i = 0; i < ranges.size() /*10000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number
 	            BDD sP = immediateSuccessorStates(transitionBdd, s); // variables to add here???
 				s = randomState(sP) * statesToKeep; // new idea
 	        }
 
-			//std::cout << "here4" << std::endl;
-	
 	        BDD fr = forwardReachableStates(transitionBdd, s);
 	        BDD br = backwardReachableStates(transitionBdd, s);
 
