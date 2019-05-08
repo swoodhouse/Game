@@ -10,6 +10,8 @@ struct QNTable {
 
     QNTable(std::vector<std::vector<int>>&& inputVarsV, std::vector<std::vector<std::vector<int>>>&& inputValuesV, std::vector<std::vector<int>>&& outputValuesV) :
         inputVars(std::move(inputVarsV)), inputValues(std::move(inputValuesV)), outputValues(std::move(outputValuesV)) {}
+	/*QNTable(const std::vector<std::vector<int>>& inputVarsV, const std::vector<std::vector<std::vector<int>>>& inputValuesV, const std::vector<std::vector<int>>& outputValuesV) :
+		inputVars(inputVarsV), inputValues(inputValuesV), outputValues(outputValuesV) {}*/
 };
 
 class Attractors {
@@ -50,10 +52,22 @@ public: // move this
         manager(numUnprimedBDDVars * 2),
         nonPrimeVariables(representNonPrimeVariables()), primeVariables(representPrimeVariables())
     {
+		std::cout << "in attractors ctor" << std::endl;
 		/*std::cout << "numUnprimedBDDVars:" << numUnprimedBDDVars << std::endl;
 		std::cout << "Attractors ctor: Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(manager.getManager()) << std::endl;*/
         manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
     };
+
+	//Attractors(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qnT) :
+	//	minValues(minVals), ranges(rangesV), qn(qnT),
+	//	numUnprimedBDDVars(countBits(ranges.size())),
+	//	manager(numUnprimedBDDVars * 2),
+	//	nonPrimeVariables(representNonPrimeVariables()), primeVariables(representPrimeVariables())
+	//{
+	//	/*std::cout << "numUnprimedBDDVars:" << numUnprimedBDDVars << std::endl;
+	//	std::cout << "Attractors ctor: Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(manager.getManager()) << std::endl;*/
+	//	manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
+	//};
 };
 
 inline int logTwo(unsigned int i) {

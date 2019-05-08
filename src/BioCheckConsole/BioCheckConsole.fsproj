@@ -65,6 +65,7 @@
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>x64</PlatformTarget>
     <DocumentationFile>bin\Release\BioCheckConsole.XML</DocumentationFile>
+    <StartArguments>-model GAME_Benchmark.json -engine GAME -apopVar 15 -mutate 3 0 -mutate 4 0 -treat 5 1 -treat 6 1 -height 5</StartArguments>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

@@ -1,7 +1,7 @@
 #pragma once
 
 struct Game {
-	const Attractors attractors;
+	Attractors attractors;
 	const int numMutations;
 	const int numTreatments;
 	const int height;
@@ -9,9 +9,9 @@ struct Game {
 	const std::vector<int> koVars;
 	const std::vector<int> oeVars;
 
-	const BDD mutantTransitionRelation;
-	const BDD unmutateRelation; // needed? // removing this is breaking.. think the num bdd vars will change
-	const ADD scoreRelation;
+	BDD mutantTransitionRelation;
+	//const BDD unmutateRelation; // needed? // removing this is breaking.. think the num bdd vars will change
+	ADD scoreRelation;
 
 	static int calcNumMutations(int height, bool maximisingPlayerGoesLast);
 	static int calcNumTreatments(int height, bool maximisingPlayerGoesLast);
@@ -50,16 +50,30 @@ struct Game {
 	BDD representNonPrimedMutVars() const; // done
 	ADD unmutate(int level, const ADD& states) const; // done
 
+	//Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,
+	//	bool maximisingPlayerGoesLast) :
+	//	koVars(koVarsV), oeVars(oeVarsV), attractors(minVals, rangesV, qn),
+	//	mutantTransitionRelation(buildMutantSyncQNTransitionRelation()),
+	//	scoreRelation(buildScoreRelation(apopVar)),
+	//	height(depth),
+	//	maximisingPlayerLast(maximisingPlayerGoesLast),
+	//	numMutations(calcNumMutations(depth, maximisingPlayerGoesLast)), // test these two lines..
+	//	numTreatments(calcNumTreatments(depth, maximisingPlayerGoesLast))
+	//{
+	//}; // done
+
 	Game(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qn, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, int depth,
 		bool maximisingPlayerGoesLast) :
-		koVars(std::move(koVarsV)), oeVars(std::move(oeVarsV)), attractors(std::move(minVals), std::move(rangesV), std::move(qn)),
-		mutantTransitionRelation(buildMutantSyncQNTransitionRelation()),
-		scoreRelation(buildScoreRelation(apopVar)),
 		height(depth),
 		maximisingPlayerLast(maximisingPlayerGoesLast),
 		numMutations(calcNumMutations(depth, maximisingPlayerGoesLast)), // test these two lines..
-		numTreatments(calcNumTreatments(depth, maximisingPlayerGoesLast))
+		numTreatments(calcNumTreatments(depth, maximisingPlayerGoesLast)),
+		koVars(std::move(koVarsV)), oeVars(std::move(oeVarsV)),
+		attractors(std::move(minVals), std::move(rangesV), std::move(qn)),
+		mutantTransitionRelation(buildMutantSyncQNTransitionRelation()),
+		scoreRelation(buildScoreRelation(apopVar))
 	{
+		std::cout << "in Game ctor" << std::endl;
 	}; // done
 
 	ADD minimax() const; // done

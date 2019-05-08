@@ -6,13 +6,12 @@
 #include "Game.h"
 
 extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
-    int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int height, bool maximisingPlayerGoesLast) {
-//extern "C" __declspec(dllexport) int minimax2(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
-//	int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int depth, bool maximisingPlayerGoesLast) {
-    //std::string outputPath(output, outputLength);
+	int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int height)
+	{
+	/*int headerLength const char *csvHeader,) {*/
     //std::string header(csvHeader, headerLength);
+	std::cout << "in dll. numVars:" << numVars << ", numMutations:" << numMutations << ", numTreatments:" << numTreatments << ", apopVar:" << apopVar << ", height: " << height << std::endl;
 
-	
     std::vector<int> rangesV(ranges, ranges + numVars);
 	std::vector<int> minValuesV(minValues, minValues + numVars);
 	std::vector<int> mutationVarsV(mutationVars, mutationVars + numMutations);
@@ -57,28 +56,39 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 
 	QNTable qn = QNTable(std::move(inputVarsV), std::move(inputValuesV), std::move(outputValuesV));
+	//QNTable qn = QNTable(inputVarsV, inputValuesV, outputValuesV);
 
 	std::sort(mutationVarsV.begin(), mutationVarsV.end());
 	std::sort(treatmentVarsV.begin(), treatmentVarsV.end());
 
-    Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, height, maximisingPlayerGoesLast);
-	std::cout << "height:" << height << std::endl;;
+	std::cout << "here" << std::endl;
+
+    Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, height, false);
+	//Game g(minValuesV, rangesV, qn, mutationVarsV, treatmentVarsV, apopVar, height, false);
+	std::cout << "height:" << height << std::endl;
+	std::cout << "g.numMutations:" << g.numMutations << std::endl;
+	std::cout << "g.numTreatments:" << g.numTreatments << std::endl;
 	std::cout << "game.attractors.ranges.size():" << g.attractors.ranges.size() << std::endl;
 	std::cout << "g.attractorsIndicies().back()" << g.attractorsIndicies().back() << std::endl;
-	std::cout << "game.chosenMutationsIndices().back():" << g.chosenMutationsIndices().back() << std::endl;;
+	std::cout << "g.treatmentVarIndices().back()" << g.treatmentVarIndices().back() << std::endl;
+	std::cout << "g.mutationVarsIndices().back()" << g.mutationVarsIndices().back() << std::endl;
+	std::cout << "game.chosenTreatmentsIndices().back():" << g.chosenTreatmentsIndices().back() << std::endl;
+	std::cout << "game.chosenMutationsIndices().back():" << g.chosenMutationsIndices().back() << std::endl;
 
 	std::cout << "apopVar: " << apopVar << std::endl;
 	
 
 	ADD out = g.minimax();
 
+	/*std::cout << "Cudd_ReadNodeCount:" << Cudd_ReadNodeCount(g.attractors.manager.getManager());
+	std::cout << "Cudd_ReadSize:" << Cudd_ReadSize(g.attractors.manager.getManager());*/
+
 	std::cout << "\nFinal output of minimax:" << std::endl;
 	out.PrintMinterm();
 
-	//std::ofstream file("Minimax.csv");
-	//file << header << std::endl;
-	//file << prettyPrint(states) << std::endl;
-	//file << attractors.prettyPrint(states.BddPattern()) << std::endl; // TEMP!
-
+	//std::ofstream file;
+	//file.open("Minimax.csv", std::ios_base::app);
+	//file << g.prettyPrint(out) << std::endl;
+	
     return 0;
 }

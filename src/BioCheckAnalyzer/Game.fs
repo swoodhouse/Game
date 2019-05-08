@@ -20,10 +20,12 @@ open BioCheckPlusZ3
 // add new Main entry point that calls playGame
 //// implement valueIteration
 
-//[<DllImport("Game.dll", CallingConvention=CallingConvention.Cdecl)>]
 [<DllImport("GameDLL.dll", CallingConvention=CallingConvention.Cdecl)>]
 extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
-                   int numMutations, int numTreatments, int[] mutationVars, int[] treatmentVars, int apopVar, int height, bool maximisingPlayerGoesLast)
+                   int numMutations, int numTreatments, int[] mutationVars, int[] treatmentVars, int apopVar, int height)
+//extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
+//                   int numMutations, int numTreatments, int[] mutationVars, int[] treatmentVars, int apopVar, int height, bool maximisingPlayerGoesLast)
+//[<DllImport("GameDLL.dll", CallingConvention=CallingConvention.Cdecl)>]
 
 let extendQN qn mutations treatments = // eventually needs to be two classes of mutations, and treatments needs to be ko not oe
     let lastId = qn |> List.map (fun (n : QN.node) -> n.var) |> List.max |> ((+) 1)
@@ -182,9 +184,22 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     let mutations' = mutations |> List.map (fun n -> List.findIndex ((=) n) qnVars)
     let treatments' = treatments |> List.map (fun n -> List.findIndex ((=) n) qnVars)
 
-    printfn "Calling DLL..."
+    let header = variables @
+                [for i in 1 .. List.length treatments' do yield sprintf "chosenTreatment%i" i] @
+                [for i in 1 .. List.length mutations' do yield sprintf "chosenMutation%i" i]
+             |> List.reduce (fun x y -> x + "," + y)
+
+    printfn "Calling DLL... numVars: %i, numMutations: %i, apopVar: %i, height: %i" (List.length qn) (List.length mutations') apopVar height
+//    minimax(List.length qn, ranges', minValues, numInputs, inputVars', numUpdates, inputValues', outputValues',
+//            List.length mutations', List.length treatments', Array.ofList mutations', Array.ofList treatments', apopVar, height, maximisingPlayerGoesLast) |> ignore
+
+    System.IO.File.WriteAllText("Minimax.csv", header)
+    // CUDD: out of memory allocating 2048 bytes
     minimax(List.length qn, ranges', minValues, numInputs, inputVars', numUpdates, inputValues', outputValues',
-            List.length mutations', List.length treatments', Array.ofList mutations', Array.ofList treatments', apopVar, height, maximisingPlayerGoesLast) |> ignore
+            List.length mutations', List.length treatments', Array.ofList mutations', Array.ofList treatments', apopVar, height) |> ignore
+  
+//    minimax(List.length qn, ranges', minValues, numInputs, inputVars', numUpdates, inputValues', outputValues',
+//            List.length mutations', List.length treatments', Array.ofList mutations', Array.ofList treatments', apopVar, height, maximisingPlayerGoesLast, header, String.length header) |> ignore
     printfn "finishing"
 
 

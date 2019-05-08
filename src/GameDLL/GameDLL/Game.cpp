@@ -69,6 +69,7 @@ std::vector<int> Game::chosenTreatmentsIndices() const {
 }
 
 std::vector<int> Game::chosenMutationsIndices() const {
+	//if (numMutations == 0) return std::vechosenTreatmentsIndices().back() + 1
 	std::vector<int> v(numMutations * bits(koVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
 	std::iota(v.begin(), v.end(), chosenTreatmentsIndices().back() + 1);
 	return v;
@@ -185,6 +186,8 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 
 	int k = 0;
 	int o = 0;
+
+	std::cout << "in buildMutantTR" << std::endl;
 
 	for (int v = 0; v < attractors.ranges.size(); v++) {
 		if (attractors.ranges[v] > 0) {
@@ -391,7 +394,6 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	//removeInvalidTreatmentBitCombinations(mutsAndTreats); // refacotr this out.. can be computed once too
 	//removeInvalidMutationBitCombinations(mutsAndTreats); // temp
 	//forceMutationLexicographicalOrdering(initial); // temp
-	std::string header = "";// temp
 
 	BDD statesToRemove = !mutsAndTreats;
 	
@@ -443,35 +445,50 @@ ADD Game::minimax() const {
 
 	maximisingPlayer = false; // temp..............
 
-	std::cout << "maximisingPlayerLast:" << this->maximisingPlayerLast << std::endl;
+	std::cout << "maximisingPlayer:" << maximisingPlayer << std::endl;
 	std::cout << "height:" << height << std::endl;
 	std::cout << "treatment?" << false << std::endl;
+	std::cout << "numTreatments: " << numTreatments << std::endl;
 	std::cout << "numMutations: " << numMutations << std::endl;
 	ADD states = scoreAttractors(false, numMutations);
+	states.PrintMinterm(); // temp
 	height--;
-
 	maximisingPlayer = true; // temp..............
-
+	
 	for (; height > 0; height--) { // do i have an off by one error
 		std::cout << "height:" << height << std::endl;
 		if (maximisingPlayer) {
-			numTreatments--; // HERE OR BEFORE?
-			std::cout << "treatment?" << false << std::endl;
-			std::cout << "numMutations" << numMutations << std::endl;
-			states = backMax(states);
-			states = untreat(numTreatments, states);
-			BDD att = scoreAttractors(false, numMutations).BddPattern(); //THIS MAY HAVE BEEN A BUG // to score then unscore is not ideal
-			states *= att.Add();
-		}
-		else {
-			numMutations--; // here or after unmutate? here
-			std::cout << "treatment?" << true << std::endl;
+			numMutations--;
+			std::cout << "treatment?" << maximisingPlayer << std::endl;
+			std::cout << "numTreatments" << numTreatments << std::endl;
 			std::cout << "numMutations" << numMutations << std::endl;
 			//states = backMin(states);
 			states = backMax(states); // backmax should work for sync networks
 			states = unmutate(numMutations, states);
-			BDD att = scoreAttractors(true, numMutations).BddPattern(); // THIS MAY HAVE BEEN A BUG // to score then unscore is not ideal
-			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // score again here?? run backrward and intersect with attractors in between adding treatment and removing mut?
+			BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add();
+
+			std::cout << "attractors:" << std::endl;
+			att.PrintMinterm();
+
+			std::cout << "states:" << std::endl;
+			states.PrintMinterm();
+		}
+		else {
+			numTreatments--; // HERE OR BEFORE?
+			std::cout << "treatment?" << maximisingPlayer << std::endl;
+			std::cout << "numTreatments" << numTreatments << std::endl;
+			std::cout << "numMutations" << numMutations << std::endl;
+			states = backMax(states);
+			states = untreat(numTreatments, states);
+			BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); //THIS MAY HAVE BEEN A BUG // to score then unscore is not ideal
+			states *= att.Add();
+
+			std::cout << "attractors:" << std::endl;
+			att.PrintMinterm();
+
+			std::cout << "states:" << std::endl;
+			states.PrintMinterm();
 		}
 
 		maximisingPlayer = !maximisingPlayer;
@@ -576,6 +593,8 @@ BDD Game::representChosenMutation(int level, int mutation) const { // in this ca
 }
 
 ADD Game::buildScoreRelation(int apopVar) const {
+	std::cout << "in buildScoreRelation" << std::endl;
+
 	ADD score = attractors.manager.addZero();
 
 	for (int val = 0; val <= attractors.ranges[apopVar]; val++) { // what if it is a ko/oe var with a range of 0?
