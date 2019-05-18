@@ -107,6 +107,34 @@ void Game::removeInvalidMutationBitCombinations(BDD& S) const {
 	}
 }
 
+BDD Game::representSomeMutation(int var) const {
+	BDD bdd = attractors.manager.bddZero();
+
+	for (int i = 0; i < koVars.size(); i++) {
+		bdd += representMutation(var, i);
+	}
+
+	return bdd;
+}
+
+BDD Game::nMutations(int n) const {
+	if (n == 0) {
+		return representMutationNone(0) * representMutationNone(1);
+	}
+	else if (n == 1) {
+		return (representSomeMutation(0) * representMutationNone(1)) +
+		       (representSomeMutation(1) * representMutationNone(0));	
+
+	}
+	else if (n == 2) {
+                return (representSomeMutation(0) * representSomeMutation(1));
+	}
+	else {
+		std::cout << "nmutations > 2 not implemented" << std::endl;
+		throw std::runtime_error("nmutations > 2 not implemented");
+	}
+}
+
 // temp: hard coded for now
 BDD Game::nMutations(int n) const {
 	if (koVars.size() > 2) {
