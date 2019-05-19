@@ -10,21 +10,20 @@ struct QNTable {
 
     QNTable(std::vector<std::vector<int>>&& inputVarsV, std::vector<std::vector<std::vector<int>>>&& inputValuesV, std::vector<std::vector<int>>&& outputValuesV) :
         inputVars(std::move(inputVarsV)), inputValues(std::move(inputValuesV)), outputValues(std::move(outputValuesV)) {}
-	/*QNTable(const std::vector<std::vector<int>>& inputVarsV, const std::vector<std::vector<std::vector<int>>>& inputValuesV, const std::vector<std::vector<int>>& outputValuesV) :
-		inputVars(inputVarsV), inputValues(inputValuesV), outputValues(outputValuesV) {}*/
 };
 
 class Attractors {
 public: // move this
-	Cudd manager;
-	const std::vector<int> minValues;
+    const std::vector<int> minValues;
     const std::vector<int> ranges;
     const QNTable qn;
     const int numUnprimedBDDVars;
-	const int numBDDVars;
-    
+    const int numBDDVars;
+
+    Cudd manager;
     const BDD nonPrimeVariables;
     const BDD primeVariables;
+
 
     BDD representState(const std::vector<bool>& values) const;
     BDD representNonPrimeVariables() const;
@@ -42,16 +41,15 @@ public: // move this
     BDD forwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
     BDD immediatePredecessorStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
     BDD backwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
-	//std::list<BDD> attractors(const BDD& transitionBdd, const BDD& statesToRemove) const;
-	std::list<BDD> attractors(const BDD & transitionBdd, const BDD & statesToRemove, const BDD & statesToKeep) const;
-	//std::list<BDD> attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& variablesToAdd) const;
+    
+    std::list<BDD> attractors(const BDD & transitionBdd, const BDD & statesToRemove, const BDD & statesToKeep) const;
     std::string prettyPrint(const BDD& attractor) const;
 
     Attractors(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qnT, int numVars) :
     minValues(std::move(minVals)), ranges(std::move(rangesV)), qn(std::move(qnT)),
-        numUnprimedBDDVars(countBits(ranges.size())),
-		numBDDVars(numVars),
-		manager(numVars, 0, CUDD_UNIQUE_SLOTS, CUDD_CACHE_SLOTS, 1.6e+10, defaultError),
+      numUnprimedBDDVars(countBits(ranges.size())),
+      numBDDVars(numVars),
+      //		manager(numVars, 0, CUDD_UNIQUE_SLOTS, CUDD_CACHE_SLOTS, 1.6e+10, defaultError),
 
 /*
 		Cudd(
@@ -62,25 +60,13 @@ public: // move this
 			unsigned long maxMemory = 0,
 			PFC defaultHandler = defaultError);*/
 
-        //manager(numUnprimedBDDVars * 2),
+        manager(numBDDVars),
         nonPrimeVariables(representNonPrimeVariables()), primeVariables(representPrimeVariables())
     {
-		std::cout << "in attractors ctor" << std::endl;
-		/*std::cout << "numUnprimedBDDVars:" << numUnprimedBDDVars << std::endl;
-		std::cout << "Attractors ctor: Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(manager.getManager()) << std::endl;*/
+        std::cout << "in attractors ctor" << std::endl;
         manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
     };
 
-	//Attractors(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qnT) :
-	//	minValues(minVals), ranges(rangesV), qn(qnT),
-	//	numUnprimedBDDVars(countBits(ranges.size())),
-	//	manager(numUnprimedBDDVars * 2),
-	//	nonPrimeVariables(representNonPrimeVariables()), primeVariables(representPrimeVariables())
-	//{
-	//	/*std::cout << "numUnprimedBDDVars:" << numUnprimedBDDVars << std::endl;
-	//	std::cout << "Attractors ctor: Cudd_ReadSize(manager.getManager()): " << Cudd_ReadSize(manager.getManager()) << std::endl;*/
-	//	manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
-	//};
 };
 
 inline int logTwo(unsigned int i) {

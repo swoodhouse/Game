@@ -1,17 +1,16 @@
 #pragma once
 
 struct Game {
-	Attractors attractors;
+        const int height;
+  	const bool maximisingPlayerLast;
 	const int numMutations;
 	const int numTreatments;
-	const int height;
-	const bool maximisingPlayerLast;
 	const std::vector<int> koVars;
 	const std::vector<int> oeVars;
-
-	const ADD scoreRelation;
+	Attractors attractors;
+ 
 	const BDD mutantTransitionRelation;
-	//const BDD unmutateRelation; // needed? // removing this is breaking.. think the num bdd vars will change
+	const ADD scoreRelation;
 	
 	static int calcNumMutations(int height, bool maximisingPlayerGoesLast);
 	static int calcNumTreatments(int height, bool maximisingPlayerGoesLast);
@@ -50,22 +49,6 @@ struct Game {
 	void removeInvalidMutationBitCombinations(BDD& S) const; // done
 	BDD representNonPrimedMutVars() const; // done
 	ADD unmutate(int level, const ADD& states) const; // done
-
-	//Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,
-	//	bool maximisingPlayerGoesLast) :
-	//	koVars(koVarsV), oeVars(oeVarsV), attractors(minVals, rangesV, qn),
-	//	mutantTransitionRelation(buildMutantSyncQNTransitionRelation()),
-	//	scoreRelation(buildScoreRelation(apopVar)),
-	//	height(depth),
-	//	maximisingPlayerLast(maximisingPlayerGoesLast),
-	//	numMutations(calcNumMutations(depth, maximisingPlayerGoesLast)), // test these two lines..
-	//	numTreatments(calcNumTreatments(depth, maximisingPlayerGoesLast))
-	//{
-	//}; // done
-
-
-	// turn optimisations back on
-
 
 	Game(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qn, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, int depth,
 		bool maximisingPlayerGoesLast) :
