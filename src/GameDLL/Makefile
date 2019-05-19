@@ -17,7 +17,9 @@ DLL_CFLAGS = -O2 -std=c++0x -Wall -IGameDLL -I../../ext/CUDD/cudd-3.0.0/cudd -I.
 
 #DLL_LDFLAGS = --verbose -L../../ext/CUDD/cudd-3.0.0/cudd/.libs -L../../ext/CUDD/cudd-3.0.0/cplusplus/.libs -l:libcudd.a -l:libobj.a -shared -s -Wl,--subsystem,windows,--out-implib,lib/libgame.a
 
-DLL_LDFLAGS = -L../../ext/CUDD/cudd-3.0.0/cudd/.libs -L../../ext/CUDD/cudd-3.0.0/cplusplus/.libs -l:libcudd.a -l:libobj.a -shared -Wl,--subsystem,windows,--out-implib,lib/libgame.a
+#DLL_LDFLAGS = -L../../ext/CUDD/cudd-3.0.0/cudd/.libs -L../../ext/CUDD/cudd-3.0.0/cplusplus/.libs -l:libcudd.a -l:libobj.a -shared -Wl,--subsystem,windows,--out-implib,lib/libgame.a
+
+DLL_LDFLAGS = -L../../ext/CUDD/cudd-3.0.0/cudd/.libs -L../../ext/CUDD/cudd-3.0.0/cplusplus/.libs -l:libobj.a -l:libcudd.a -shared -Wl,--subsystem,windows
 
 .PHONY: all clean
 
