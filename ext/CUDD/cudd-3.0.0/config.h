@@ -20,7 +20,7 @@
 #define HAVE_GETRLIMIT 1
 
 /* Define to 1 if you have the `getrusage' function. */
-#define HAVE_GETRUSAGE 1
+//#define HAVE_GETRUSAGE 1 // SW
 
 /* Define to 1 if you have working floating-point infinities */
 #define HAVE_IEEE_754 1
@@ -74,28 +74,28 @@
 #define HAVE_STRSTR 1
 
 /* Define to 1 if you have the `sysconf' function. */
-#define HAVE_SYSCONF 0
+//#define HAVE_SYSCONF 1
 
 /* Define to 1 if you have the <sys/resource.h> header file. */
-#define HAVE_SYS_RESOURCE_H 1
+//#define HAVE_SYS_RESOURCE_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#define HAVE_SYS_STAT_H 1
+//#define HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/times.h> header file. */
-#define HAVE_SYS_TIMES_H 0
+//#define HAVE_SYS_TIMES_H 1
 
 /* Define to 1 if you have the <sys/time.h> header file. */
-#define HAVE_SYS_TIME_H 1
+//#define HAVE_SYS_TIME_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#define HAVE_SYS_TYPES_H 1
+//#define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <sys/wait.h> header file. */
-#define HAVE_SYS_WAIT_H 1
+//#define HAVE_SYS_WAIT_H 1 // SW
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#define HAVE_UNISTD_H 0
+#define HAVE_UNISTD_H 1
 
 /* Define to 1 if C++ thread header is usable */
 #define HAVE_WORKING_THREAD 1

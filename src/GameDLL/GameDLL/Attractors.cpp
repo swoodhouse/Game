@@ -73,7 +73,7 @@ BDD Attractors::representPrimeVariables() const {
     return bdd;
 }
 
-inline int Attractors::countBits(int end) const {
+int Attractors::countBits(int end) const {
     auto lambda = [](int a, int b) { return a + bits(b); };
     return std::accumulate(ranges.begin(), ranges.begin() + end, 0, lambda);
 }

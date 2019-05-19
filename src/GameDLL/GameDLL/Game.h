@@ -39,7 +39,8 @@ struct Game {
 	BDD representTreatment(int val) const; // done.. including zero mut and bits
 	BDD representTreatmentNone() const; //	done
 	BDD representSomeTreatment() const;
-	BDD representMutation(int var, int val) const; // done.. including zero mut and bits
+        BDD representSomeMutation(int var) const;
+        BDD representMutation(int var, int val) const; // done.. including zero mut and bits
 	BDD representMutationNone(int var) const; // done
 	BDD representChosenTreatment(int level, int treatment) const; // done
 	BDD representChosenMutation(int level, int mutation) const; // done

@@ -12,6 +12,7 @@
 #include <windows.h>
 
 #include "cuddObj.hh"
+#include <cmath>
 #include <vector>
 #include <list>
 #include <numeric>

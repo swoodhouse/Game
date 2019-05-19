@@ -107,80 +107,72 @@ void Game::removeInvalidMutationBitCombinations(BDD& S) const {
 	}
 }
 
-// temp: hard coded for now
-BDD Game::nMutations(int n) const {
-	if (koVars.size() > 2) {
-		std::cout << "nmutations with size(koVars) > 2 not implemented" << std::endl;
-		throw std::runtime_error("nmutations with size(koVars) > 2 not implemented");
+BDD Game::representSomeMutation(int var) const {
+	BDD bdd = attractors.manager.bddZero();
+
+	for (int i = 0; i < koVars.size(); i++) {
+		bdd += representMutation(var, i);
 	}
-	else if (n == 0) {
+
+	return bdd;
+}
+
+BDD Game::nMutations(int n) const {
+	if (n == 0) {
 		return representMutationNone(0) * representMutationNone(1);
 	}
 	else if (n == 1) {
-		// this won't work for current unmutate implementation
-		//return (representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1);
-		return ((representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1)) +
-			((representMutation(1, 0) + representMutation(1, 1)) * representMutationNone(0));
+		return (representSomeMutation(0) * representMutationNone(1)) +
+		       (representSomeMutation(1) * representMutationNone(0));	
+
 	}
 	else if (n == 2) {
-		// this won't work for current unmutate implementation
-		//return representMutation(0, 0) * representMutation(1, 1);
-		return (representMutation(0, 0) * representMutation(1, 1)) +
-			(representMutation(0, 1) * representMutation(1, 0));
+                return (representSomeMutation(0) * representSomeMutation(1));
 	}
 	else {
 		std::cout << "nmutations > 2 not implemented" << std::endl;
 		throw std::runtime_error("nmutations > 2 not implemented");
 	}
-
-	//BDD bdd = attractors.manager.bddOne();
-
-	//for (int var = 0; var < n; var++) {
-	//    BDD isMutated = !representMutationNone(var);
-	//    bdd *= isMutated;
-	//}
-	//for (std::vector<int>::size_type var = n; var < koVars.size(); var++) {
-	//    BDD isNotMutated = representMutationNone(var);
-	//    bdd *= isNotMutated;
-	//}
-	//return bdd;
 }
 
-//ADD Game::untreat(int level, const ADD& states) const {
-//	// i think actually for untreat, since we have only one variable, it can be a permute.
-//	// then no need for an exist of treatment vars
-//	// this has the effect of remembering the treatment by storing it in remember@level and removing treatment var
-//	// also try a multiply-and-exist version that should behave identically
-//
-//	std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
-//	std::iota(permute.begin(), permute.end(), 0);
-//
-//	int b = bits(oeVars.size() + 1);
-//	int i = treatmentVarIndices().front();
-//	int j = chosenTreatmentsIndices().front() + level * b;
-//
-//	for (int n = 0; n < b; n++) { // duplication
-//		permute[n + i] = n + j;
-//	}
-//
-//	return states.Permute(&permute[0]);
-//}
-//
-//// alternate unmutate, just copying untreat for now. ideally you would use indices() functions.
-//ADD Game::unmutate(int level, const ADD& states) const {
-//	std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
-//	std::iota(permute.begin(), permute.end(), 0);
-//
-//	int b = bits(koVars.size() + 1);
-//	int i = mutationVarsIndices().front() + level * b;
-//	int j = chosenMutationsIndices().front() + level * b;
-//	for (int n = 0; n < b; n++) { // duplication
-//		permute[n + i] = n + j;
-//	}
-//
-//	return states.Permute(&permute[0]);
-//}
-//
+// temp: hard coded for now
+// BDD Game::nMutations(int n) const {
+// 	if (koVars.size() > 2) {
+// 		std::cout << "nmutations with size(koVars) > 2 not implemented" << std::endl;
+// 		throw std::runtime_error("nmutations with size(koVars) > 2 not implemented");
+// 	}
+// 	else if (n == 0) {
+// 		return representMutationNone(0) * representMutationNone(1);
+// 	}
+// 	else if (n == 1) {
+// 		// this won't work for current unmutate implementation
+// 		//return (representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1);
+// 		return ((representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1)) +
+// 			((representMutation(1, 0) + representMutation(1, 1)) * representMutationNone(0));
+// 	}
+// 	else if (n == 2) {
+// 		// this won't work for current unmutate implementation
+// 		//return representMutation(0, 0) * representMutation(1, 1);
+// 		return (representMutation(0, 0) * representMutation(1, 1)) +
+// 			(representMutation(0, 1) * representMutation(1, 0));
+// 	}
+// 	else {
+// 		std::cout << "nmutations > 2 not implemented" << std::endl;
+// 		throw std::runtime_error("nmutations > 2 not implemented");
+// 	}
+
+// 	//BDD bdd = attractors.manager.bddOne();
+
+// 	//for (int var = 0; var < n; var++) {
+// 	//    BDD isMutated = !representMutationNone(var);
+// 	//    bdd *= isMutated;
+// 	//}
+// 	//for (std::vector<int>::size_type var = n; var < koVars.size(); var++) {
+// 	//    BDD isNotMutated = representMutationNone(var);
+// 	//    bdd *= isNotMutated;
+// 	//}
+// 	//return bdd;
+// }
 
 ADD Game::untreat(int level, const ADD& states) const {
 	// i think actually for untreat, since we have only one variable, it can be a permute.
