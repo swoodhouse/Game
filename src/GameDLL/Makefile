@@ -7,7 +7,7 @@ CC = x86_64-w64-mingw32-g++
 DLL = GameDLL.dll
 
 # Compiler flags
-DLL_CFLAGS = -O2 -std=c++0x -Wall -IGameDLL -I../../ext/CUDD/cudd-3.0.0/cudd -I../../ext/CUDD/cudd-3.0.0/cplusplus
+DLL_CFLAGS = -m64 -O2 -std=c++0x -Wall -IGameDLL -I../../ext/CUDD/cudd-3.0.0/cudd -I../../ext/CUDD/cudd-3.0.0/cplusplus
 
 # Linker flags
 #DLL_LDFLAGS = -L../../ext/CUDD/cudd-3.0.0/cudd/.libs -L../../ext/CUDD/cudd-3.0.0/cplusplus/.libs -Lcudd -Lobj -shared -s -Wl,--subsystem,windows,--out-implib,lib/libgame.a
