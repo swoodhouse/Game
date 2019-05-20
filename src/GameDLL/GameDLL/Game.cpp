@@ -4,7 +4,7 @@
 #include "Attractors.h"
 #include "Game.h"
 
-inline BDD logicalImplication(const BDD& a, const BDD& b) {
+/*inline*/ BDD logicalImplication(const BDD& a, const BDD& b) {
 	return (!a) + b;
 }
 
@@ -146,13 +146,51 @@ BDD Game::nMutations(int n) const {
 	//return bdd;
 }
 
+//ADD Game::untreat(int level, const ADD& states) const {
+//	// i think actually for untreat, since we have only one variable, it can be a permute.
+//	// then no need for an exist of treatment vars
+//	// this has the effect of remembering the treatment by storing it in remember@level and removing treatment var
+//	// also try a multiply-and-exist version that should behave identically
+//
+//	std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
+//	std::iota(permute.begin(), permute.end(), 0);
+//
+//	int b = bits(oeVars.size() + 1);
+//	int i = treatmentVarIndices().front();
+//	int j = chosenTreatmentsIndices().front() + level * b;
+//
+//	for (int n = 0; n < b; n++) { // duplication
+//		permute[n + i] = n + j;
+//	}
+//
+//	return states.Permute(&permute[0]);
+//}
+//
+//// alternate unmutate, just copying untreat for now. ideally you would use indices() functions.
+//ADD Game::unmutate(int level, const ADD& states) const {
+//	std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
+//	std::iota(permute.begin(), permute.end(), 0);
+//
+//	int b = bits(koVars.size() + 1);
+//	int i = mutationVarsIndices().front() + level * b;
+//	int j = chosenMutationsIndices().front() + level * b;
+//	for (int n = 0; n < b; n++) { // duplication
+//		permute[n + i] = n + j;
+//	}
+//
+//	return states.Permute(&permute[0]);
+//}
+//
+
 ADD Game::untreat(int level, const ADD& states) const {
 	// i think actually for untreat, since we have only one variable, it can be a permute.
 	// then no need for an exist of treatment vars
 	// this has the effect of remembering the treatment by storing it in remember@level and removing treatment var
 	// also try a multiply-and-exist version that should behave identically
 
-	std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
+	std::vector<int> permute(chosenMutationsIndices().back() + 1);
+	//std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
+	//std::vector<int> permute(Cudd_ReadSize(attractors.manager.getManager()));
 	std::iota(permute.begin(), permute.end(), 0);
 
 	int b = bits(oeVars.size() + 1);
@@ -166,9 +204,10 @@ ADD Game::untreat(int level, const ADD& states) const {
 	return states.Permute(&permute[0]);
 }
 
-// alternate unmutate, just copying untreat for now. ideally you would use indices() functions.
 ADD Game::unmutate(int level, const ADD& states) const {
-	std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
+	std::vector<int> permute(chosenMutationsIndices().back() + 1);
+	//std::vector<int> permute(Cudd_ReadNodeCount(attractors.manager.getManager()));
+	//std::vector<int> permute(Cudd_ReadSize(attractors.manager.getManager()));
 	std::iota(permute.begin(), permute.end(), 0);
 
 	int b = bits(koVars.size() + 1);
@@ -263,14 +302,18 @@ ADD addSetDiffMin(const ADD& a, const ADD& b) {
 }
 
 ADD Game::renameBDDVarsAddingPrimes(const ADD& add) const {
-	int *permute = new int[Cudd_ReadNodeCount(attractors.manager.getManager())];
+	int *permute = new int[chosenMutationsIndices().back() + 1];
+	//int *permute = new int[Cudd_ReadNodeCount(attractors.manager.getManager())];
+	//int *permute = new int[Cudd_ReadSize(attractors.manager.getManager())];
 	int i = 0;
 	for (; i < attractors.numUnprimedBDDVars; i++) {
 		permute[i] = i + attractors.numUnprimedBDDVars;
 		permute[i + attractors.numUnprimedBDDVars] = i + attractors.numUnprimedBDDVars;
 	}
 
-	for (; i < Cudd_ReadNodeCount(attractors.manager.getManager()); i++) {
+	//for (; i < Cudd_ReadNodeCount(attractors.manager.getManager()); i++) {
+	//for (; i < Cudd_ReadSize(attractors.manager.getManager()); i++) {
+	for (; i < chosenMutationsIndices().back() + 1; i++) {
 		permute[i] = i;
 	}
 
@@ -278,6 +321,24 @@ ADD Game::renameBDDVarsAddingPrimes(const ADD& add) const {
 	delete[] permute;
 	return r;
 }
+
+//
+//ADD Game::renameBDDVarsAddingPrimes(const ADD& add) const {
+//	int *permute = new int[Cudd_ReadNodeCount(attractors.manager.getManager())];
+//	int i = 0;
+//	for (; i < attractors.numUnprimedBDDVars; i++) {
+//		permute[i] = i + attractors.numUnprimedBDDVars;
+//		permute[i + attractors.numUnprimedBDDVars] = i + attractors.numUnprimedBDDVars;
+//	}
+//
+//	for (; i < Cudd_ReadNodeCount(attractors.manager.getManager()); i++) {
+//		permute[i] = i;
+//	}
+//
+//	ADD r = add.Permute(permute);
+//	delete[] permute;
+//	return r;
+//}
 
 ADD Game::immediateBackMax(const ADD& states) const {
 	ADD add = renameBDDVarsAddingPrimes(states); // uses attractors.primeVariables/nonPrime
@@ -343,6 +404,8 @@ ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
 }
 
 std::string Game::prettyPrint(const ADD& states) const {
+	std::cout << "in pretty print" << std::endl;
+
 	// ideally would not use a temp file
 	FILE *old = attractors.manager.ReadStdout();
 	FILE *fp = fopen("temp_game.txt", "w");

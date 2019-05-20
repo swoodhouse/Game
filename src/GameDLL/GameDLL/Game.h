@@ -9,10 +9,10 @@ struct Game {
 	const std::vector<int> koVars;
 	const std::vector<int> oeVars;
 
-	BDD mutantTransitionRelation;
+	const ADD scoreRelation;
+	const BDD mutantTransitionRelation;
 	//const BDD unmutateRelation; // needed? // removing this is breaking.. think the num bdd vars will change
-	ADD scoreRelation;
-
+	
 	static int calcNumMutations(int height, bool maximisingPlayerGoesLast);
 	static int calcNumTreatments(int height, bool maximisingPlayerGoesLast);
 
@@ -62,6 +62,10 @@ struct Game {
 	//{
 	//}; // done
 
+
+	// turn optimisations back on
+
+
 	Game(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qn, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, int depth,
 		bool maximisingPlayerGoesLast) :
 		height(depth),
@@ -69,7 +73,7 @@ struct Game {
 		numMutations(calcNumMutations(depth, maximisingPlayerGoesLast)), // test these two lines..
 		numTreatments(calcNumTreatments(depth, maximisingPlayerGoesLast)),
 		koVars(std::move(koVarsV)), oeVars(std::move(oeVarsV)),
-		attractors(std::move(minVals), std::move(rangesV), std::move(qn)),
+		attractors(std::move(minVals), std::move(rangesV), std::move(qn), chosenMutationsIndices().back() + 1),
 		mutantTransitionRelation(buildMutantSyncQNTransitionRelation()),
 		scoreRelation(buildScoreRelation(apopVar))
 	{

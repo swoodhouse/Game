@@ -4,6 +4,10 @@
 #include "stdafx.h"
 #include "Attractors.h"
 
+BDD logicalEquivalence(const BDD& a, const BDD& b) {
+	return !(a ^ b);
+}
+
 std::string printRange(const std::list<int>& values) {
 	std::string s("[");
 	s += std::to_string(values.front());
@@ -44,6 +48,7 @@ std::string fromBinary(const std::string& bits, int offset) {
 }
 
 BDD Attractors::representState(const std::vector<bool>& values) const {
+	std::cout << "hereZ" << std::endl;
     BDD bdd = manager.bddOne();
     for (int i = 0; i < values.size(); i++) {
         BDD var = manager.bddVar(i);
@@ -151,7 +156,9 @@ BDD Attractors::representSyncQNTransitionRelation(const QNTable& qn) const {
 }
 
 BDD Attractors::renameRemovingPrimes(const BDD& bdd) const {
-	std::vector<int> permute(Cudd_ReadNodeCount(manager.getManager()));
+	//std::vector<int> permute(Cudd_ReadNodeCount(manager.getManager()));
+	//std::vector<int> permute(Cudd_ReadSize(manager.getManager()));
+	std::vector<int> permute(numBDDVars);
 	std::iota(permute.begin(), permute.end(), 0);
 
 	for (int i = 0; i < numUnprimedBDDVars; i++) {
@@ -162,7 +169,9 @@ BDD Attractors::renameRemovingPrimes(const BDD& bdd) const {
 }
 
 BDD Attractors::renameAddingPrimes(const BDD& bdd) const {
-	std::vector<int> permute(Cudd_ReadNodeCount(manager.getManager()));
+	std::vector<int> permute(numBDDVars);
+	//std::vector<int> permute(Cudd_ReadNodeCount(manager.getManager()));
+	//std::vector<int> permute(Cudd_ReadSize(manager.getManager()));
 	std::iota(permute.begin(), permute.end(), 0);
 
 	for (int i = 0; i < numUnprimedBDDVars; i++) {
@@ -171,6 +180,29 @@ BDD Attractors::renameAddingPrimes(const BDD& bdd) const {
 
 	return bdd.Permute(&permute[0]);
 }
+
+//
+//BDD Attractors::renameRemovingPrimes(const BDD& bdd) const {
+//	std::vector<int> permute(Cudd_ReadNodeCount(manager.getManager()));
+//	std::iota(permute.begin(), permute.end(), 0);
+//
+//	for (int i = 0; i < numUnprimedBDDVars; i++) {
+//		permute[i + numUnprimedBDDVars] = i;
+//	}
+//
+//	return bdd.Permute(&permute[0]);
+//}
+//
+//BDD Attractors::renameAddingPrimes(const BDD& bdd) const {
+//	std::vector<int> permute(Cudd_ReadNodeCount(manager.getManager()));
+//	std::iota(permute.begin(), permute.end(), 0);
+//
+//	for (int i = 0; i < numUnprimedBDDVars; i++) {
+//		permute[i] = i + numUnprimedBDDVars;
+//	}
+//
+//	return bdd.Permute(&permute[0]);
+//}
 //
 //// TODO: switch between variablesToIngore and variablesToKeep implementations, verify they are equivalent and it is just that
 //// the later is more efficent
@@ -301,13 +333,19 @@ BDD Attractors::randomState(const BDD& S) const {
 //}
 //
 
-BDD Attractors::randomState(const BDD& S/*, int numBddVars*/) const {
+BDD Attractors::randomState(const BDD& S) const {
+	std::cout << "before manager.bddOne" << std::endl;
 	BDD bdd = manager.bddOne();
+	std::cout << "after manager.bddOne" << std::endl;
 
+	char *out = new char[numBDDVars];
+	//char *out = new char[Cudd_ReadNodeCount(manager.getManager())];
 	//char *out = new char[Cudd_ReadNodeCount(manager.getManager())];  // does this give the right number.........
-	char *out = new char[Cudd_ReadSize(manager.getManager())]; // Cudd_ReadSize seems like it should actually be correct.. that's not what permute is using though..
+	//char *out = new char[Cudd_ReadSize(manager.getManager())]; // Cudd_ReadSize seems like it should actually be correct.. that's not what permute is using though..
 															   //char *out = new char[numBddVars]; // 50?
+	std::cout << "before pickOneCube" << std::endl;
 	S.PickOneCube(out);
+	std::cout << "after pickOneCube" << std::endl;
 
 	for (int i = 0; i < numUnprimedBDDVars; i++) {
 		if (out[i] == 0) bdd *= !manager.bddVar(i);
@@ -435,18 +473,27 @@ BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& val
 // i don't think this is an optimal implementation, will do repeated work - if state a is ruled out under mutations X but not Y, will be run again under X and Y
 std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& statesToKeep /*, const BDD& variablesToAdd*/) const {
 	    std::list<BDD> attractors;
+
+		std::cout << "hereC" << std::endl;
+
 	    BDD S = manager.bddOne();
+		std::cout << "hereD" << std::endl;
 	    removeInvalidBitCombinations(S);
+		std::cout << "hereE" << std::endl;
 	    S *= !statesToRemove;
 
 	    while (!S.IsZero()) {
-			BDD s = randomState(S) * statesToKeep; // new idea
+			std::cout << "hereF" << std::endl;
+			BDD s = randomState(S) * statesToKeep; // threading numBDDVArs through
+			std::cout << "hereG" << std::endl;
+			//BDD s = randomState(S) * statesToKeep; // new idea
 			//BDD s = randomState(S);
 			//BDD s = randomState(S); // *variablesToAdd; // variab
 	
 	        for (int i = 0; i < ranges.size() /*10000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number
 	            BDD sP = immediateSuccessorStates(transitionBdd, s); // variables to add here???
 				s = randomState(sP) * statesToKeep; // new idea
+																	 //s = randomState(sP) * statesToKeep; // new idea
 	        }
 
 	        BDD fr = forwardReachableStates(transitionBdd, s);

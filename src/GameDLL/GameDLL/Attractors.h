@@ -16,11 +16,12 @@ struct QNTable {
 
 class Attractors {
 public: // move this
-	const Cudd manager;
+	Cudd manager;
 	const std::vector<int> minValues;
     const std::vector<int> ranges;
     const QNTable qn;
     const int numUnprimedBDDVars;
+	const int numBDDVars;
     
     const BDD nonPrimeVariables;
     const BDD primeVariables;
@@ -46,10 +47,22 @@ public: // move this
 	//std::list<BDD> attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& variablesToAdd) const;
     std::string prettyPrint(const BDD& attractor) const;
 
-    Attractors(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qnT) :
+    Attractors(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qnT, int numVars) :
     minValues(std::move(minVals)), ranges(std::move(rangesV)), qn(std::move(qnT)),
         numUnprimedBDDVars(countBits(ranges.size())),
-        manager(numUnprimedBDDVars * 2),
+		numBDDVars(numVars),
+		manager(numVars, 0, CUDD_UNIQUE_SLOTS, CUDD_CACHE_SLOTS, 1.6e+10, defaultError),
+
+/*
+		Cudd(
+			unsigned int numVars = 0,
+			unsigned int numVarsZ = 0,
+			unsigned int numSlots = CUDD_UNIQUE_SLOTS,
+			unsigned int cacheSize = CUDD_CACHE_SLOTS,
+			unsigned long maxMemory = 0,
+			PFC defaultHandler = defaultError);*/
+
+        //manager(numUnprimedBDDVars * 2),
         nonPrimeVariables(representNonPrimeVariables()), primeVariables(representPrimeVariables())
     {
 		std::cout << "in attractors ctor" << std::endl;
@@ -84,8 +97,6 @@ inline bool nthBitSet(int i, int n) {
     return (1 << n) & i;
 }
 
-inline BDD logicalEquivalence(const BDD& a, const BDD& b) {
-    return !(a ^ b);
-}
+BDD logicalEquivalence(const BDD& a, const BDD& b);
 
 std::string fromBinary(const std::string& bits, int offset);

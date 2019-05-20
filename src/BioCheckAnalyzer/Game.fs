@@ -195,8 +195,12 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
 
     System.IO.File.WriteAllText("Minimax.csv", header)
     // CUDD: out of memory allocating 2048 bytes
-    minimax(List.length qn, ranges', minValues, numInputs, inputVars', numUpdates, inputValues', outputValues',
-            List.length mutations', List.length treatments', Array.ofList mutations', Array.ofList treatments', apopVar, height) |> ignore
+
+    try 
+        minimax(List.length qn, ranges', minValues, numInputs, inputVars', numUpdates, inputValues', outputValues',
+                List.length mutations', List.length treatments', Array.ofList mutations', Array.ofList treatments', apopVar, height) |> ignore
+    with
+    | :? System.Runtime.InteropServices.SEHException as e -> printfn "External exception: %s, code: %ui" e.Message e.ErrorCode // Unspecified failure..
   
 //    minimax(List.length qn, ranges', minValues, numInputs, inputVars', numUpdates, inputValues', outputValues',
 //            List.length mutations', List.length treatments', Array.ofList mutations', Array.ofList treatments', apopVar, height, maximisingPlayerGoesLast, header, String.length header) |> ignore
