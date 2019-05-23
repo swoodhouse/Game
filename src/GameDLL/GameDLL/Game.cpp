@@ -21,8 +21,10 @@ int Game::calcNumMutations(int height, bool maximisingPlayerGoesLast) {
 		return 2;
 	}
 	else if (height == 5) return 2;
-	
+
+	std::cout << "is this the problem?" << std::endl;
 	throw std::runtime_error("height > 5 not implemented");
+	std::cout << "is this the problem?" << std::endl;
 }
 
 int Game::calcNumTreatments(int height, bool maximisingPlayerGoesLast) { // wrong
@@ -41,7 +43,9 @@ int Game::calcNumTreatments(int height, bool maximisingPlayerGoesLast) { // wron
 	}
 	else if (height == 5) return 2;
 
+	std::cout << "is this the problem?" << std::endl;
 	throw std::runtime_error("height > 5 not implemented");
+	std::cout << "is this the problem?" << std::endl;
 }
 
 std::vector<int> Game::attractorsIndicies() const {

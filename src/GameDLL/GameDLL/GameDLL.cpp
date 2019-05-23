@@ -12,6 +12,9 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
     //std::string header(csvHeader, headerLength);
 	std::cout << "in dll. numVars:" << numVars << ", numMutations:" << numMutations << ", numTreatments:" << numTreatments << ", apopVar:" << apopVar << ", height: " << height << std::endl;
 
+	std::cout << "ranges[3]" << ranges[3] << std::endl;
+
+	  // maybe these are getting moved here? call std::copy?
     std::vector<int> rangesV(ranges, ranges + numVars);
 	std::vector<int> minValuesV(minValues, minValues + numVars);
 	std::vector<int> mutationVarsV(mutationVars, mutationVars + numMutations);
@@ -19,6 +22,13 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
     std::vector<std::vector<int>> inputVarsV;
     std::vector<std::vector<int>> outputValuesV;
     std::vector<std::vector<std::vector<int>>> inputValuesV;
+
+
+    
+	std::cout << "rangesV[3]" << rangesV[3] << std::endl;
+	std::cout << "minValuesV[3]" << minValuesV[3] << std::endl;
+	std::cout << "mutationVarsV[3]" << mutationVarsV[3] << std::endl;
+	std::cout << "treatmentVarsV[3]" << treatmentVarsV[3] << std::endl;
 	
     int k = 0;
     for (int i = 0; i < numVars; i++) {

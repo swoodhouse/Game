@@ -57,7 +57,7 @@ struct Game {
 		numMutations(calcNumMutations(depth, maximisingPlayerGoesLast)), // test these two lines..
 		numTreatments(calcNumTreatments(depth, maximisingPlayerGoesLast)),
 		koVars(std::move(koVarsV)), oeVars(std::move(oeVarsV)),
-		attractors(std::move(minVals), std::move(rangesV), std::move(qn), chosenMutationsIndices().back() + 1),
+		  attractors(std::move(minVals), std::move(rangesV), std::move(qn), chosenMutationsIndices().back() + 1), // this could be the problem. apparently not
 		mutantTransitionRelation(buildMutantSyncQNTransitionRelation()),
 		scoreRelation(buildScoreRelation(apopVar))
 	{
