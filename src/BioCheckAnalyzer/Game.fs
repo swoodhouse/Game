@@ -117,6 +117,7 @@ let read_ModelFile_as_QN model_fname =
 
 let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatments : (QN.var * int) list) (apopVar : int) height maximisingPlayerGoesLast =
 
+    printfn "intptr.size: %i" System.IntPtr.Size
     printfn "in playGame. height = %i" height
 
     // temp!!!!
