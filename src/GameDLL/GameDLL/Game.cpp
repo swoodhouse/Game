@@ -49,34 +49,61 @@ int Game::calcNumTreatments(int height, bool maximisingPlayerGoesLast) { // wron
 }
 
 std::vector<int> Game::attractorsIndicies() const {
+    std::cout << "5" << std::endl;
 //std::vector<int> v(attractors.numUnprimedBDDVars * 2);
     std::vector<int> v(this->numUnprimedBDDVars * 2);
+    std::cout << "5.1" << std::endl;
     std::iota(v.begin(), v.end(), 0);
+    std::cout << "5.2" << std::endl;
+    for (int i : v) std::cout << i << std::endl;
     return v;
 }
 
 std::vector<int> Game::treatmentVarIndices() const {
-	std::vector<int> v(bits(oeVars.size() + 1));
-	std::iota(v.begin(), v.end(), attractorsIndicies().back() + 1);
-	return v;
+    std::cout << "4" << std::endl;
+    std::vector<int> v(bits(oeVars.size() + 1));
+    std::cout << "4.1" << std::endl;
+    std::iota(v.begin(), v.end(), attractorsIndicies().back() + 1);
+    std::cout << "4.2" << std::endl;
+    for (int i : v) std::cout << i << std::endl;
+    return v;
 }
 
 std::vector<int> Game::mutationVarsIndices() const {
-	std::vector<int> v(numMutations * bits(koVars.size() + 1));
-	std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
-	return v;
+    std::cout << "3" << std::endl;
+    std::vector<int> v(numMutations * bits(koVars.size() + 1));
+    std::cout << "3.1" << std::endl;
+    std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
+    std::cout << "3.2" << std::endl;
+    for (int i : v) std::cout << i << std::endl;
+    return v;
 }
 
 std::vector<int> Game::chosenTreatmentsIndices() const {
-	std::vector<int> v(numTreatments * bits(oeVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
-	std::iota(v.begin(), v.end(), mutationVarsIndices().back() + 1);
-	return v;
+  if (numTreatments == 0) return mutationVarsIndices().back(); // need stuff like this
+  std::cout << "2" << std::endl;
+  std::vector<int> v(numTreatments * bits(oeVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
+  std::cout << "2.1" << std::endl;
+  std::iota(v.begin(), v.end(), mutationVarsIndices().back() + 1);
+  std::cout << "2.2" << std::endl;
+  std::cout << "numTreatments:" << numTreatments << std::endl;
+  for (int i : v) std::cout << i << std::endl; // SOMETHING HERE.... nothing is ever printed.............
+  return v;
 }
 
 std::vector<int> Game::chosenMutationsIndices() const {
+  std::cout << "1" << std::endl;
 	//if (numMutations == 0) return std::vechosenTreatmentsIndices().back() + 1
 	std::vector<int> v(numMutations * bits(koVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
-	std::iota(v.begin(), v.end(), chosenTreatmentsIndices().back() + 1);
+	std::cout << "1.1" << std::endl;
+	auto temp = chosenTreatmentsIndices();
+	std::cout << "1.2" << std::endl;
+	auto temp2 = temp.back(); // problem is here.........
+	std::cout << "1.3" << std::endl;
+	auto temp3 = temp2 + 1;
+	std::cout << "1.4" << std::endl;
+	std::iota(v.begin(), v.end(), temp3);
+	std::cout << "1.5" << std::endl;
 	return v;
 }
 

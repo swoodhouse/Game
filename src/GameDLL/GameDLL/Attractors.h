@@ -72,7 +72,8 @@ public: // move this
 
 	 std::cout << "leaving attractors ctor" << std::endl;
      };
-    
+
+  
     /* Attractors(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qnT, int numVars) : */
     /* minValues(std::move(minVals)), ranges(std::move(rangesV)), qn(std::move(qnT)), */
     /*   numUnprimedBDDVars(countBits(ranges.size())), */

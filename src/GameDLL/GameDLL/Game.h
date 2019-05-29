@@ -64,9 +64,9 @@ struct Game {
     
     auto lambda = [](int a, int b) { return a + bits(b); };
     this->numUnprimedBDDVars = std::accumulate(rangesV.begin(), rangesV.begin() + rangesV.size(), 0, lambda); // same as rangesV.end()?
-    
+    std::cout << "numUnprimedBddVars:" << this->numUnprimedBDDVars << std::endl;
     std::cout << "before chosenMutIndices" << std::endl;
-    auto temp = chosenMutationsIndices().back() + 1;
+    int temp = chosenMutationsIndices().back() + 1;
     std::cout << "before attractors ctor" << std::endl;
     // ha.. i've found the bug chosenMuts refers to attractors member but i'm initinalising attractors with a call to it.
     attractors = Attractors(minVals, rangesV, qn, temp);    
