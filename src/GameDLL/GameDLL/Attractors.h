@@ -4,26 +4,33 @@
 #pragma once
 
 struct QNTable {
-    std::vector<std::vector<int>> inputVars;
-    std::vector<std::vector<std::vector<int>>> inputValues;
-    std::vector<std::vector<int>> outputValues;
+  /*const*/ std::vector<std::vector<int>> inputVars;
+  /*const*/ std::vector<std::vector<std::vector<int>>> inputValues;
+  /* const*/ std::vector<std::vector<int>> outputValues;
 
-    QNTable(std::vector<std::vector<int>>&& inputVarsV, std::vector<std::vector<std::vector<int>>>&& inputValuesV, std::vector<std::vector<int>>&& outputValuesV) :
-        inputVars(std::move(inputVarsV)), inputValues(std::move(inputValuesV)), outputValues(std::move(outputValuesV)) {}
+    /* QNTable(std::vector<std::vector<int>>&& inputVarsV, std::vector<std::vector<std::vector<int>>>&& inputValuesV, std::vector<std::vector<int>>&& outputValuesV) : */
+    /*      inputVars(std::move(inputVarsV)), inputValues(std::move(inputValuesV)), outputValues(std::move(outputValuesV)) {} */
+
+    QNTable(const std::vector<std::vector<int>>& inputVarsV, const std::vector<std::vector<std::vector<int>>>& inputValuesV, const std::vector<std::vector<int>>& outputValuesV) :
+  inputVars(inputVarsV), inputValues(inputValuesV), outputValues(outputValuesV) {} // temp
+  
+  QNTable() {} // temp
+  
+    /* QNTable(const QNTable&) = delete; */
+    /* QNTable& operator=(const QNTable&) = delete; */
 };
 
 class Attractors {
 public: // move this
-    const std::vector<int> minValues;
-    const std::vector<int> ranges;
-    const QNTable qn;
-    const int numUnprimedBDDVars;
-    const int numBDDVars;
+  /*const*/ std::vector<int> minValues;
+  /*const*/ std::vector<int> ranges;
+  /*const*/ QNTable qn;
+    /*const*/ int numUnprimedBDDVars;
+    /*const*/ int numBDDVars;
 
     Cudd manager;
-    const BDD nonPrimeVariables;
-    const BDD primeVariables;
-
+    /*const*/ BDD nonPrimeVariables;
+    /*const*/ BDD primeVariables;
 
     BDD representState(const std::vector<bool>& values) const;
     BDD representNonPrimeVariables() const;
@@ -42,31 +49,42 @@ public: // move this
     BDD immediatePredecessorStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
     BDD backwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
     
-    std::list<BDD> attractors(const BDD & transitionBdd, const BDD & statesToRemove, const BDD & statesToKeep) const;
+    std::list<BDD> attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& statesToKeep) const;
     std::string prettyPrint(const BDD& attractor) const;
 
-    Attractors(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qnT, int numVars) :
-    minValues(std::move(minVals)), ranges(std::move(rangesV)), qn(std::move(qnT)),
-      numUnprimedBDDVars(countBits(ranges.size())),
-      numBDDVars(numVars),
-      //		manager(numVars, 0, CUDD_UNIQUE_SLOTS, CUDD_CACHE_SLOTS, 1.6e+10, defaultError),
+    // temp
+    Attractors() {};
 
-/*
-		Cudd(
-			unsigned int numVars = 0,
-			unsigned int numVarsZ = 0,
-			unsigned int numSlots = CUDD_UNIQUE_SLOTS,
-			unsigned int cacheSize = CUDD_CACHE_SLOTS,
-			unsigned long maxMemory = 0,
-			PFC defaultHandler = defaultError);*/
-
-        manager(numBDDVars),
-        nonPrimeVariables(representNonPrimeVariables()), primeVariables(representPrimeVariables())
+    Attractors(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qnT, int numVars)
     {
-        std::cout << "in attractors ctor" << std::endl;
-        manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
-    };
+      minValues = minVals;
+      ranges = rangesV;
+      qn = qnT;
+      numUnprimedBDDVars = countBits(rangesV.size());
+      numBDDVars = numVars;
+      manager = Cudd(numBDDVars);
+      nonPrimeVariables = representNonPrimeVariables();
+      primeVariables = representPrimeVariables();
+      
+         std::cout << "in attractors ctor" << std::endl;
+         manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
+     };
 
+    
+    /* Attractors(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qnT, int numVars) : */
+    /* minValues(std::move(minVals)), ranges(std::move(rangesV)), qn(std::move(qnT)), */
+    /*   numUnprimedBDDVars(countBits(ranges.size())), */
+    /*   numBDDVars(numVars), */
+    /*     manager(numBDDVars), */
+    /*     nonPrimeVariables(representNonPrimeVariables()), primeVariables(representPrimeVariables()) */
+    /* { */
+    /*     std::cout << "in attractors ctor" << std::endl; */
+    /*     manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT */
+    /* }; */
+
+    // temp
+    //Attractors(const Attractors&) = delete;
+    //Attractors& operator=(const Attractors&) = delete;
 };
 
 inline int logTwo(unsigned int i) {

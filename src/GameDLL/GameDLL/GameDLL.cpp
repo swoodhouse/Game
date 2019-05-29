@@ -65,15 +65,15 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
     }
 
 
-	QNTable qn = QNTable(std::move(inputVarsV), std::move(inputValuesV), std::move(outputValuesV));
-	//QNTable qn = QNTable(inputVarsV, inputValuesV, outputValuesV);
+    //QNTable qn = QNTable(std::move(inputVarsV), std::move(inputValuesV), std::move(outputValuesV));
+	QNTable qn = QNTable(inputVarsV, inputValuesV, outputValuesV);
 
 	std::sort(mutationVarsV.begin(), mutationVarsV.end());
 	std::sort(treatmentVarsV.begin(), treatmentVarsV.end());
 
 	std::cout << "here" << std::endl;
-
-    Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, height, false);
+	
+	Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, height, false);
 	//Game g(minValuesV, rangesV, qn, mutationVarsV, treatmentVarsV, apopVar, height, false);
 	std::cout << "height:" << height << std::endl;
 	std::cout << "g.numMutations:" << g.numMutations << std::endl;
