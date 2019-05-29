@@ -57,6 +57,7 @@ public: // move this
 
     Attractors(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qnT, int numVars)
     {
+         std::cout << "in attractors ctor" << std::endl;
       minValues = minVals;
       ranges = rangesV;
       qn = qnT;
@@ -66,8 +67,9 @@ public: // move this
       nonPrimeVariables = representNonPrimeVariables();
       primeVariables = representPrimeVariables();
       
-         std::cout << "in attractors ctor" << std::endl;
+
          manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
+	          std::cout << "leaving attractors ctor" << std::endl;
      };
 
     
