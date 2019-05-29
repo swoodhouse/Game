@@ -61,8 +61,14 @@ struct Game {
     numTreatments = calcNumTreatments(depth, maximisingPlayerGoesLast);
     koVars = koVarsV;
     oeVars = oeVarsV;
-    attractors = Attractors(minVals, rangesV, qn, chosenMutationsIndices().back() + 1);
+    std::cout << "before chosenMutIndices" << std::endl;
+    auto temp = chosenMutationsIndices().back() + 1;
+    std::cout << "before attractors ctor" << std::endl;
+    // ha.. i've found the bug chosenMuts refers to attractors member but i'm initinalising attractors with a call to it.
+    attractors = Attractors(minVals, rangesV, qn, temp);
+    std::cout << "after attractors ctor" << std::endl;
     mutantTransitionRelation = buildMutantSyncQNTransitionRelation();
+    std::cout << "after build trr" << std::endl;
     scoreRelation = buildScoreRelation(apopVar);
     std::cout << "leaving Game ctor" << std::endl;
   }; // done

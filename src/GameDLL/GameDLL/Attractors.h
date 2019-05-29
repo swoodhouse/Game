@@ -69,7 +69,8 @@ public: // move this
       
 
          manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
-	          std::cout << "leaving attractors ctor" << std::endl;
+
+	 std::cout << "leaving attractors ctor" << std::endl;
      };
 
     
