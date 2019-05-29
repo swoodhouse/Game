@@ -7,7 +7,8 @@ struct Game {
   /*const*/ int numTreatments;
   /*const*/ std::vector<int> koVars;
   /*const*/ std::vector<int> oeVars;
-	Attractors attractors;
+  int numUnprimedBDDVars;
+  Attractors attractors;
  
   /*const*/ BDD mutantTransitionRelation;
   /*const*/ ADD scoreRelation;
@@ -50,7 +51,6 @@ struct Game {
 	BDD representNonPrimedMutVars() const; // done
 	ADD unmutate(int level, const ADD& states) const; // done
 
-
   Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,
        bool maximisingPlayerGoesLast)
   {
@@ -61,11 +61,15 @@ struct Game {
     numTreatments = calcNumTreatments(depth, maximisingPlayerGoesLast);
     koVars = koVarsV;
     oeVars = oeVarsV;
+    
+    auto lambda = [](int a, int b) { return a + bits(b); };
+    this->numUnprimedBDDVars = std::accumulate(rangesV.begin(), rangesV.begin() + rangesV.size(), 0, lambda); // same as rangesV.end()?
+    
     std::cout << "before chosenMutIndices" << std::endl;
     auto temp = chosenMutationsIndices().back() + 1;
     std::cout << "before attractors ctor" << std::endl;
     // ha.. i've found the bug chosenMuts refers to attractors member but i'm initinalising attractors with a call to it.
-    attractors = Attractors(minVals, rangesV, qn, temp);
+    attractors = Attractors(minVals, rangesV, qn, temp);    
     std::cout << "after attractors ctor" << std::endl;
     mutantTransitionRelation = buildMutantSyncQNTransitionRelation();
     std::cout << "after build trr" << std::endl;

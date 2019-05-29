@@ -49,9 +49,10 @@ int Game::calcNumTreatments(int height, bool maximisingPlayerGoesLast) { // wron
 }
 
 std::vector<int> Game::attractorsIndicies() const {
-	std::vector<int> v(attractors.numUnprimedBDDVars * 2);
-	std::iota(v.begin(), v.end(), 0);
-	return v;
+//std::vector<int> v(attractors.numUnprimedBDDVars * 2);
+    std::vector<int> v(this->numUnprimedBDDVars * 2);
+    std::iota(v.begin(), v.end(), 0);
+    return v;
 }
 
 std::vector<int> Game::treatmentVarIndices() const {
