@@ -156,6 +156,7 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     let minValues_ = Map.toArray ranges_ |> Array.map (fun (_, x) -> List.head x)
     let ranges'_ = Map.toArray ranges_ |> Array.map (fun (_, x) -> List.length x - 1)
     let minValues, ranges, ranges' = minValues_, ranges_, ranges'_
+
 //    System.IO.File.WriteAllLines("manual_ranges.txt", Array.map string ranges'_)
 //    System.IO.File.WriteAllLines("extendQn_ranges.txt", Array.map string ranges')
 //    //let ranges // temp
@@ -185,9 +186,21 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     let mutations' = mutations |> List.map (fun n -> List.findIndex ((=) n) qnVars)
     let treatments' = treatments |> List.map (fun n -> List.findIndex ((=) n) qnVars)
 
+    let maximisingPlayerGoesLast = true
+
+    let numTreatments, numMutations = 
+        match height with
+        | 0 | 1 -> 0, 0
+        | 2 -> if maximisingPlayerGoesLast then 1, 0 else 0, 1
+        | 3 -> 1, 1
+        | 4 -> if maximisingPlayerGoesLast then 2, 1 else 1, 2
+        | 5 -> 2, 2
+        | _ -> 0, 0
+
     let header = variables @
-                [for i in 1 .. List.length treatments' do yield sprintf "chosenTreatment%i" i] @
-                [for i in 1 .. List.length mutations' do yield sprintf "chosenMutation%i" i]
+                [for i in 1 .. numTreatments do yield sprintf "chosenTreatment%i" i] @
+                [for i in 1 .. numMutations do yield sprintf "chosenMutation%i" i] @
+                ["Score"]
              |> List.reduce (fun x y -> x + "," + y)
 
     printfn "Calling DLL... numVars: %i, numMutations: %i, apopVar: %i, height: %i" (List.length qn) (List.length mutations') apopVar height

@@ -45,7 +45,6 @@ int Game::calcNumTreatments(int height, bool maximisingPlayerGoesLast) { // wron
 }
 
 std::vector<int> Game::attractorsIndicies() const {
-//std::vector<int> v(attractors.numUnprimedBDDVars * 2);
     std::vector<int> v(this->numUnprimedBDDVars * 2);
     std::iota(v.begin(), v.end(), 0);
     return v;
@@ -58,27 +57,35 @@ std::vector<int> Game::treatmentVarIndices() const {
 }
 
 std::vector<int> Game::mutationVarsIndices() const {
+  int n = numMutations;
   if (numMutations == 0) {
-    std::cout << "numMutations == 0, this will trigger a bug" << std::endl; // temp
+    //std::cout << "numMutations == 0, this will trigger a bug" << std::endl; // temp
+    n = 1;
   }
-    std::vector<int> v(numMutations * bits(koVars.size() + 1));
+    std::vector<int> v(n * bits(koVars.size() + 1));
     std::iota(v.begin(), v.end(), treatmentVarIndices().back() + 1);
     return v;
 }
 
 std::vector<int> Game::chosenTreatmentsIndices() const {
-    if (numTreatments == 0) {
-    std::cout << "numTreatments == 0, this will trigger a bug" << std::endl; // temp
+  int n = numTreatments;
+  if (numTreatments == 0) {
+    //std::cout << "numTreatments == 0, this will trigger a bug" << std::endl; // temp
+    n = 1;
   }
-  //if (numTreatments == 0) return mutationVarsIndices().back(); // need stuff like this
-  std::vector<int> v(numTreatments * bits(oeVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
+  std::vector<int> v(n * bits(oeVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
   std::iota(v.begin(), v.end(), mutationVarsIndices().back() + 1);
   return v;
 }
 
 std::vector<int> Game::chosenMutationsIndices() const {
-  // numMutations == 0 bug here too
-	std::vector<int> v(numMutations * bits(koVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
+  int n = numMutations;
+  if (numMutations == 0) {
+    //std::cout << "numMutations == 0, this will trigger a bug" << std::endl; // temp
+    n = 1;
+  }
+
+  std::vector<int> v(n * bits(koVars.size() + 1)); // don't actually need +1 because don't need to represent zero, but easier this way
 	auto temp = chosenTreatmentsIndices();
 	auto temp2 = temp.back(); // problem is here.........
 	auto temp3 = temp2 + 1;
@@ -128,62 +135,62 @@ BDD Game::representSomeMutation(int var) const {
 	return bdd;
 }
 
-BDD Game::nMutations(int n) const {
-	if (n == 0) {
-		return representMutationNone(0) * representMutationNone(1);
-	}
-	else if (n == 1) {
-		return (representSomeMutation(0) * representMutationNone(1)) +
-		       (representSomeMutation(1) * representMutationNone(0));	
-
-	}
-	else if (n == 2) {
-                return (representSomeMutation(0) * representSomeMutation(1));
-	}
-	else {
-		std::cout << "nmutations > 2 not implemented" << std::endl;
-		throw std::runtime_error("nmutations > 2 not implemented");
-	}
-}
-
-// temp: hard coded for now
 // BDD Game::nMutations(int n) const {
-// 	if (koVars.size() > 2) {
-// 		std::cout << "nmutations with size(koVars) > 2 not implemented" << std::endl;
-// 		throw std::runtime_error("nmutations with size(koVars) > 2 not implemented");
-// 	}
-// 	else if (n == 0) {
+// 	if (n == 0) {
 // 		return representMutationNone(0) * representMutationNone(1);
 // 	}
 // 	else if (n == 1) {
-// 		// this won't work for current unmutate implementation
-// 		//return (representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1);
-// 		return ((representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1)) +
-// 			((representMutation(1, 0) + representMutation(1, 1)) * representMutationNone(0));
+// 		return (representSomeMutation(0) * representMutationNone(1)) +
+// 		       (representSomeMutation(1) * representMutationNone(0));	
+
 // 	}
 // 	else if (n == 2) {
-// 		// this won't work for current unmutate implementation
-// 		//return representMutation(0, 0) * representMutation(1, 1);
-// 		return (representMutation(0, 0) * representMutation(1, 1)) +
-// 			(representMutation(0, 1) * representMutation(1, 0));
+//                 return (representSomeMutation(0) * representSomeMutation(1));
 // 	}
 // 	else {
 // 		std::cout << "nmutations > 2 not implemented" << std::endl;
 // 		throw std::runtime_error("nmutations > 2 not implemented");
 // 	}
-
-// 	//BDD bdd = attractors.manager.bddOne();
-
-// 	//for (int var = 0; var < n; var++) {
-// 	//    BDD isMutated = !representMutationNone(var);
-// 	//    bdd *= isMutated;
-// 	//}
-// 	//for (std::vector<int>::size_type var = n; var < koVars.size(); var++) {
-// 	//    BDD isNotMutated = representMutationNone(var);
-// 	//    bdd *= isNotMutated;
-// 	//}
-// 	//return bdd;
 // }
+
+// temp: hard coded for now
+BDD Game::nMutations(int n) const {
+	if (koVars.size() > 2) {
+		std::cout << "nmutations with size(koVars) > 2 not implemented" << std::endl;
+		throw std::runtime_error("nmutations with size(koVars) > 2 not implemented");
+	}
+	else if (n == 0) {
+		return representMutationNone(0) * representMutationNone(1);
+	}
+	else if (n == 1) {
+		// this won't work for current unmutate implementation
+		//return (representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1);
+		return ((representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1)) +
+			((representMutation(1, 0) + representMutation(1, 1)) * representMutationNone(0));
+	}
+	else if (n == 2) {
+		// this won't work for current unmutate implementation
+		//return representMutation(0, 0) * representMutation(1, 1);
+		return (representMutation(0, 0) * representMutation(1, 1)) +
+			(representMutation(0, 1) * representMutation(1, 0));
+	}
+	else {
+		std::cout << "nmutations > 2 not implemented" << std::endl;
+		throw std::runtime_error("nmutations > 2 not implemented");
+	}
+
+	//BDD bdd = attractors.manager.bddOne();
+
+	//for (int var = 0; var < n; var++) {
+	//    BDD isMutated = !representMutationNone(var);
+	//    bdd *= isMutated;
+	//}
+	//for (std::vector<int>::size_type var = n; var < koVars.size(); var++) {
+	//    BDD isNotMutated = representMutationNone(var);
+	//    bdd *= isNotMutated;
+	//}
+	//return bdd;
+}
 
 ADD Game::untreat(int level, const ADD& states) const {
 	// i think actually for untreat, since we have only one variable, it can be a permute.
@@ -258,11 +265,20 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				}
 				int max = attractors.ranges[v];
 				bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
+				// TEMP!
+				//bdd *= attractors.representPrimedVarQN(v, max);
 				std::cout << "MUTATION BRANCH  EXECUTED for v =" << v << std::endl;
 				k++;
 			}
 			else if (o < oeVars.size() && oeVars[o] == v) { // rename to treat vars - koing not oe-ing
 				BDD isTreated = representTreatment(o);
+
+				// std::cout << "isTreated:" << std::endl;
+				// isTreated.PrintMinterm();
+				
+				//int max = attractors.ranges[v];
+				//bdd *= attractors.representPrimedVarQN(v, max);
+				//bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
 				bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
 				std::cout << "TREATMENT BRANCH EXECUTED for v =" << v << std::endl;
 				o++;
@@ -446,7 +462,7 @@ std::string Game::prettyPrint(const ADD& states) const {
 			i += b;
 		}
 		// get the score value
-		std::string rest = line.substr(i);
+		std::string rest = std::to_string(std::stoi(line.substr(i)) - 1); // subtract 1 back off add value (0 is nothing, so 1 is score of 0)
 		output.push_back(rest); // trim this
 
 		out += std::accumulate(std::next(output.begin()), output.end(), output.front(), lambda) + "\n";
@@ -458,7 +474,12 @@ std::string Game::prettyPrint(const ADD& states) const {
 ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	ADD states = attractors.manager.addZero();
 	BDD treatment = applyTreatments ? representSomeTreatment() : representTreatmentNone();
+
+	
 	BDD mutsAndTreats = treatment * nMutations(numMutations);
+	// std::cout << "mutsAndTreats:" << std::endl;
+	// mutsAndTreats.PrintMinterm();
+
 	// temp. need this
 	//removeInvalidTreatmentBitCombinations(mutsAndTreats); // refacotr this out.. can be computed once too
 	//removeInvalidMutationBitCombinations(mutsAndTreats); // temp
@@ -477,21 +498,20 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	//	statesToRemove = fix + attractors.backwardReachableStates(mutantTransitionRelation, fix);
 	//}
 
-	std::cout << "hereA" << std::endl;
 	std::list<BDD> loops = attractors.attractors(mutantTransitionRelation, statesToRemove, mutsAndTreats);
-
-	std::cout << "hereB" << std::endl;
 
 	int i = 0;
 	for (const BDD& a : loops) { // loop here and writing to same file is not right.
 		ADD scored = scoreLoop(a, scoreRelation);
-		//std::ofstream file("LoopAttractor" + std::to_string(i) + ".csv");
+		//std::ofstream file("LoopAttractor_" + std::to_string(i) + ".csv");
 		//file << header << std::endl;
 		//file << prettyPrint(scored) << std::endl; // TODO: this must have an indexing bug, it throws an exception
 		//file << attractors.prettyPrint(states.BddPattern()) << std::endl; // temp
 		states += scored;
 		i++;
 	}
+	std::ofstream csv("Attractors_treat" + std::to_string(applyTreatments) + "_mut" + std::to_string(numMutations) + ".csv");
+	csv << std::endl << prettyPrint(states) << std::endl;
 
 	return states;
 }
@@ -520,7 +540,6 @@ ADD Game::minimax() const {
 	std::cout << "numTreatments: " << numTreatments << std::endl;
 	std::cout << "numMutations: " << numMutations << std::endl;
 	ADD states = scoreAttractors(false, numMutations);
-	states.PrintMinterm(); // temp
 	height--;
 	maximisingPlayer = true; // temp..............
 	
@@ -537,11 +556,6 @@ ADD Game::minimax() const {
 			BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
 			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add();
 
-			std::cout << "attractors:" << std::endl;
-			att.PrintMinterm();
-
-			std::cout << "states:" << std::endl;
-			states.PrintMinterm();
 		}
 		else {
 			numTreatments--; // HERE OR BEFORE?
@@ -552,12 +566,6 @@ ADD Game::minimax() const {
 			states = untreat(numTreatments, states);
 			BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); //THIS MAY HAVE BEEN A BUG // to score then unscore is not ideal
 			states *= att.Add();
-
-			std::cout << "attractors:" << std::endl;
-			att.PrintMinterm();
-
-			std::cout << "states:" << std::endl;
-			states.PrintMinterm();
 		}
 
 		maximisingPlayer = !maximisingPlayer;
