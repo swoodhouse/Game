@@ -74,35 +74,22 @@ BDD Attractors::representPrimeVariables() const {
 }
 
 int Attractors::countBits(int end) const {
-  std::cout << "in countBits" << std::endl;
     auto lambda = [](int a, int b) { return a + bits(b); };
     return std::accumulate(ranges.begin(), ranges.begin() + end, 0, lambda);
 }
 
 BDD Attractors::representUnprimedVarQN(int var, int val) const {
-	//std::cout << "here1" << std::endl;
     BDD bdd = manager.bddOne();
-	//std::cout << "here2" << std::endl;
     int i = countBits(var);
-	//std::cout << "here3" << std::endl;
     int b = bits(ranges[var]);
-	//std::cout << "here4" << std::endl;
     for (int n = 0; n < b; n++) {
-		//std::cout << "here5" << std::endl;
-		//std::cout << "i:" << i << std::endl;
         BDD var = manager.bddVar(i);
-		//std::cout << "here6" << std::endl;
         if (!nthBitSet(val, n)) {
-			//std::cout << "here7" << std::endl;
             var = !var;
-			//std::cout << "here8" << std::endl;
         }
-	//	std::cout << "here9" << std::endl;
         bdd *= var;
-		//std::cout << "here10" << std::endl;
         i++;
     }
-	//std::cout << "here11" << std::endl;
 
     return bdd;
 }
@@ -335,18 +322,14 @@ BDD Attractors::randomState(const BDD& S) const {
 //
 
 BDD Attractors::randomState(const BDD& S) const {
-	std::cout << "before manager.bddOne" << std::endl;
 	BDD bdd = manager.bddOne();
-	std::cout << "after manager.bddOne" << std::endl;
 
 	char *out = new char[numBDDVars];
 	//char *out = new char[Cudd_ReadNodeCount(manager.getManager())];
 	//char *out = new char[Cudd_ReadNodeCount(manager.getManager())];  // does this give the right number.........
 	//char *out = new char[Cudd_ReadSize(manager.getManager())]; // Cudd_ReadSize seems like it should actually be correct.. that's not what permute is using though..
 															   //char *out = new char[numBddVars]; // 50?
-	std::cout << "before pickOneCube" << std::endl;
 	S.PickOneCube(out);
-	std::cout << "after pickOneCube" << std::endl;
 
 	for (int i = 0; i < numUnprimedBDDVars; i++) {
 		if (out[i] == 0) bdd *= !manager.bddVar(i);
@@ -474,19 +457,12 @@ BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& val
 // i don't think this is an optimal implementation, will do repeated work - if state a is ruled out under mutations X but not Y, will be run again under X and Y
 std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& statesToKeep /*, const BDD& variablesToAdd*/) const {
 	    std::list<BDD> attractors;
-
-		std::cout << "hereC" << std::endl;
-
 	    BDD S = manager.bddOne();
-		std::cout << "hereD" << std::endl;
 	    removeInvalidBitCombinations(S);
-		std::cout << "hereE" << std::endl;
 	    S *= !statesToRemove;
 
 	    while (!S.IsZero()) {
-			std::cout << "hereF" << std::endl;
 			BDD s = randomState(S) * statesToKeep; // threading numBDDVArs through
-			std::cout << "hereG" << std::endl;
 			//BDD s = randomState(S) * statesToKeep; // new idea
 			//BDD s = randomState(S);
 			//BDD s = randomState(S); // *variablesToAdd; // variab

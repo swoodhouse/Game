@@ -23,12 +23,6 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
     std::vector<std::vector<int>> outputValuesV;
     std::vector<std::vector<std::vector<int>>> inputValuesV;
 
-
-    
-	std::cout << "rangesV[3]" << rangesV[3] << std::endl;
-	std::cout << "minValuesV[3]" << minValuesV[3] << std::endl;
-	std::cout << "mutationVarsV[3]" << mutationVarsV[3] << std::endl;
-	std::cout << "treatmentVarsV[3]" << treatmentVarsV[3] << std::endl;
 	
     int k = 0;
     for (int i = 0; i < numVars; i++) {
@@ -100,9 +94,9 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	//std::cout << "Cudd_ReadSize:" << Cudd_ReadSize(g.attractors.manager.getManager()) << std::endl;
 
 	// the below causes the whole program to crash before even starting anything..
-	//std::ofstream csv;
-	//csv.open("Minimax.csv", std::ios_base::app);
-	//csv << g.prettyPrint(out) << std::endl;
+	std::ofstream csv;
+	csv.open("Minimax.csv", std::ios_base::app);
+	csv << std::endl << g.prettyPrint(out) << std::endl;
 	//std::cout << g.prettyPrint(out) << std::endl;
 
     return 0;
