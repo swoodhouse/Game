@@ -186,6 +186,9 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
     let mutations' = mutations |> List.map (fun n -> List.findIndex ((=) n) qnVars)
     let treatments' = treatments |> List.map (fun n -> List.findIndex ((=) n) qnVars)
 
+    let mutationNames = mutations |> List.map (fun n -> let x = List.find (fun (y : QN.node) -> y.var = n) qn in x.name)
+    let treatmentNames = treatments |> List.map (fun n -> let x = List.find (fun (y : QN.node) -> y.var = n) qn in x.name)
+
     let maximisingPlayerGoesLast = true
 
     let numTreatments, numMutations = 
@@ -202,6 +205,11 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
                 [for i in 1 .. numMutations do yield sprintf "chosenMutation%i" i] @
                 ["Score"]
              |> List.reduce (fun x y -> x + "," + y)
+
+    printfn "Ranges: %A" ranges'
+    printfn "Minvalues: %A" minValues
+    printfn "Mutations: %A" mutationNames
+    printfn "Treatments: %A" treatmentNames
 
     printfn "Calling DLL... numVars: %i, numMutations: %i, apopVar: %i, height: %i" (List.length qn) (List.length mutations') apopVar height
 //    minimax(List.length qn, ranges', minValues, numInputs, inputVars', numUpdates, inputValues', outputValues',

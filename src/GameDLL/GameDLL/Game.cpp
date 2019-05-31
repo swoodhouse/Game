@@ -135,62 +135,62 @@ BDD Game::representSomeMutation(int var) const {
 	return bdd;
 }
 
-// BDD Game::nMutations(int n) const {
-// 	if (n == 0) {
-// 		return representMutationNone(0) * representMutationNone(1);
-// 	}
-// 	else if (n == 1) {
-// 		return (representSomeMutation(0) * representMutationNone(1)) +
-// 		       (representSomeMutation(1) * representMutationNone(0));	
-
-// 	}
-// 	else if (n == 2) {
-//                 return (representSomeMutation(0) * representSomeMutation(1));
-// 	}
-// 	else {
-// 		std::cout << "nmutations > 2 not implemented" << std::endl;
-// 		throw std::runtime_error("nmutations > 2 not implemented");
-// 	}
-// }
-
-// temp: hard coded for now
 BDD Game::nMutations(int n) const {
-	if (koVars.size() > 2) {
-		std::cout << "nmutations with size(koVars) > 2 not implemented" << std::endl;
-		throw std::runtime_error("nmutations with size(koVars) > 2 not implemented");
-	}
-	else if (n == 0) {
+	if (n == 0) {
 		return representMutationNone(0) * representMutationNone(1);
 	}
 	else if (n == 1) {
-		// this won't work for current unmutate implementation
-		//return (representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1);
-		return ((representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1)) +
-			((representMutation(1, 0) + representMutation(1, 1)) * representMutationNone(0));
+		return (representSomeMutation(0) * representMutationNone(1)) +
+		       (representSomeMutation(1) * representMutationNone(0));	
+
 	}
 	else if (n == 2) {
-		// this won't work for current unmutate implementation
-		//return representMutation(0, 0) * representMutation(1, 1);
-		return (representMutation(0, 0) * representMutation(1, 1)) +
-			(representMutation(0, 1) * representMutation(1, 0));
+                return (representSomeMutation(0) * representSomeMutation(1));
 	}
 	else {
 		std::cout << "nmutations > 2 not implemented" << std::endl;
 		throw std::runtime_error("nmutations > 2 not implemented");
 	}
-
-	//BDD bdd = attractors.manager.bddOne();
-
-	//for (int var = 0; var < n; var++) {
-	//    BDD isMutated = !representMutationNone(var);
-	//    bdd *= isMutated;
-	//}
-	//for (std::vector<int>::size_type var = n; var < koVars.size(); var++) {
-	//    BDD isNotMutated = representMutationNone(var);
-	//    bdd *= isNotMutated;
-	//}
-	//return bdd;
 }
+
+// temp: hard coded for now
+// BDD Game::nMutations(int n) const {
+// 	if (koVars.size() > 2) {
+// 		std::cout << "nmutations with size(koVars) > 2 not implemented" << std::endl;
+// 		throw std::runtime_error("nmutations with size(koVars) > 2 not implemented");
+// 	}
+// 	else if (n == 0) {
+// 		return representMutationNone(0) * representMutationNone(1);
+// 	}
+// 	else if (n == 1) {
+// 		// this won't work for current unmutate implementation
+// 		//return (representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1);
+// 		return ((representMutation(0, 0) + representMutation(0, 1)) * representMutationNone(1)) +
+// 			((representMutation(1, 0) + representMutation(1, 1)) * representMutationNone(0));
+// 	}
+// 	else if (n == 2) {
+// 		// this won't work for current unmutate implementation
+// 		//return representMutation(0, 0) * representMutation(1, 1);
+// 		return (representMutation(0, 0) * representMutation(1, 1)) +
+// 			(representMutation(0, 1) * representMutation(1, 0));
+// 	}
+// 	else {
+// 		std::cout << "nmutations > 2 not implemented" << std::endl;
+// 		throw std::runtime_error("nmutations > 2 not implemented");
+// 	}
+
+// 	//BDD bdd = attractors.manager.bddOne();
+
+// 	//for (int var = 0; var < n; var++) {
+// 	//    BDD isMutated = !representMutationNone(var);
+// 	//    bdd *= isMutated;
+// 	//}
+// 	//for (std::vector<int>::size_type var = n; var < koVars.size(); var++) {
+// 	//    BDD isNotMutated = representMutationNone(var);
+// 	//    bdd *= isNotMutated;
+// 	//}
+// 	//return bdd;
+// }
 
 ADD Game::untreat(int level, const ADD& states) const {
 	// i think actually for untreat, since we have only one variable, it can be a permute.
@@ -257,14 +257,17 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 
 			// assuming koVars and oeVars are disjoint. and sorted. we call sort in entry point
 
-			if (k < koVars.size() && koVars[k] == v) {
+			if (k < koVars.size() && koVars[k] == v) { // rename to mutation vars - oe-ing not ko-ing
 				BDD isMutated = attractors.manager.bddZero();
-
+				
 				for (int lvl = 0; lvl < numMutations; lvl++) {
 					isMutated += representMutation(lvl, k);
 				}
+				// 
+				
 				int max = attractors.ranges[v];
 				bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
+				//bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction); // TEMP!! again causes to hang..
 				// TEMP!
 				//bdd *= attractors.representPrimedVarQN(v, max);
 				std::cout << "MUTATION BRANCH  EXECUTED for v =" << v << std::endl;
@@ -276,9 +279,9 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				// std::cout << "isTreated:" << std::endl;
 				// isTreated.PrintMinterm();
 				
-				//int max = attractors.ranges[v];
+				int max = attractors.ranges[v];
 				//bdd *= attractors.representPrimedVarQN(v, max);
-				//bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
+				//bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max), targetFunction); // TEMP!! causes to hang
 				bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
 				std::cout << "TREATMENT BRANCH EXECUTED for v =" << v << std::endl;
 				o++;
