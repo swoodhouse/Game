@@ -34,8 +34,8 @@ let extendQN qn mutations treatments = // eventually needs to be two classes of 
         {QN.var = id; QN.f = Expr.Var id; QN.inputs = [id]; QN.range = (0, 1); QN.name = tag + "_" + string id; QN.nature = Map.ofList [(id, QN.Act)];
          QN.number = 0; QN.defaultF = false; QN.tags = [(0, "")]}
 
-    let koVars = lastId |> Seq.unfold (fun id -> Some (mkNode "ko" id, id + 1)) |> Seq.take (Set.count mutations) |> List.ofSeq
-    let oeVars = lastId + Set.count mutations |>  Seq.unfold (fun id -> Some (mkNode "oe" id, id + 1)) |> Seq.take (Set.count treatments) |> List.ofSeq
+    let koVars = lastId |> Seq.unfold (fun id -> Some (mkNode "ko" id, id + 1)) |> Seq.take (Set.count treatments) |> List.ofSeq
+    let oeVars = lastId + Seq.length koVars |>  Seq.unfold (fun id -> Some (mkNode "oe" id, id + 1)) |> Seq.take (Set.count mutations) |> List.ofSeq
 
     // switching these.. ko should be rename mutation and oe treatment
     let extendTFwithKo (node : QN.node) (koNode : QN.node) = 
@@ -61,16 +61,16 @@ let extendQN qn mutations treatments = // eventually needs to be two classes of 
                                          // need to do ko then oe
 
     let mutable i = 0 // hack
-    let qn = qn |> List.map (fun n -> if Set.contains n.var mutations then
+    let qn = qn |> List.map (fun n -> if Set.contains n.var treatments then
                                           let r = { n with defaultF = false; f = extendTFwithKo n (mkNode "ko" <| lastId + i); inputs = (lastId + i) :: n.inputs}
                                           i <- i + 1
-                                          printfn "mutating.."
+                                          printfn "treating.."
                                           r
                                        else n) 
-    let qn = qn |> List.map (fun n -> if Set.contains n.var treatments then
+    let qn = qn |> List.map (fun n -> if Set.contains n.var mutations then
                                           let r = { n with defaultF = false; f = extendTFwithOe n (mkNode "oe" <| lastId + i); inputs = (lastId + i) :: n.inputs}
                                           i <- i + 1
-                                          printfn "treating.."
+                                          printfn "mutating.."
                                           r
                                        else n)
 

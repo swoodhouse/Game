@@ -263,12 +263,11 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				for (int lvl = 0; lvl < numMutations; lvl++) {
 					isMutated += representMutation(lvl, k);
 				}
-				// 
 				
 				int max = attractors.ranges[v];
-				//bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
+				bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
 
-				bdd *= attractors.manager.bddOne().Ite(attractors.representPrimedVarQN(v, max), targetFunction); // TEMP!! doesht do anything?
+				//bdd *= attractors.manager.bddOne().Ite(attractors.representPrimedVarQN(v, max), targetFunction); // TEMP!! doesht do anything?
 				//bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction); // TEMP!! again causes to hang..
 				// TEMP!
 				//bdd *= attractors.representPrimedVarQN(v, max);
