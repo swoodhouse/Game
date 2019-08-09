@@ -34,8 +34,13 @@ let extendQN qn mutations treatments = // eventually needs to be two classes of 
         {QN.var = id; QN.f = Expr.Var id; QN.inputs = [id]; QN.range = (0, 1); QN.name = tag + "_" + string id; QN.nature = Map.ofList [(id, QN.Act)];
          QN.number = 0; QN.defaultF = false; QN.tags = [(0, "")]}
 
+    // NEW:
     let koVars = lastId |> Seq.unfold (fun id -> Some (mkNode "ko" id, id + 1)) |> Seq.take (Set.count treatments) |> List.ofSeq
     let oeVars = lastId + Seq.length koVars |>  Seq.unfold (fun id -> Some (mkNode "oe" id, id + 1)) |> Seq.take (Set.count mutations) |> List.ofSeq
+
+    // OLD:
+//    let koVars = lastId |> Seq.unfold (fun id -> Some (mkNode "ko" id, id + 1)) |> Seq.take (Set.count mutations) |> List.ofSeq
+//    let oeVars = lastId + Set.count mutations |>  Seq.unfold (fun id -> Some (mkNode "oe" id, id + 1)) |> Seq.take (Set.count treatments) |> List.ofSeq
 
     // switching these.. ko should be rename mutation and oe treatment
     let extendTFwithKo (node : QN.node) (koNode : QN.node) = 
@@ -61,13 +66,18 @@ let extendQN qn mutations treatments = // eventually needs to be two classes of 
                                          // need to do ko then oe
 
     let mutable i = 0 // hack
+    // NEW
     let qn = qn |> List.map (fun n -> if Set.contains n.var treatments then
+    // OLD
+    //let qn = qn |> List.map (fun n -> if Set.contains n.var mutations then
                                           let r = { n with defaultF = false; f = extendTFwithKo n (mkNode "ko" <| lastId + i); inputs = (lastId + i) :: n.inputs}
                                           i <- i + 1
                                           printfn "treating.."
                                           r
                                        else n) 
+    // NEW
     let qn = qn |> List.map (fun n -> if Set.contains n.var mutations then
+    //let qn = qn |> List.map (fun n -> if Set.contains n.var treatments then
                                           let r = { n with defaultF = false; f = extendTFwithOe n (mkNode "oe" <| lastId + i); inputs = (lastId + i) :: n.inputs}
                                           i <- i + 1
                                           printfn "mutating.."
@@ -135,11 +145,11 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
 //    printfn "Running VMCAI..."
 //    // this is the key..... we need to add special vars, corresponding target functions, then run vmcai, then remove special vars
 //    // basically.. maintain qn and extendedQn. ranges come from extendedQn, table from qn
-    let extendedQn = extendQN qn (Set.ofList mutations) (Set.ofList treatments)
-    let ranges, _ = Attractors.runVMCAI extendedQn
-    let ranges = ranges |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars)) // you need to trim ^ these to remove ko vars and oe vars................
-    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
-    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
+//    let extendedQn = extendQN qn (Set.ofList mutations) (Set.ofList treatments)
+//    let ranges, _ = Attractors.runVMCAI extendedQn
+//    let ranges = ranges |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars)) // you need to trim ^ these to remove ko vars and oe vars................
+//    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
+//    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
 
 //    let manualRanges = Attractors.runVMCAI (read_ModelFile_as_QN "GAME_Benchmark_manualmut.json") 
 //                    |> fst
@@ -147,10 +157,10 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
 //    printfn "Same as manually mutating? %b" (ranges = manualRanges)
 
 //    // temp: turning off vmcai for Tests.cpp
-//    printfn "TEMP: TURNING OFF VMCAI FOR TESTING..."
-//    let ranges = qn |> List.map (fun n -> n.var, Attractors.rangeToList n.range) |> Map.ofList
-//    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
-//    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
+    printfn "TEMP: TURNING OFF VMCAI FOR TESTING..."
+    let ranges = qn |> List.map (fun n -> n.var, Attractors.rangeToList n.range) |> Map.ofList
+    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
+    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
 
 //    printfn "TEMP: Running VMCAI on manually mutated model"
 //    let ranges_, _ = Attractors.runVMCAI (read_ModelFile_as_QN "GAME_Benchmark_manualmut.json")
@@ -209,6 +219,8 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
                 ["Score"]
              |> List.reduce (fun x y -> x + "," + y)
 
+    printfn "Variables: %A" variables
+    printfn "Variables: %A" (qn |> List.map (fun n -> n.var))
     printfn "Ranges: %A" ranges'
     printfn "Minvalues: %A" minValues
     printfn "Mutations: %A" mutationNames

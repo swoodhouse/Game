@@ -81,7 +81,7 @@ std::vector<int> Game::chosenTreatmentsIndices() const {
 std::vector<int> Game::chosenMutationsIndices() const {
   int n = numMutations;
   if (numMutations == 0) {
-    //std::cout << "numMutations == 0, this will trigger a bug" << std::endl; // temp
+    std::cout << "numMutations == 0, this will trigger a bug" << std::endl; // temp
     n = 1;
   }
 
@@ -137,14 +137,31 @@ BDD Game::representSomeMutation(int var) const {
 
 BDD Game::nMutations(int n) const {
 	if (n == 0) {
+	  if (numMutations == 2) {
 		return representMutationNone(0) * representMutationNone(1);
+	  }
+	  else if (numMutations == 1) {
+	    return representMutationNone(0);
+	  }
+	  else {
+	    	std::cout << "nmutations > 2 not implemented" << std::endl;
+		throw std::runtime_error("nmutations > 2 not implemented");
+	  }
 	}
 	else if (n == 1) {
+	  if (numMutations == 2) {
 		return (representSomeMutation(0) * representMutationNone(1)) +
-		       (representSomeMutation(1) * representMutationNone(0));	
-
+		       (representSomeMutation(1) * representMutationNone(0));
+	  }
+	  else if (numMutations == 1) {
+	    return representSomeMutation(0);
+	  }
+	  else {
+	    	std::cout << "nmutations > 2 not implemented" << std::endl;
+		throw std::runtime_error("nmutations > 2 not implemented");
+	  }
 	}
-	else if (n == 2) {
+	else if (n == 2 && numMutations > 1) {
                 return (representSomeMutation(0) * representSomeMutation(1));
 	}
 	else {
@@ -262,35 +279,46 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 				
 				for (int lvl = 0; lvl < numMutations; lvl++) {
 					isMutated += representMutation(lvl, k);
+
+					
+					// std::cout << "representMutation(" << lvl << "," << k << ")" << std::endl;
+					// representMutation(lvl, k).PrintMinterm();
 				}
 				
 				int max = attractors.ranges[v];
 				bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
-
-				//bdd *= attractors.manager.bddOne().Ite(attractors.representPrimedVarQN(v, max), targetFunction); // TEMP!! doesht do anything?
-				//bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction); // TEMP!! again causes to hang..
-				// TEMP!
-				//bdd *= attractors.representPrimedVarQN(v, max);
 				std::cout << "MUTATION BRANCH  EXECUTED for v =" << v << std::endl;
+
+				std::cout << "isMutated:" << std::endl;
+				isMutated.PrintMinterm();
+				//attractors.representPrimedVarQN(v, max).PrintMinterm();
+				
+				// TEMP1!
+				//bdd *= targetFunction;
+				//bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 1), targetFunction); // this also breaks, so not max that's the issue. 0 works though.
+				
+				// std::cout << "isMutated:" << std::endl;
+				// isMutated.PrintMinterm();
+				
 				k++;
 			}
+		
 			else if (o < oeVars.size() && oeVars[o] == v) { // rename to treat vars - koing not oe-ing
 				BDD isTreated = representTreatment(o);
-
-				// std::cout << "isTreated:" << std::endl;
-				// isTreated.PrintMinterm();
-				
-				int max = attractors.ranges[v];
-				//bdd *= attractors.representPrimedVarQN(v, max);
-				//bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, max), targetFunction); // TEMP!! causes to hang
 				bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
 				std::cout << "TREATMENT BRANCH EXECUTED for v =" << v << std::endl;
+				std::cout << "isTreated:" << std::endl;
+				isTreated.PrintMinterm();
+
 				o++;
 			}
 			else {
 				std::cout << "thenormal target function part of tr is built.." << std::endl;
 				bdd *= targetFunction;
 			}
+		}
+		else {
+		  std::cout << "skipping" << std::endl;
 		}
 	}
 
@@ -481,36 +509,44 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 
 	
 	BDD mutsAndTreats = treatment * nMutations(numMutations);
-	// std::cout << "mutsAndTreats:" << std::endl;
-	// mutsAndTreats.PrintMinterm();
+	std::cout << "mutsAndTreats:" << std::endl;
+	mutsAndTreats.PrintMinterm();
 
 	// temp. need this
-	//removeInvalidTreatmentBitCombinations(mutsAndTreats); // refacotr this out.. can be computed once too
-	//removeInvalidMutationBitCombinations(mutsAndTreats); // temp
+	// removeInvalidTreatmentBitCombinations(mutsAndTreats); // refacotr this out.. can be computed once too
+	// removeInvalidMutationBitCombinations(mutsAndTreats); // temp
 	//forceMutationLexicographicalOrdering(initial); // temp
 
-	BDD statesToRemove = !mutsAndTreats;
+
+	// TEMP! DEBUGGING
+	//mutsAndTreats = attractors.manager.bddOne();
 	
-	//BDD fix = fixpoints(mutsAndTreats);
-	//if (!fix.IsZero()) {
-	//	std::cout << "hereZ" << std::endl;
-	//	states = scoreFixpoints(fix);
-	//	std::ofstream file("Fixpoints.csv");
-	//	//file << header << std::endl;
-	//	//file << prettyPrint(states) << std::endl; // TODO: this must have an indexing bug, it throws an exception
-	//	file << attractors.prettyPrint(states.BddPattern()) << std::endl; // temp
-	//	statesToRemove = fix + attractors.backwardReachableStates(mutantTransitionRelation, fix);
-	//}
+	BDD statesToRemove = !mutsAndTreats;
+	// std::cout << "statesToRemove:" << std::endl;
+	// statesToRemove.PrintMinterm();
+	
+	BDD fix = fixpoints(mutsAndTreats);
+	if (!fix.IsZero()) {
+		std::cout << "hereZ" << std::endl;
+		states = scoreFixpoints(fix);
+		std::ofstream file("Fixpoints.csv");
+		//	file << header << std::endl;
+		file << prettyPrint(states) << std::endl; // TODO: this must have an indexing bug, it throws an exception
+		file << attractors.prettyPrint(states.BddPattern()) << std::endl; // temp
+		statesToRemove = fix + attractors.backwardReachableStates(mutantTransitionRelation, fix);
+	}
 
+	// INFINITE LOOP HERE because of randomstate
 	std::list<BDD> loops = attractors.attractors(mutantTransitionRelation, statesToRemove, mutsAndTreats);
-
+	std::cout << "loops.len:" << loops.size() << std::endl; // 64..?
+	
 	int i = 0;
 	for (const BDD& a : loops) { // loop here and writing to same file is not right.
 		ADD scored = scoreLoop(a, scoreRelation);
-		//std::ofstream file("LoopAttractor_" + std::to_string(i) + ".csv");
+		std::ofstream file("LoopAttractor_" + std::to_string(i) + ".csv");
 		//file << header << std::endl;
-		//file << prettyPrint(scored) << std::endl; // TODO: this must have an indexing bug, it throws an exception
-		//file << attractors.prettyPrint(states.BddPattern()) << std::endl; // temp
+		file << prettyPrint(scored) << std::endl; // TODO: this must have an indexing bug, it throws an exception
+		file << attractors.prettyPrint(states.BddPattern()) << std::endl; // temp
 		states += scored;
 		i++;
 	}
@@ -544,6 +580,7 @@ ADD Game::minimax() const {
 	std::cout << "numTreatments: " << numTreatments << std::endl;
 	std::cout << "numMutations: " << numMutations << std::endl;
 	ADD states = scoreAttractors(false, numMutations);
+	if (states.IsZero()) std::cout << "states == 0" << std::endl;
 	height--;
 	maximisingPlayer = true; // temp..............
 	
@@ -558,8 +595,13 @@ ADD Game::minimax() const {
 			states = backMax(states); // backmax should work for sync networks
 			states = unmutate(numMutations, states);
 			BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+			if (att.IsZero()) std::cout << "att == 0" << std::endl;
+			// std::cout << "att.minterm:" << std::endl;
+			// att.PrintMinterm();
+			// std::cout << "states.minterm:" << std::endl;
+			// states.PrintMinterm();
 			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add();
-
+			if (states.IsZero()) std::cout << "states == 0" << std::endl;
 		}
 		else {
 			numTreatments--; // HERE OR BEFORE?
