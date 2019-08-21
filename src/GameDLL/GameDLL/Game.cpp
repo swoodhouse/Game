@@ -547,7 +547,6 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	for (const BDD& a : loops) { // loop here and writing to same file is not right.
 		ADD scored = scoreLoop(a, scoreRelation);
 		std::ofstream file("LoopAttractor_treat" + std::to_string(applyTreatments) + "_mut" + std::to_string(numMutations) + "_" + std::to_string(i) + ".csv");
-		//file << header << std::endl;
 		file << prettyPrint(scored) << std::endl; // TODO: this must have an indexing bug, it throws an exception
 		file << attractors.prettyPrint(states.BddPattern()) << std::endl; // temp
 		states += scored;
