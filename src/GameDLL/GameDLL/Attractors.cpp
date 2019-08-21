@@ -248,8 +248,10 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
 	    BDD S = manager.bddOne();
 	    removeInvalidBitCombinations(S);
 	    S *= !statesToRemove;
+	    //S *= statesToKeep;
 
-	    std::cout << "S.iszero:" << S.IsZero() << std::endl;
+	    // std::cout << "S, starting:" << std::endl;
+	    // S.PrintMinterm();
 	    
 	    while (!S.IsZero()) {
 	      //std::cout << "calling randomState" << std::endl;
@@ -271,31 +273,44 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
 	        BDD br = backwardReachableStates(transitionBdd, s);
 
 
-		std::cout << "fr" << std::endl;
-		fr.PrintMinterm();
-		std::cout << "br" << std::endl;
-		br.PrintMinterm();
-		std::cout << "statesToKeep:" << std::endl;
-		statesToKeep.PrintMinterm();
+		// std::cout << "fr" << std::endl;
+		// fr.PrintMinterm();
+		// std::cout << "br" << std::endl;
+		// br.PrintMinterm();
+		// std::cout << "statesToKeep:" << std::endl;
+		// statesToKeep.PrintMinterm();
 		// std::cout << "s:" << std::endl;
 		// s.PrintMinterm();
 		
 	        if ((fr * !br).IsZero()) {
-				//std::cout << "pushing attractor" << std::endl; // ok.. so we keep hitting this..
+		  //std::cout << "pushing attractor" << std::endl; // ok.. so we keep hitting this..
 
 	            attractors.push_back(fr);
 	        }
-		else {
-		  std::cout << "(fr * !br):" << std::endl;
-		  (fr * !br)
-		}
+		// else {
+		//   std::cout << "(fr * !br):" << std::endl;
+		//   (fr * !br).PrintMinterm();
+		// }
 			//std::cout << "here5" << std::endl;
-	
+
+		// std::cout << "S:" << std::endl;
+		// S.PrintMinterm();
+		
+		// std::cout << "S * !(s + br):" << std::endl;
+		// (S * !(s + br)).PrintMinterm();
+
+		// std::cout << "s:" << std::endl;
+		// (s).PrintMinterm();
+		
+		// std::cout << "!(s + br):" << std::endl;
+		// (!(s + br)).PrintMinterm();
+
+		
 	        S *= !(s + br);
-		if (S.IsZero()) {
-		  std::cout << "S is zero" << std::endl;
+		// if (S.IsZero()) {
+		//   std::cout << "S is zero" << std::endl;
 		  
-		}
+		// }
 		//		std::cout << "S.iszero:" << S.IsZero() << std::endl;
 	    }
 	    return attractors;

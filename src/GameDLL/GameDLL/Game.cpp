@@ -522,19 +522,22 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	//mutsAndTreats = attractors.manager.bddOne();
 	
 	BDD statesToRemove = !mutsAndTreats;
-	// std::cout << "statesToRemove:" << std::endl;
-	// statesToRemove.PrintMinterm();
+	std::cout << "statesToRemove:" << std::endl;
+	statesToRemove.PrintMinterm();
+
+	std::cout << "manager.bddOne * !statesToRemove:" << std::endl;
+	(attractors.manager.bddOne() * !statesToRemove).PrintMinterm();
 	
-	BDD fix = fixpoints(mutsAndTreats);
-	if (!fix.IsZero()) {
-		std::cout << "hereZ" << std::endl;
-		states = scoreFixpoints(fix);
-		std::ofstream file("Fixpoints.csv");
-		//	file << header << std::endl;
-		file << prettyPrint(states) << std::endl; // TODO: this must have an indexing bug, it throws an exception
-		file << attractors.prettyPrint(states.BddPattern()) << std::endl; // temp
-		statesToRemove = fix + attractors.backwardReachableStates(mutantTransitionRelation, fix);
-	}
+	// BDD fix = fixpoints(mutsAndTreats);
+	// if (!fix.IsZero()) {
+	// 	std::cout << "hereZ" << std::endl;
+	// 	states = scoreFixpoints(fix);
+	// 	std::ofstream file("Fixpoints.csv");
+	// 	//	file << header << std::endl;
+	// 	file << prettyPrint(states) << std::endl; // TODO: this must have an indexing bug, it throws an exception
+	// 	file << attractors.prettyPrint(states.BddPattern()) << std::endl; // temp
+	// 	statesToRemove = fix + attractors.backwardReachableStates(mutantTransitionRelation, fix);
+	// }
 
 	// INFINITE LOOP HERE because of randomstate
 	std::list<BDD> loops = attractors.attractors(mutantTransitionRelation, statesToRemove, mutsAndTreats);
