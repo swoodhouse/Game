@@ -373,6 +373,37 @@ ADD Game::renameBDDVarsAddingPrimes(const ADD& add) const {
 	return r;
 }
 
+// new, hopefully correct. add to unit tests
+ADD Game::renameBDDVarsRemovingPrimes(const ADD& add) const {
+  std::vector<int> permute(attractors.numBDDVars);
+  std::iota(permute.begin(), permute.end(), 0);
+
+  for (int i = 0; i < attractors.numUnprimedBDDVars; i++) {
+    permute[i + attractors.numUnprimedBDDVars] = i;
+  }
+
+  return add.Permute(&permute[0]);
+}
+
+// this is wrong
+// ADD Game::renameBDDVarsRemovingPrimes(const ADD& add) const {
+//     int *permute = new int[chosenMutationsIndices().back() + 1];
+//     int i = 0;
+//     for (; i < attractors.numUnprimedBDDVars; i++) {
+//         permute[i] = i;
+// 	permute[i + attractors.numUnprimedBDDVars] = i;
+//     }
+
+//     for (; i < chosenMutationsIndices().back() + 1; i++) {
+//         permute[i] = i;
+//     }
+
+//     ADD r = add.Permute(permute);
+//     delete[] permute;
+//     return r;
+// }
+
+
 //
 //ADD Game::renameBDDVarsAddingPrimes(const ADD& add) const {
 //	int *permute = new int[Cudd_ReadNodeCount(attractors.manager.getManager())];
@@ -418,9 +449,9 @@ BDD Game::fixpoints(const BDD& mutsAndTreats) const {
 }
 
 
-ADD Game::scoreFixpoints(const BDD& fix) const {
-	return fix.Add() * scoreRelation;
-}
+// ADD Game::scoreFixpoints(const BDD& fix) const {
+// 	return fix.Add() * scoreRelation;
+// }
 
 ADD Game::backMax(const ADD& states) const {
 	ADD reachable = attractors.manager.addZero();
@@ -452,6 +483,43 @@ ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
 	ADD a = loop.Add();
 	ADD max = (a * scoreRelation).FindMax();
 	return max * a;
+}
+
+// this one will work with multiple mutsAndTreats configurations
+// very broken
+ADD Game::scoreLoopNew(const BDD& loop, const ADD& scoreRelation) const {
+  ADD scoredLoop = scoreLoop(loop, scoreRelation);
+
+  // std::cout << "scoredLoop, starting:" << std::endl;
+  // scoredLoop.PrintMinterm();
+
+  // std::cout << "fr = scoredLoop * mutantTransitionRelation.Add():" << std::endl;
+  ADD fr = scoredLoop * mutantTransitionRelation.Add();
+  fr.PrintMinterm();
+
+  // std::cout << "fr = fr.MaxAbstract(attractors.nonPrimeVariables.Add())" << std::endl;
+  fr = fr.MaxAbstract(attractors.nonPrimeVariables.Add());
+  // fr.PrintMinterm();
+
+  // std::cout << "fr = renameBDDVarsRemovingPrimes(fr)" << std::endl;
+  fr = renameBDDVarsRemovingPrimes(fr); // this is not working
+  // fr.PrintMinterm();
+  // std::cout << "attractors.renameRemovingPrimes(fr).PrintMinterm()" << std::endl;
+  // attractors.renameRemovingPrimes(fr.BddPattern()).PrintMinterm();
+  
+     // ADD withoutMutsAndTreats = scoredLoop.MaxAbstract(representTreatmentVariables().Add() * representNonPrimedMutVars());
+    // auto loopSize = withoutMutsAndTreats.CountPath();
+    // auto loopSize2 = withoutMutsAndTreats.CountMinterm(chosenMutationsIndices().back() + 1);
+    // std::cout << "loop size:" << loopSize << std::endl;
+    // std::cout << "loop size2:" << loopSize2 << std::endl;
+    // for (int i = 0; i < loopSize; i++) { 
+    // for (int i = 0; i < attractors.ranges.size() * 2; i++) { // hack for now. NEED TO FIX FOR ALL LOOP SIZES.....
+    //     ADD fr = scoredLoop * mutantTransitionRelation.Add();
+    // 	fr = fr.MaxAbstract(attractors.nonPrimeVariables.Add());
+    // 	fr = renameBDDVarsRemovingPrimes(fr);
+    //     scoredLoop = scoredLoop.Maximum(fr);
+    // }
+  return scoredLoop;
 }
 
 std::string Game::prettyPrint(const ADD& states) const {
@@ -509,8 +577,8 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 
 	
 	BDD mutsAndTreats = treatment * nMutations(numMutations);
-	std::cout << "mutsAndTreats:" << std::endl;
-	mutsAndTreats.PrintMinterm();
+	//std::cout << "mutsAndTreats:" << std::endl;
+	//mutsAndTreats.PrintMinterm();
 
 	// temp. need this
 	// removeInvalidTreatmentBitCombinations(mutsAndTreats); // refacotr this out.. can be computed once too
@@ -522,11 +590,11 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	//mutsAndTreats = attractors.manager.bddOne();
 	
 	BDD statesToRemove = !mutsAndTreats;
-	std::cout << "statesToRemove:" << std::endl;
-	statesToRemove.PrintMinterm();
+	//std::cout << "statesToRemove:" << std::endl;
+	//statesToRemove.PrintMinterm();
 
-	std::cout << "manager.bddOne * !statesToRemove:" << std::endl;
-	(attractors.manager.bddOne() * !statesToRemove).PrintMinterm();
+	//std::cout << "manager.bddOne * !statesToRemove:" << std::endl;
+	//(attractors.manager.bddOne() * !statesToRemove).PrintMinterm();
 	
 	// BDD fix = fixpoints(mutsAndTreats);
 	// if (!fix.IsZero()) {
@@ -539,13 +607,13 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	// 	statesToRemove = fix + attractors.backwardReachableStates(mutantTransitionRelation, fix);
 	// }
 
-	// INFINITE LOOP HERE because of randomstate
 	std::list<BDD> loops = attractors.attractors(mutantTransitionRelation, statesToRemove, mutsAndTreats);
 	std::cout << "loops.len:" << loops.size() << std::endl; // 64..?
 	
 	int i = 0;
-	for (const BDD& a : loops) { // loop here and writing to same file is not right.
-		ADD scored = scoreLoop(a, scoreRelation);
+	for (const BDD& a : loops) { // loop here and writing to same file is not
+	  //ADD scored = scoreLoop(a, scoreRelation);
+	  ADD scored = scoreLoopNew(a, scoreRelation); // new.. trying to work with mutiple mutations
 		std::ofstream file("LoopAttractor_treat" + std::to_string(applyTreatments) + "_mut" + std::to_string(numMutations) + "_" + std::to_string(i) + ".csv");
 		file << prettyPrint(scored) << std::endl; // TODO: this must have an indexing bug, it throws an exception
 		file << attractors.prettyPrint(states.BddPattern()) << std::endl; // temp

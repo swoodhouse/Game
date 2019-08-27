@@ -212,21 +212,21 @@ BDD Attractors::forwardReachableStates(const BDD& transitionBdd, const BDD& valu
 }
 
 BDD Attractors::immediatePredecessorStates(const BDD& transitionBdd, const BDD& valuesBdd) const {
-    // std::cout << "valuesBdd:" << std::endl;
-    // valuesBdd.PrintMinterm();
+  //std::cout << "valuesBdd:" << std::endl;
+  //valuesBdd.PrintMinterm();
     BDD bdd = renameAddingPrimes(valuesBdd);
 
 
-    // std::cout << "after renameAddingPrimes" << std::endl;
-    // bdd.PrintMinterm();
+    //    std::cout << "after renameAddingPrimes" << std::endl;
+    //bdd.PrintMinterm();
     
     bdd *= transitionBdd;
 
-    // std::cout << "after * transitionBdd" << std::endl;
-    // bdd.PrintMinterm();
+    //std::cout << "after * transitionBdd" << std::endl;
+    //bdd.PrintMinterm();
 
-    // std::cout << "after exist" << std::endl;
-    // bdd.ExistAbstract(primeVariables).PrintMinterm();
+    //std::cout << "after exist" << std::endl;
+    //bdd.ExistAbstract(primeVariables).PrintMinterm();
     
     return bdd.ExistAbstract(primeVariables);
 }
@@ -244,77 +244,58 @@ BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& val
 
 // i don't think this is an optimal implementation, will do repeated work - if state a is ruled out under mutations X but not Y, will be run again under X and Y
 std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& statesToKeep /*, const BDD& variablesToAdd*/) const {
-	    std::list<BDD> attractors;
-	    BDD S = manager.bddOne();
-	    removeInvalidBitCombinations(S);
-	    S *= !statesToRemove;
-	    //S *= statesToKeep;
+    std::list<BDD> attractors;
+    BDD S = manager.bddOne();
+    removeInvalidBitCombinations(S);
+    S *= !statesToRemove;
+   
+    while (!S.IsZero()) {
+        BDD s = randomState(S) * statesToKeep; // should really be called variables to keep?
 
-	    // std::cout << "S, starting:" << std::endl;
-	    // S.PrintMinterm();
-	    
-	    while (!S.IsZero()) {
-	      //std::cout << "calling randomState" << std::endl;
-			BDD s = randomState(S) * statesToKeep; // threading numBDDVArs through
-			if (s.IsZero()) std::cout << "random makes zero" << std::endl;
-			//BDD s = randomState(S) * statesToKeep; // new idea
-			//BDD s = randomState(S);
-			//BDD s = randomState(S); // *variablesToAdd; // variab
-	
-	        for (int i = 0; i < ranges.size() /*10000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number, especially for Game
-	            BDD sP = immediateSuccessorStates(transitionBdd, s); // variables to add here???
-		    s = randomState(sP) * statesToKeep; // new idea
-		    if (s.IsZero()) std::cout << "random2 makes zero" << std::endl;																	 //s = randomState(sP) * statesToKeep; // new idea
-	        }
-
-		//		std::cout << "s.iszero:" << s.IsZero() << std::endl;
-		
-	        BDD fr = forwardReachableStates(transitionBdd, s);
-	        BDD br = backwardReachableStates(transitionBdd, s);
-
-
-		// std::cout << "fr" << std::endl;
-		// fr.PrintMinterm();
-		// std::cout << "br" << std::endl;
-		// br.PrintMinterm();
-		// std::cout << "statesToKeep:" << std::endl;
-		// statesToKeep.PrintMinterm();
-		// std::cout << "s:" << std::endl;
-		// s.PrintMinterm();
-		
-	        if ((fr * !br).IsZero()) {
-		  //std::cout << "pushing attractor" << std::endl; // ok.. so we keep hitting this..
-
-	            attractors.push_back(fr);
-	        }
-		// else {
-		//   std::cout << "(fr * !br):" << std::endl;
-		//   (fr * !br).PrintMinterm();
-		// }
-			//std::cout << "here5" << std::endl;
-
-		// std::cout << "S:" << std::endl;
-		// S.PrintMinterm();
-		
-		// std::cout << "S * !(s + br):" << std::endl;
-		// (S * !(s + br)).PrintMinterm();
-
-		// std::cout << "s:" << std::endl;
-		// (s).PrintMinterm();
-		
-		// std::cout << "!(s + br):" << std::endl;
-		// (!(s + br)).PrintMinterm();
-
-		
-	        S *= !(s + br);
-		// if (S.IsZero()) {
-		//   std::cout << "S is zero" << std::endl;
-		  
-		// }
-		//		std::cout << "S.iszero:" << S.IsZero() << std::endl;
-	    }
-	    return attractors;
+        for (int i = 0; i < ranges.size() /*10000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number, especially for Game
+	    BDD sP = immediateSuccessorStates(transitionBdd, s);
+	    s = randomState(sP) * statesToKeep;
 	}
+
+	BDD fr = forwardReachableStates(transitionBdd, s);
+	BDD br = backwardReachableStates(transitionBdd, s);
+
+	// do we need fr too???
+	BDD variablesToKeepNonZero = fr.ExistAbstract(nonPrimeVariables) * br.ExistAbstract(nonPrimeVariables); // print minterm
+
+	std::cout << "fr:" << std::endl;
+	fr.PrintMinterm();
+
+	std::cout << "br:" << std::endl;
+	br.PrintMinterm();
+		
+	std::cout << "variablesToKeepNonZero:" << std::endl;
+	variablesToKeepNonZero.PrintMinterm();
+	
+	//BDD frExtended = fr.ExistAbstract(mutsAndTreatsNonZero); // extended? more like intersected or something
+	//BDD brExtended = br.ExistAbstract(mutsAndTreatsNonZero);
+	// or is it this?
+	BDD frIntersected = fr * variablesToKeepNonZero;
+	BDD brIntersected = br * variablesToKeepNonZero;
+
+	std::cout << "frIntersected:" << std::endl;
+	frIntersected.PrintMinterm();
+
+	std::cout << "brIntersected:" << std::endl;
+	brIntersected.PrintMinterm();
+		
+	
+	// seems like we don't need brIntersected. 
+        //if ((fr * !br).IsZero()) {
+	if ((frIntersected * !brIntersected).IsZero()) { // new.. test it doesn't break old solutions
+            std::cout << "pushing attractor" << std::endl;
+	    attractors.push_back(fr);
+	}
+
+	S *= !(s + br);
+    }
+    return attractors;
+}
 
 std::string Attractors::prettyPrint(const BDD& attractor) const {
     // ideally would not use a temp file

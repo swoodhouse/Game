@@ -22,16 +22,18 @@ struct Game {
 	std::vector<int> chosenTreatmentsIndices() const;
 	std::vector<int> chosenMutationsIndices() const;
 
-	ADD scoreFixpoints(const BDD & fix) const;
+  //ADD scoreFixpoints(const BDD & fix) const;
 	BDD fixpoints(const BDD & mutsAndTreats) const;
 
 	ADD buildScoreRelation(int apopVar) const; // done
 	ADD renameBDDVarsAddingPrimes(const ADD& add) const; // done
+	ADD renameBDDVarsRemovingPrimes(const ADD& add) const; // done
 	ADD immediateBackMax(const ADD& states) const; // done
 	ADD immediateBackMin(const ADD& states) const; // done
 	ADD backMin(const ADD& states) const; // done
 	ADD backMax(const ADD& states) const; // done
 	ADD scoreLoop(const BDD& loop, const ADD& scoreRelation) const;
+        ADD scoreLoopNew(const BDD& loop, const ADD& scoreRelation) const;
 	ADD scoreAttractors(bool maximisingPlayer, int numMutations) const; // done.. except taking max not mean
 	BDD representTreatmentVariables() const;
 	std::string prettyPrint(const ADD & states) const;
