@@ -263,14 +263,14 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
 	// do we need fr too???
 	BDD variablesToKeepNonZero = fr.ExistAbstract(nonPrimeVariables) * br.ExistAbstract(nonPrimeVariables); // print minterm
 
-	std::cout << "fr:" << std::endl;
-	fr.PrintMinterm();
+	// std::cout << "fr:" << std::endl;
+	// fr.PrintMinterm();
 
-	std::cout << "br:" << std::endl;
-	br.PrintMinterm();
+	// std::cout << "br:" << std::endl;
+	// br.PrintMinterm();
 		
-	std::cout << "variablesToKeepNonZero:" << std::endl;
-	variablesToKeepNonZero.PrintMinterm();
+	// std::cout << "variablesToKeepNonZero:" << std::endl;
+	// variablesToKeepNonZero.PrintMinterm();
 	
 	//BDD frExtended = fr.ExistAbstract(mutsAndTreatsNonZero); // extended? more like intersected or something
 	//BDD brExtended = br.ExistAbstract(mutsAndTreatsNonZero);
@@ -278,11 +278,11 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
 	BDD frIntersected = fr * variablesToKeepNonZero;
 	BDD brIntersected = br * variablesToKeepNonZero;
 
-	std::cout << "frIntersected:" << std::endl;
-	frIntersected.PrintMinterm();
+	// std::cout << "frIntersected:" << std::endl;
+	// frIntersected.PrintMinterm();
 
-	std::cout << "brIntersected:" << std::endl;
-	brIntersected.PrintMinterm();
+	// std::cout << "brIntersected:" << std::endl;
+	// brIntersected.PrintMinterm();
 		
 	
 	// seems like we don't need brIntersected. 

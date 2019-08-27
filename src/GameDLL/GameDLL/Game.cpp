@@ -495,7 +495,7 @@ ADD Game::scoreLoopNew(const BDD& loop, const ADD& scoreRelation) const {
 
   // std::cout << "fr = scoredLoop * mutantTransitionRelation.Add():" << std::endl;
   ADD fr = scoredLoop * mutantTransitionRelation.Add();
-  fr.PrintMinterm();
+  //fr.PrintMinterm();
 
   // std::cout << "fr = fr.MaxAbstract(attractors.nonPrimeVariables.Add())" << std::endl;
   fr = fr.MaxAbstract(attractors.nonPrimeVariables.Add());
@@ -519,6 +519,8 @@ ADD Game::scoreLoopNew(const BDD& loop, const ADD& scoreRelation) const {
     // 	fr = renameBDDVarsRemovingPrimes(fr);
     //     scoredLoop = scoredLoop.Maximum(fr);
     // }
+  std::cout << "scoredLoop:" << std::endl;
+  scoredLoop.PrintMinterm();
   return scoredLoop;
 }
 
@@ -617,7 +619,8 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 		std::ofstream file("LoopAttractor_treat" + std::to_string(applyTreatments) + "_mut" + std::to_string(numMutations) + "_" + std::to_string(i) + ".csv");
 		file << prettyPrint(scored) << std::endl; // TODO: this must have an indexing bug, it throws an exception
 		file << attractors.prettyPrint(states.BddPattern()) << std::endl; // temp
-		states += scored;
+		//states += scored; .....................................
+		states = states.Maximum(scored);
 		i++;
 	}
 	std::ofstream csv("Attractors_treat" + std::to_string(applyTreatments) + "_mut" + std::to_string(numMutations) + ".csv");
@@ -653,6 +656,9 @@ ADD Game::minimax() const {
 	if (states.IsZero()) std::cout << "states == 0" << std::endl;
 	height--;
 	maximisingPlayer = true; // temp..............
+
+	std::cout << "states 1:" << std::endl;
+	states.PrintMinterm();
 	
 	for (; height > 0; height--) { // do i have an off by one error
 		std::cout << "height:" << height << std::endl;
@@ -672,6 +678,9 @@ ADD Game::minimax() const {
 			// states.PrintMinterm();
 			states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add();
 			if (states.IsZero()) std::cout << "states == 0" << std::endl;
+
+			std::cout << "states 2:" << std::endl;
+			states.PrintMinterm();
 		}
 		else {
 			numTreatments--; // HERE OR BEFORE?
@@ -682,6 +691,9 @@ ADD Game::minimax() const {
 			states = untreat(numTreatments, states);
 			BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); //THIS MAY HAVE BEEN A BUG // to score then unscore is not ideal
 			states *= att.Add();
+
+			std::cout << "states 3:" << std::endl;
+			states.PrintMinterm();
 		}
 
 		maximisingPlayer = !maximisingPlayer;
