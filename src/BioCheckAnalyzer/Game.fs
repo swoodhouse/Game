@@ -142,14 +142,14 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
 
     
 
-//    printfn "Running VMCAI..."
-//    // this is the key..... we need to add special vars, corresponding target functions, then run vmcai, then remove special vars
-//    // basically.. maintain qn and extendedQn. ranges come from extendedQn, table from qn
-//    let extendedQn = extendQN qn (Set.ofList mutations) (Set.ofList treatments)
-//    let ranges, _ = Attractors.runVMCAI extendedQn
-//    let ranges = ranges |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars)) // you need to trim ^ these to remove ko vars and oe vars................
-//    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
-//    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
+    printfn "Running VMCAI..."
+    // this is the key..... we need to add special vars, corresponding target functions, then run vmcai, then remove special vars
+    // basically.. maintain qn and extendedQn. ranges come from extendedQn, table from qn
+    let extendedQn = extendQN qn (Set.ofList mutations) (Set.ofList treatments)
+    let ranges, _ = Attractors.runVMCAI extendedQn
+    let ranges = ranges |> Map.filter (fun k _ -> Set.contains k (Set.ofList qnVars)) // you need to trim ^ these to remove ko vars and oe vars................
+    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
+    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
 
 //    let manualRanges = Attractors.runVMCAI (read_ModelFile_as_QN "GAME_Benchmark_manualmut.json") 
 //                    |> fst
@@ -157,10 +157,10 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
 //    printfn "Same as manually mutating? %b" (ranges = manualRanges)
 
 //    // temp: turning off vmcai for Tests.cpp
-    printfn "TEMP: TURNING OFF VMCAI FOR TESTING..."
-    let ranges = qn |> List.map (fun n -> n.var, Attractors.rangeToList n.range) |> Map.ofList
-    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
-    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
+//    printfn "TEMP: TURNING OFF VMCAI FOR TESTING..."
+//    let ranges = qn |> List.map (fun n -> n.var, Attractors.rangeToList n.range) |> Map.ofList
+//    let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
+//    let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)
 
 //    printfn "TEMP: Running VMCAI on manually mutated model"
 //    let ranges_, _ = Attractors.runVMCAI (read_ModelFile_as_QN "GAME_Benchmark_manualmut.json")
