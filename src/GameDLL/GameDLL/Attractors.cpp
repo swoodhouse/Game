@@ -248,7 +248,10 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
     BDD S = manager.bddOne();
     removeInvalidBitCombinations(S);
     S *= !statesToRemove;
-   
+
+    std::cout << "statesToKeep:" << std::endl;
+    statesToKeep.PrintMinterm();
+    
     while (!S.IsZero()) {
         BDD s = randomState(S) * statesToKeep; // should really be called variables to keep?
 
@@ -288,8 +291,9 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
 	// seems like we don't need brIntersected. 
         //if ((fr * !br).IsZero()) {
 	if ((frIntersected * !brIntersected).IsZero()) { // new.. test it doesn't break old solutions
-            std::cout << "pushing attractor" << std::endl;
+	  //std::cout << "pushing attractor" << std::endl;
 	    attractors.push_back(fr);
+	    //fr.PrintMinterm();
 	}
 
 	S *= !(s + br);
