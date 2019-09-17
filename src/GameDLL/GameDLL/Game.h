@@ -25,6 +25,7 @@ struct Game {
   ADD buildScoreRelation(int apopVar) const;
   ADD renameBDDVarsAddingPrimes(const ADD& add) const;
   ADD renameBDDVarsRemovingPrimes(const ADD& add) const;
+  ADD immediateForwardMax(const ADD& states) const;
   ADD immediateBackMax(const ADD& states) const;
   ADD backMax(const ADD& states) const;
   ADD scoreLoop(const BDD& loop, const ADD& scoreRelation) const;
