@@ -308,6 +308,18 @@ ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
   return max * a;
 }
 
+// ADD Game::scoreLoopNew(const BDD& loop, const ADD& scoreRelation) const {
+//   ADD scored = loop.Add() * scoreRelation;
+
+//   for (std::vector<int>::size_type i = 0; i < attractors.ranges.size(); i++) { // ranges.size is temp.. need to make work for all loop sizes
+//     ADD br = immediateBackMax(scored); // forward would seem more logical but this should work
+//     scored = scored.Maximum(br);
+//   }
+
+//   return scored;
+// }
+
+
 // very broken
 ADD Game::scoreLoopNew(const BDD& loop, const ADD& scoreRelation) const {
   ADD scoredLoop = scoreLoop(loop, scoreRelation);
