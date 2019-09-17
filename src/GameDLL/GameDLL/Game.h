@@ -13,45 +13,40 @@ struct Game {
   /*const*/ BDD mutantTransitionRelation;
   /*const*/ ADD scoreRelation;
 	
-	static int calcNumMutations(int height, bool maximisingPlayerGoesLast);
-	static int calcNumTreatments(int height, bool maximisingPlayerGoesLast);
+  static int calcNumMutations(int height, bool maximisingPlayerGoesLast);
+  static int calcNumTreatments(int height, bool maximisingPlayerGoesLast);
 
-	std::vector<int> attractorsIndicies() const;
-	std::vector<int> treatmentVarIndices() const;
-	std::vector<int> mutationVarsIndices() const;
-	std::vector<int> chosenTreatmentsIndices() const;
-	std::vector<int> chosenMutationsIndices() const;
+  std::vector<int> attractorsIndicies() const;
+  std::vector<int> treatmentVarIndices() const;
+  std::vector<int> mutationVarsIndices() const;
+  std::vector<int> chosenTreatmentsIndices() const;
+  std::vector<int> chosenMutationsIndices() const;
 
-  //ADD scoreFixpoints(const BDD & fix) const;
-	BDD fixpoints(const BDD & mutsAndTreats) const;
-
-	ADD buildScoreRelation(int apopVar) const; // done
-	ADD renameBDDVarsAddingPrimes(const ADD& add) const; // done
-	ADD renameBDDVarsRemovingPrimes(const ADD& add) const; // done
-	ADD immediateBackMax(const ADD& states) const; // done
-	ADD immediateBackMin(const ADD& states) const; // done
-	ADD backMin(const ADD& states) const; // done
-	ADD backMax(const ADD& states) const; // done
-	ADD scoreLoop(const BDD& loop, const ADD& scoreRelation) const;
-        ADD scoreLoopNew(const BDD& loop, const ADD& scoreRelation) const;
-	ADD scoreAttractors(bool maximisingPlayer, int numMutations) const; // done.. except taking max not mean
-	BDD representTreatmentVariables() const;
-	std::string prettyPrint(const ADD & states) const;
-	BDD buildMutantSyncQNTransitionRelation() const; // done.. except no.. i need zero to mean no mutation i think!!!
-	BDD representTreatment(int val) const; // done.. including zero mut and bits
-	BDD representTreatmentNone() const; //	done
-	BDD representSomeTreatment() const;
-        BDD representSomeMutation(int var) const;
-        BDD representMutation(int var, int val) const; // done.. including zero mut and bits
-	BDD representMutationNone(int var) const; // done
-	BDD representChosenTreatment(int level, int treatment) const; // done
-	BDD representChosenMutation(int level, int mutation) const; // done
-	BDD nMutations(int n) const; // done
-	ADD untreat(int level, const ADD& states) const; // done
-	void removeInvalidTreatmentBitCombinations(BDD& S) const; // done
-	void removeInvalidMutationBitCombinations(BDD& S) const; // done
-	BDD representNonPrimedMutVars() const; // done
-	ADD unmutate(int level, const ADD& states) const; // done
+  ADD buildScoreRelation(int apopVar) const;
+  ADD renameBDDVarsAddingPrimes(const ADD& add) const;
+  ADD renameBDDVarsRemovingPrimes(const ADD& add) const;
+  ADD immediateBackMax(const ADD& states) const;
+  ADD backMax(const ADD& states) const;
+  ADD scoreLoop(const BDD& loop, const ADD& scoreRelation) const;
+  ADD scoreLoopNew(const BDD& loop, const ADD& scoreRelation) const;
+  ADD scoreAttractors(bool maximisingPlayer, int numMutations) const;
+  BDD representTreatmentVariables() const;
+  std::string prettyPrint(const ADD & states) const;
+  BDD buildMutantSyncQNTransitionRelation() const;
+  BDD representTreatment(int val) const;
+  BDD representTreatmentNone() const;
+  BDD representSomeTreatment() const;
+  BDD representSomeMutation(int var) const;
+  BDD representMutation(int var, int val) const;
+  BDD representMutationNone(int var) const;
+  BDD representChosenTreatment(int level, int treatment) const;
+  BDD representChosenMutation(int level, int mutation) const;
+  BDD nMutations(int n) const;
+  ADD untreat(int level, const ADD& states) const;
+  void removeInvalidTreatmentBitCombinations(BDD& S) const;
+  void removeInvalidMutationBitCombinations(BDD& S) const;
+  BDD representNonPrimedMutVars() const;
+  ADD unmutate(int level, const ADD& states) const;
 
   Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,
        bool maximisingPlayerGoesLast)
@@ -66,19 +61,14 @@ struct Game {
     
     auto lambda = [](int a, int b) { return a + bits(b); };
     this->numUnprimedBDDVars = std::accumulate(rangesV.begin(), rangesV.begin() + rangesV.size(), 0, lambda); // same as rangesV.end()?
-    std::cout << "numUnprimedBddVars:" << this->numUnprimedBDDVars << std::endl;
-    std::cout << "before chosenMutIndices" << std::endl;
     int temp = chosenMutationsIndices().back() + 1;
-    std::cout << "before attractors ctor" << std::endl;
-    // ha.. i've found the bug chosenMuts refers to attractors member but i'm initinalising attractors with a call to it.
+
     attractors = Attractors(minVals, rangesV, qn, temp);    
-    std::cout << "after attractors ctor" << std::endl;
     mutantTransitionRelation = buildMutantSyncQNTransitionRelation();
-    std::cout << "after build trr" << std::endl;
     scoreRelation = buildScoreRelation(apopVar);
-    std::cout << "leaving Game ctor" << std::endl;
-  }; // done
+  };
     
+  // this was buggy, so be careful if you go back to move ctors
   /* Game(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qn, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, int depth, */
 	/* 	bool maximisingPlayerGoesLast) : */
 	/* 	height(depth), */
@@ -93,8 +83,8 @@ struct Game {
 	/* 	std::cout << "in Game ctor" << std::endl; */
 	/* }; // done */
 
-        Game(const Game&) = delete;
-        Game& operator=(const Game&) = delete;
+  Game(const Game&) = delete;
+  Game& operator=(const Game&) = delete;
 
-	ADD minimax() const; // done
+  ADD minimax() const;
 };
