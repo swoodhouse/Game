@@ -206,9 +206,6 @@ ADD Game::unmutate(int level, const ADD& states) const {
 // BDD Game::buildMutantSyncQNTransitionRelation() const {
 //   BDD bdd = attractors.manager.bddOne();
 
-//   std::vector<int>::size_type k = 0;
-//   std::vector<int>::size_type o = 0;
-
 //   std::cout << "in buildMutantTR" << std::endl;
 
 //   // *what do i have.. attractors.ranges and indices into. then the table, indexed the same.*
@@ -222,7 +219,7 @@ ADD Game::unmutate(int level, const ADD& states) const {
 //   std::vector<std::vector<int>::size_type> shuffled_indicies(attractors.ranges.size());
 //   std::iota(shuffled_indices.begin(), shuffled_indicies.end(), 0);
 
-//   auto rng = std::default_random_engine {}; // set a seed
+//   auto rng = std::default_random_engine {}; // should set a seed
 //   std::shuffle(std::begin(shuffled_indicies), std::end(shuffled_indicies), rng);
 
 //   for (auto v : shuffled_indices) {
@@ -247,9 +244,10 @@ ADD Game::unmutate(int level, const ADD& states) const {
 //       // USE A SET INSTEAD
 //       //if (std::find(v.begin(), v.end(),value)!=v.end())
       
-//       ptrdiff_t pos = distance(Names.begin(), find(Names.begin(), Names.end(), old_name_));
-//       std::vector<int>::iterator it = .............
-// 	if (k < koVars.size() && koVars[k] == v) { // rename to mutation vars - oe-ing not ko-ing
+//       std::vector<int>::iterator koIt = std::find(koVars.begin(), koVars.end(), v);
+//       
+// 	if (koIt != koVars.end()) { // rename to mutation vars - oe-ing not ko-ing
+//        int k = 
 // 	  BDD isMutated = attractors.manager.bddZero();
 				
 // 	  for (int lvl = 0; lvl < numMutations; lvl++) {
@@ -258,21 +256,20 @@ ADD Game::unmutate(int level, const ADD& states) const {
 				
 // 	  int max = attractors.ranges[v];
 // 	  bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
-				
-// 	  k++;
 // 	}
-		
-// 	else if (o < oeVars.size() && oeVars[o] == v) { // rename to treat vars - koing not oe-ing
-// 	  BDD isTreated = representTreatment(o);
-// 	  bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
-// 	  o++;
-// 	}
-// 	else {
-// 	  bdd *= targetFunction;
-// 	}
-//     }
+//	else {
+//        std::vector<int>::iterator oeIt = std::find(oeVars.begin(), oeVars.end(), v);
+//        if (oIt != oeVars.end()) { // rename to treat vars - koing not oe-ing
+//          int o = std::distance(oeVars.begin(), oeIt);        
+// 	    BDD isTreated = representTreatment(o);
+// 	    bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
+//        }
+// 	  else {
+// 	    bdd *= targetFunction;
+//        }
+//      }
 //   }
-
+//
 //   return bdd;
 // }
 
