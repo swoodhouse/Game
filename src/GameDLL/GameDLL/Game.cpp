@@ -203,6 +203,80 @@ ADD Game::unmutate(int level, const ADD& states) const {
   return states.Permute(&permute[0]);
 }
 
+// BDD Game::buildMutantSyncQNTransitionRelation() const {
+//   BDD bdd = attractors.manager.bddOne();
+
+//   std::vector<int>::size_type k = 0;
+//   std::vector<int>::size_type o = 0;
+
+//   std::cout << "in buildMutantTR" << std::endl;
+
+//   // *what do i have.. attractors.ranges and indices into. then the table, indexed the same.*
+//   // *and also inputVars which is std::vector<std::vector<int>>*
+//   // *so inputVars can be used as an adjacency list to generate the strongly connect components*
+//   // *then print the number of those i have*
+//   // *then what.. i've turned inputVars into a set of inputVars.. so i just need an extra outer loop*
+//   // *then at the end of that outer loop you conjugate onto the main bdd.. if you really want to optimise then in order of neighbouring components, removing from a set*
+//   // *to add random element.. set a seed. shuffle the connected components, and also shuffle the nodes inside the connected components*
+
+//   std::vector<std::vector<int>::size_type> shuffled_indicies(attractors.ranges.size());
+//   std::iota(shuffled_indices.begin(), shuffled_indicies.end(), 0);
+
+//   auto rng = std::default_random_engine {}; // set a seed
+//   std::shuffle(std::begin(shuffled_indicies), std::end(shuffled_indicies), rng);
+
+//   for (auto v : shuffled_indices) {
+//     if (attractors.ranges[v] > 0) {
+//       const auto& iVars = attractors.qn.inputVars[v];
+//       const auto& iValues = attractors.qn.inputValues[v];
+//       const auto& oValues = attractors.qn.outputValues[v];
+//       std::vector<BDD> states(attractors.ranges[v] + 1, attractors.manager.bddZero());
+//       for (std::vector<int>::size_type i = 0; i < oValues.size(); i++) {
+// 	states[oValues[i]] += attractors.representStateQN(iVars, iValues[i]);
+//       }
+
+//       BDD targetFunction = attractors.manager.bddOne();
+
+//       for (int val = 0; val <= attractors.ranges[v]; val++) {
+// 	BDD vPrime = attractors.representPrimedVarQN(v, val);
+// 	targetFunction *= logicalEquivalence(states[val], vPrime);
+//       }
+
+//       // assuming koVars and oeVars are disjoint. and sorted. we call sort in entry point
+//       // THIS WON'T WORK ANYMORE.....................................................................
+//       // USE A SET INSTEAD
+//       //if (std::find(v.begin(), v.end(),value)!=v.end())
+      
+//       ptrdiff_t pos = distance(Names.begin(), find(Names.begin(), Names.end(), old_name_));
+//       std::vector<int>::iterator it = .............
+// 	if (k < koVars.size() && koVars[k] == v) { // rename to mutation vars - oe-ing not ko-ing
+// 	  BDD isMutated = attractors.manager.bddZero();
+				
+// 	  for (int lvl = 0; lvl < numMutations; lvl++) {
+// 	    isMutated += representMutation(lvl, k);
+// 	  }
+				
+// 	  int max = attractors.ranges[v];
+// 	  bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
+				
+// 	  k++;
+// 	}
+		
+// 	else if (o < oeVars.size() && oeVars[o] == v) { // rename to treat vars - koing not oe-ing
+// 	  BDD isTreated = representTreatment(o);
+// 	  bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
+// 	  o++;
+// 	}
+// 	else {
+// 	  bdd *= targetFunction;
+// 	}
+//     }
+//   }
+
+//   return bdd;
+// }
+
+
 BDD Game::buildMutantSyncQNTransitionRelation() const {
   BDD bdd = attractors.manager.bddOne();
 
