@@ -238,12 +238,7 @@ ADD Game::unmutate(int level, const ADD& states) const {
 // 	BDD vPrime = attractors.representPrimedVarQN(v, val);
 // 	targetFunction *= logicalEquivalence(states[val], vPrime);
 //       }
-
-//       // assuming koVars and oeVars are disjoint. and sorted. we call sort in entry point
-//       // THIS WON'T WORK ANYMORE.....................................................................
-//       // USE A SET INSTEAD
-//       //if (std::find(v.begin(), v.end(),value)!=v.end())
-      
+     
 //       std::vector<int>::iterator koIt = std::find(koVars.begin(), koVars.end(), v);
 //       
 // 	if (koIt != koVars.end()) { // rename to mutation vars - oe-ing not ko-ing
