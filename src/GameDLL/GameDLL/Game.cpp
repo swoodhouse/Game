@@ -242,7 +242,7 @@ ADD Game::unmutate(int level, const ADD& states) const {
 //       std::vector<int>::iterator koIt = std::find(koVars.begin(), koVars.end(), v);
 //       
 // 	if (koIt != koVars.end()) { // rename to mutation vars - oe-ing not ko-ing
-//        int k = 
+//        int k = std::distance(koVars.begin(), koIt);  
 // 	  BDD isMutated = attractors.manager.bddZero();
 				
 // 	  for (int lvl = 0; lvl < numMutations; lvl++) {
