@@ -203,18 +203,11 @@ ADD Game::unmutate(int level, const ADD& states) const {
   return states.Permute(&permute[0]);
 }
 
+// proposed randomised version
 // BDD Game::buildMutantSyncQNTransitionRelation() const {
 //   BDD bdd = attractors.manager.bddOne();
 
 //   std::cout << "in buildMutantTR" << std::endl;
-
-//   // *what do i have.. attractors.ranges and indices into. then the table, indexed the same.*
-//   // *and also inputVars which is std::vector<std::vector<int>>*
-//   // *so inputVars can be used as an adjacency list to generate the strongly connect components*
-//   // *then print the number of those i have*
-//   // *then what.. i've turned inputVars into a set of inputVars.. so i just need an extra outer loop*
-//   // *then at the end of that outer loop you conjugate onto the main bdd.. if you really want to optimise then in order of neighbouring components, removing from a set*
-//   // *to add random element.. set a seed. shuffle the connected components, and also shuffle the nodes inside the connected components*
 
 //   std::vector<std::vector<int>::size_type> shuffled_indicies(attractors.ranges.size());
 //   std::iota(shuffled_indices.begin(), shuffled_indicies.end(), 0);
@@ -268,6 +261,99 @@ ADD Game::unmutate(int level, const ADD& states) const {
 //   return bdd;
 // }
 
+// proposed strongly connected components version. then make a randomised and connected components version - shuffle the components and the nodes inside each component connected component version
+// BDD Game::buildMutantSyncQNTransitionRelation() const {
+//   BDD tr = attractors.manager.bddOne();
+
+//   std::cout << "in buildMutantTR" << std::endl;
+
+// _auto components = connectedComponents();_
+// _std::cout << "num connected components: " << components.size() << std::endl;_
+// _shuffle here_
+//  _for (auto comp : components) {_
+//     _shuffle here_
+//     _BDD bdd = attractors.manager.bddOne();_
+  //   for (auto v : comp) {
+  //   std::cout << "node " v << << std::endl;
+  //     if (attractors.ranges[v] > 0) {
+  //       const auto& iVars = attractors.qn.inputVars[v];
+  //       const auto& iValues = attractors.qn.inputValues[v];
+  //       const auto& oValues = attractors.qn.outputValues[v];
+  //       std::vector<BDD> states(attractors.ranges[v] + 1, attractors.manager.bddZero());
+  //       for (std::vector<int>::size_type i = 0; i < oValues.size(); i++) {
+  // 	   states[oValues[i]] += attractors.representStateQN(iVars, iValues[i]);
+  //       }
+
+  //       BDD targetFunction = attractors.manager.bddOne();
+
+  //       for (int val = 0; val <= attractors.ranges[v]; val++) {
+  // 	   BDD vPrime = attractors.representPrimedVarQN(v, val);
+  // 	   targetFunction *= logicalEquivalence(states[val], vPrime);
+  //       }
+     
+  //       std::vector<int>::iterator koIt = std::find(koVars.begin(), koVars.end(), v);
+  //       
+  //       if (koIt != koVars.end()) { // rename to mutation vars - oe-ing not ko-ing
+  //         int k = std::distance(koVars.begin(), koIt);  
+  // 	     BDD isMutated = attractors.manager.bddZero();
+				
+  // 	   for (int lvl = 0; lvl < numMutations; lvl++) {
+  // 	     isMutated += representMutation(lvl, k);
+  //  	   }
+  				
+  // 	   int max = attractors.ranges[v];
+  // 	   bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
+  // 	 }
+  //	 else {
+  //         std::vector<int>::iterator oeIt = std::find(oeVars.begin(), oeVars.end(), v);
+  //         if (oIt != oeVars.end()) { // rename to treat vars - koing not oe-ing
+  //           int o = std::distance(oeVars.begin(), oeIt);        
+  // 	     BDD isTreated = representTreatment(o);
+  // 	     bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
+  //         }
+  // 	   else {
+  // 	     bdd *= targetFunction;
+  //         }
+  //       }
+  //   }
+//   }
+//   std::cout << "adding connected component " v << << std::endl;
+//   _tr *= bdd;_
+//  }
+//
+//   return tr;
+// }
+
+//  #include <iostream>                  // for std::cout
+//  #include <utility>                   // for std::pair
+//  #include <algorithm>                 // for std::for_each
+//  #include <boost/graph/graph_traits.hpp>
+//  #include <boost/graph/adjacency_list.hpp>
+
+//   // *and also inputVars which is std::vector<std::vector<int>>*
+//   // *so inputVars can be used as an adjacency list to generate the strongly connected components*
+//std::vector<std::vector<std::vector<int>::size_type>> Game::connectedComponents() {
+//  using namespace boost;
+//  typedef adjacency_list <vecS, vecS, undirectedS> Graph;
+
+//  Graph G;
+//  for (std::vector<std::vector<int>>::size_type i = 0; i < attractors.qn.inputVars.size(); i++) {
+//    for (int j : attractors.qn.inputVars[i]) add_edge(j, i, G);
+//  }
+    
+//  std::vector<int> component(num_vertices(G));
+//  int num = strong_components(G, &component[0]);
+
+//  std::vector<std::vector<std::vector<int>::size_type>> ret(num);
+
+//  for (std::vector<int>::size_type i = 0; i < component.size(); i++) {
+//    std::cout << "Vertex " << name[i]
+//         <<" is in component " << component[i] << std::endl;
+//
+//    ret[component[i]].push_back(attractors.qn.inputVars[i]); // need to make sure the order of the graph indices matches my indices
+//  }
+//  return ret;
+//}
 
 BDD Game::buildMutantSyncQNTransitionRelation() const {
   BDD bdd = attractors.manager.bddOne();
