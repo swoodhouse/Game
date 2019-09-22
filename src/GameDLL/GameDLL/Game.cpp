@@ -364,6 +364,9 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
   std::cout << "in buildMutantTR" << std::endl;
 
   for (std::vector<int>::size_type v = 0; v < attractors.ranges.size(); v++) {
+    std::cout << "on variable " << v << std::endl;
+    auto start = std::chrono::steady_clock::now();
+    
     if (attractors.ranges[v] > 0) {
       const auto& iVars = attractors.qn.inputVars[v];
       const auto& iValues = attractors.qn.inputValues[v];
@@ -403,6 +406,9 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
       else {
 	bdd *= targetFunction;
       }
+
+      auto diff = std::chrono::steady_clock::now() - start;
+      std::cout << "took " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
     }
   }
 

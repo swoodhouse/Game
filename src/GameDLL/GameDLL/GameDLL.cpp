@@ -65,7 +65,8 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	std::sort(mutationVarsV.begin(), mutationVarsV.end());
 	std::sort(treatmentVarsV.begin(), treatmentVarsV.end());
 
-	std::cout << "here" << std::endl;
+	std::cout << "constructing game:" << std::endl;
+
 	
 	Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, height, false);
 	//Game g(minValuesV, rangesV, qn, mutationVarsV, treatmentVarsV, apopVar, height, false);
@@ -81,7 +82,8 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 
 	std::cout << "apopVar: " << apopVar << std::endl;
 	
-
+	std::cout << "calling minimax.." << std::endl;
+	
 	ADD out = g.minimax();
 
 
