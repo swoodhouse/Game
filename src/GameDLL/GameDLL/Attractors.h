@@ -67,12 +67,24 @@ public: // move this
       nonPrimeVariables = representNonPrimeVariables();
       primeVariables = representPrimeVariables();
       
-
-         manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
+      // new, trying to change this to solve efficency issue on breast cancer model in Game mode
+      //manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
+      manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // CUDD_REORDER_GROUP_SIFT_CONV better than GROUP_SIFT it seems, CUDD_REORDER_SYMM_SIFT_COV not as good. CUDD_REORDER_SYMM_SIFT probably not as good. CUDD_REORDER_SIFT_CONVERGE good? maybe not as group_sif_conv. Can I get debugging information for the reordering.. actually, maybe some of these were better than CUDD_REORDER_GROUP_SIFT_CONV
+	 // try CUDD_REORDER_GROUP_SIFT_CONV? CUDD_REORDER_SYMM_SIFT_CONV? CUDD_REORDER_SYMM_SIFT? CUDD_REORDER_SIFT_CONVERGE? CUDD_REORDER_SIFT?
 
 	 std::cout << "leaving attractors ctor" << std::endl;
      };
 
+// //Option 2: Dynamic reordering by window permutation
+// Cudd_AutodynEnable(gbm, CUDD_REORDER_WINDOW2);
+// Cudd_ReduceHeap(gbm, CUDD_REORDER_WINDOW2, 3000);
+
+// //Option 5: Dynamic reordering by swapping
+// Cudd_AutodynEnable(gbm, CUDD_REORDER_RANDOM);
+// Cudd_ReduceHeap(gbm, CUDD_REORDER_RANDOM, 3000);
+
+// //Option 6: No reordering
+// Cudd_AutodynDisable (gbm);
   
     /* Attractors(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qnT, int numVars) : */
     /* minValues(std::move(minVals)), ranges(std::move(rangesV)), qn(std::move(qnT)), */
