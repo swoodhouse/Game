@@ -463,59 +463,14 @@ ADD Game::backMax(const ADD& states) const {
 }
 
 ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
-  ADD a = loop.Add();
-  ADD max = (a * scoreRelation).FindMax();
-  return max * a;
-}
+  ADD scored = loop.Add() * scoreRelation;
 
-// new
-// ADD Game::scoreLoopNew(const BDD& loop, const ADD& scoreRelation) const {
-//   ADD scored = loop.Add() * scoreRelation;
+  for (std::vector<int>::size_type i = 0; i < attractors.ranges.size(); i++) { // ranges.size is temp.. need to make work for all loop sizes
+    ADD fr = immediateForwardMax(scored);
+    scored = scored.Maximum(fr);
+  }
 
-//   for (std::vector<int>::size_type i = 0; i < attractors.ranges.size(); i++) { // ranges.size is temp.. need to make work for all loop sizes
-//     ADD fr = immediateForwardMax(scored);
-//     scored = scored.Maximum(fr);
-//   }
-
-//   return scored;
-// }
-
-// very broken
-ADD Game::scoreLoopNew(const BDD& loop, const ADD& scoreRelation) const {
-  ADD scoredLoop = scoreLoop(loop, scoreRelation);
-
-  // std::cout << "scoredLoop, starting:" << std::endl;
-  // scoredLoop.PrintMinterm();
-
-  // std::cout << "fr = scoredLoop * mutantTransitionRelation.Add():" << std::endl;
-  ADD fr = scoredLoop * mutantTransitionRelation.Add();
-  //fr.PrintMinterm();
-
-  // std::cout << "fr = fr.MaxAbstract(attractors.nonPrimeVariables.Add())" << std::endl;
-  fr = fr.MaxAbstract(attractors.nonPrimeVariables.Add());
-  // fr.PrintMinterm();
-
-  // std::cout << "fr = renameBDDVarsRemovingPrimes(fr)" << std::endl;
-  fr = renameBDDVarsRemovingPrimes(fr); // this is not working
-  // fr.PrintMinterm();
-  // std::cout << "attractors.renameRemovingPrimes(fr).PrintMinterm()" << std::endl;
-  // attractors.renameRemovingPrimes(fr.BddPattern()).PrintMinterm();
-  
-     // ADD withoutMutsAndTreats = scoredLoop.MaxAbstract(representTreatmentVariables().Add() * representNonPrimedMutVars());
-    // auto loopSize = withoutMutsAndTreats.CountPath();
-    // auto loopSize2 = withoutMutsAndTreats.CountMinterm(chosenMutationsIndices().back() + 1);
-    // std::cout << "loop size:" << loopSize << std::endl;
-    // std::cout << "loop size2:" << loopSize2 << std::endl;
-    // for (int i = 0; i < loopSize; i++) { 
-    // for (int i = 0; i < attractors.ranges.size() * 2; i++) { // hack for now. NEED TO FIX FOR ALL LOOP SIZES.....
-    //     ADD fr = scoredLoop * mutantTransitionRelation.Add();
-    // 	fr = fr.MaxAbstract(attractors.nonPrimeVariables.Add());
-    // 	fr = renameBDDVarsRemovingPrimes(fr);
-    //     scoredLoop = scoredLoop.Maximum(fr);
-    // }
-  std::cout << "scoredLoop:" << std::endl;
-  scoredLoop.PrintMinterm();
-  return scoredLoop;
+  return scored;
 }
 
 std::string Game::prettyPrint(const ADD& states) const {
@@ -582,8 +537,7 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	
   int i = 0;
   for (const BDD& a : loops) {
-    //ADD scored = scoreLoop(a, scoreRelation);
-    ADD scored = scoreLoopNew(a, scoreRelation); // new.. trying to work with mutiple mutations
+    ADD scored = scoreLoop(a, scoreRelation);
     states = states.Maximum(scored);
     i++;
   }

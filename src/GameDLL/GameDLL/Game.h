@@ -29,7 +29,6 @@ struct Game {
   ADD immediateBackMax(const ADD& states) const;
   ADD backMax(const ADD& states) const;
   ADD scoreLoop(const BDD& loop, const ADD& scoreRelation) const;
-  ADD scoreLoopNew(const BDD& loop, const ADD& scoreRelation) const;
   ADD scoreAttractors(bool maximisingPlayer, int numMutations) const;
   BDD representTreatmentVariables() const;
   std::string prettyPrint(const ADD & states) const;
