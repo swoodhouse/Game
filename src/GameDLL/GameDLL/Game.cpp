@@ -212,7 +212,7 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
   std::vector<std::vector<int>::size_type> shuffled_indices(attractors.ranges.size());
   std::iota(shuffled_indices.begin(), shuffled_indices.end(), 0);
 
-  auto rng = std::default_random_engine {}; // should set a seed
+  auto rng = std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
   std::shuffle(std::begin(shuffled_indices), std::end(shuffled_indices), rng);
   auto start = std::chrono::steady_clock::now();
   
