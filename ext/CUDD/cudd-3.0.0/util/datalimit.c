@@ -66,9 +66,9 @@
 /**
  * @brief Default value returned if getrlimit not available.
  */
-//#ifndef RLIMIT_DATA_DEFAULT
-//#define RLIMIT_DATA_DEFAULT 268435456	/* assume 256MB by default */
-//#endif
+#ifndef RLIMIT_DATA_DEFAULT
+#define RLIMIT_DATA_DEFAULT 268435456	/* assume 256MB by default */
+#endif
 
 /**
  * @def EXTERN
