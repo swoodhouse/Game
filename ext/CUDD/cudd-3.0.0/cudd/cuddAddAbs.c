@@ -609,10 +609,10 @@ cuddAddMaxAbstractRecur(
 		return(res);
 	}
 	else { /* if (cuddI(manager,f->index) < cuddI(manager,cube->index)) */
-		res1 = cuddAddExistAbstractRecur(manager, T, cube);
+		res1 = cuddAddMaxAbstractRecur(manager, T, cube);
 		if (res1 == NULL) return(NULL);
 		cuddRef(res1);
-		res2 = cuddAddExistAbstractRecur(manager, E, cube);
+		res2 = cuddAddMaxAbstractRecur(manager, E, cube);
 		if (res2 == NULL) {
 			Cudd_RecursiveDeref(manager, res1);
 			return(NULL);
