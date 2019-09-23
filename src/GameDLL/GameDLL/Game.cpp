@@ -446,9 +446,18 @@ ADD Game::renameBDDVarsRemovingPrimes(const ADD& add) const {
 
 // want also immediateForwardMean
 ADD Game::immediateForwardMax(const ADD& states) const {
+  std::cout << "states:" << std::endl;
+  states.PrintMinterm();
   ADD add = mutantTransitionRelation.Add() * states;
+  std::cout << "tr * states:" << std::endl;
+  add.PrintMinterm();
   add = add.MaxAbstract(attractors.nonPrimeVariables.Add());
-  return renameBDDVarsRemovingPrimes(add);
+  std::cout << "maxAbstract:" << std::endl;
+  add.PrintMinterm();
+  std::cout << "rename:" << std::endl;
+  add = renameBDDVarsRemovingPrimes(add); // temp, just move to inside return statement
+  add.PrintMinterm();
+  return add;
 }
 
 ADD Game::immediateBackMax(const ADD& states) const {
@@ -468,16 +477,29 @@ ADD Game::backMax(const ADD& states) const {
   return reachable;
 }
 
+// old
 ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
-  ADD scored = loop.Add() * scoreRelation;
-
-  for (std::vector<int>::size_type i = 0; i < attractors.ranges.size(); i++) { // ranges.size is temp.. need to make work for all loop sizes
-    ADD fr = immediateForwardMax(scored);
-    scored = scored.Maximum(fr);
-  }
-
-  return scored;
+  ADD a = loop.Add();
+  ADD max = (a * scoreRelation).FindMax();
+  return max * a;
 }
+
+// new
+// ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
+//   ADD scored = loop.Add() * scoreRelation;
+
+//   scored.PrintMinterm();
+//   std::cout << "score" << std::endl;
+
+//   for (std::vector<int>::size_type i = 0; i < attractors.ranges.size(); i++) { // ranges.size is temp.. need to make work for all loop sizes
+//     ADD fr = immediateForwardMax(scored);
+//     std::cout << "forward" << std::endl;
+//     fr.PrintMinterm();
+//     scored = scored.Maximum(fr);
+//   }
+
+//   return scored;
+// }
 
 std::string Game::prettyPrint(const ADD& states) const {
   // ideally would not use a temp file
