@@ -483,13 +483,8 @@ ADD Game::backMax(const ADD& states) const {
 ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
   ADD scored = loop.Add() * scoreRelation;
 
-  scored.PrintMinterm();
-  std::cout << "score" << std::endl;
-
   for (std::vector<int>::size_type i = 0; i < attractors.ranges.size(); i++) { // ranges.size is temp.. need to make work for all loop sizes
     ADD fr = immediateForwardMax(scored);
-    std::cout << "forward" << std::endl;
-    fr.PrintMinterm();
     scored = scored.Maximum(fr);
   }
 
@@ -592,47 +587,42 @@ ADD Game::minimax() const {
   std::cout << "numTreatments: " << numTreatments << std::endl;
   std::cout << "numMutations: " << numMutations << std::endl;
   ADD states = scoreAttractors(false, numMutations);
-  if (states.IsZero()) std::cout << "states == 0" << std::endl;
   height--;
   maximisingPlayer = true; // temp..............
-
-  std::cout << "states 1:" << std::endl;
-  states.PrintMinterm();
 	
   for (; height > 0; height--) { // do i have an off by one error
     std::cout << "height:" << height << std::endl;
     if (maximisingPlayer) {
+      // add t
+      std::cout << "treatment?" << maximisingPlayer << std::endl;
+      std::cout << "numTreatments" << numTreatments << std::endl;
+      std::cout << "numMutations" << numMutations << std::endl;
+      states = backMax(states); // should this be backMin if we support async networks?
+      BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+      states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // removing the treatment = 0 forcing variables
+		
+      // then remove m...			
       numMutations--;
       std::cout << "treatment?" << maximisingPlayer << std::endl;
       std::cout << "numTreatments" << numTreatments << std::endl;
       std::cout << "numMutations" << numMutations << std::endl;
-      //states = backMin(states);
-      states = backMax(states); // backmax should work for sync networks
+      states = backMax(states); // should this be backMin if we support async networks?
       states = unmutate(numMutations, states);
-      BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
-      if (att.IsZero()) std::cout << "att == 0" << std::endl;
-      // std::cout << "att.minterm:" << std::endl;
-      // att.PrintMinterm();
-      // std::cout << "states.minterm:" << std::endl;
-      // states.PrintMinterm();
-      states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add();
-      if (states.IsZero()) std::cout << "states == 0" << std::endl;
-
-      std::cout << "states 2:" << std::endl;
-      states.PrintMinterm();
+      att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+      states *= att.Add();
     }
+
     else {
-      numTreatments--; // HERE OR BEFORE?
+      // remove t
+      numTreatments--;
       std::cout << "treatment?" << maximisingPlayer << std::endl;
       std::cout << "numTreatments" << numTreatments << std::endl;
       std::cout << "numMutations" << numMutations << std::endl;
-      states = backMax(states);
+      states = backMax(states); // should this be backMin if we support async networks?
       states = untreat(numTreatments, states);
-      BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); //THIS MAY HAVE BEEN A BUG // to score then unscore is not ideal
+      BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
       states *= att.Add();
 
-      std::cout << "states 3:" << std::endl;
-      states.PrintMinterm();
     }
 
     maximisingPlayer = !maximisingPlayer;
@@ -640,65 +630,6 @@ ADD Game::minimax() const {
 
   return states;
 }
-
-// ADD Game::minimax() const {
-//   std::cout << "\n\n\nin minimax" << std::endl;
-//   int height = this->height;
-//   int numTreatments = this->numTreatments;
-//   int numMutations = this->numMutations;
-//   bool maximisingPlayer = this->maximisingPlayerLast;
-
-//   maximisingPlayer = false; // temp..............
-
-//   std::cout << "maximisingPlayer:" << maximisingPlayer << std::endl;
-//   std::cout << "height:" << height << std::endl;
-//   std::cout << "treatment?" << false << std::endl;
-//   std::cout << "numTreatments: " << numTreatments << std::endl;
-//   std::cout << "numMutations: " << numMutations << std::endl;
-//   ADD states = scoreAttractors(false, numMutations);
-//   height--;
-//   maximisingPlayer = true; // temp..............
-	
-//   for (; height > 0; height--) { // do i have an off by one error
-//     std::cout << "height:" << height << std::endl;
-//     if (maximisingPlayer) {
-//       // add t
-//       std::cout << "treatment?" << maximisingPlayer << std::endl;
-//       std::cout << "numTreatments" << numTreatments << std::endl;
-//       std::cout << "numMutations" << numMutations << std::endl;
-//       states = backMax(states); // should this be backMin if we support async networks?
-//       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
-//       states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // removing the treatment = 0 forcing variables
-		
-//       // then remove m...			
-//       numMutations--;
-//       std::cout << "treatment?" << maximisingPlayer << std::endl;
-//       std::cout << "numTreatments" << numTreatments << std::endl;
-//       std::cout << "numMutations" << numMutations << std::endl;
-//       states = backMax(states); // should this be backMin if we support async networks?
-//       states = unmutate(numMutations, states);
-//       att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
-//       states *= att.Add();
-//     }
-
-//     else {
-//       // remove t
-//       numTreatments--;
-//       std::cout << "treatment?" << maximisingPlayer << std::endl;
-//       std::cout << "numTreatments" << numTreatments << std::endl;
-//       std::cout << "numMutations" << numMutations << std::endl;
-//       states = backMax(states); // should this be backMin if we support async networks?
-//       states = untreat(numTreatments, states);
-//       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
-//       states *= att.Add();
-
-//     }
-
-//     maximisingPlayer = !maximisingPlayer;
-//   }
-
-//   return states;
-// }
 
 BDD Game::representTreatment(int treatment) const {
   treatment++; // 0 represents no treatment, so n is represented by n+1
