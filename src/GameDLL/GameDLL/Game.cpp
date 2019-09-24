@@ -458,18 +458,9 @@ ADD Game::renameBDDVarsRemovingPrimes(const ADD& add) const {
 
 // want also immediateForwardMean
 ADD Game::immediateForwardMax(const ADD& states) const {
-  std::cout << "states:" << std::endl;
-  states.PrintMinterm();
   ADD add = mutantTransitionRelation.Add() * states;
-  std::cout << "tr * states:" << std::endl;
-  add.PrintMinterm();
   add = add.MaxAbstract(attractors.nonPrimeVariables.Add());
-  std::cout << "maxAbstract:" << std::endl;
-  add.PrintMinterm();
-  std::cout << "rename:" << std::endl;
-  add = renameBDDVarsRemovingPrimes(add); // temp, just move to inside return statement
-  add.PrintMinterm();
-  return add;
+  return renameBDDVarsRemovingPrimes(add);
 }
 
 ADD Game::immediateBackMax(const ADD& states) const {
