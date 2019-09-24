@@ -279,10 +279,13 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 // _std::cout << "num connected components: " << components.size() << std::endl;_
 // _shuffle here_
 //  _for (auto comp : components) {_
-//     _shuffle here_
+//    _shuffle here_
+//    int i = 0;
 //     _BDD bdd = attractors.manager.bddOne();_
   //   for (auto v : comp) {
-  //   std::cout << "node " v << << std::endl;
+    //   std::cout << "variables done:" << i << std::endl;
+    //    i++;
+  //      std::cout << "node " v << << std::endl;
   //     if (attractors.ranges[v] > 0) {
   //       const auto& iVars = attractors.qn.inputVars[v];
   //       const auto& iValues = attractors.qn.inputValues[v];
@@ -486,29 +489,21 @@ ADD Game::backMax(const ADD& states) const {
   return reachable;
 }
 
-// old
 ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
-  ADD a = loop.Add();
-  ADD max = (a * scoreRelation).FindMax();
-  return max * a;
+  ADD scored = loop.Add() * scoreRelation;
+
+  scored.PrintMinterm();
+  std::cout << "score" << std::endl;
+
+  for (std::vector<int>::size_type i = 0; i < attractors.ranges.size(); i++) { // ranges.size is temp.. need to make work for all loop sizes
+    ADD fr = immediateForwardMax(scored);
+    std::cout << "forward" << std::endl;
+    fr.PrintMinterm();
+    scored = scored.Maximum(fr);
+  }
+
+  return scored;
 }
-
-// new
-// ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
-//   ADD scored = loop.Add() * scoreRelation;
-
-//   scored.PrintMinterm();
-//   std::cout << "score" << std::endl;
-
-//   for (std::vector<int>::size_type i = 0; i < attractors.ranges.size(); i++) { // ranges.size is temp.. need to make work for all loop sizes
-//     ADD fr = immediateForwardMax(scored);
-//     std::cout << "forward" << std::endl;
-//     fr.PrintMinterm();
-//     scored = scored.Maximum(fr);
-//   }
-
-//   return scored;
-// }
 
 std::string Game::prettyPrint(const ADD& states) const {
   // ideally would not use a temp file
