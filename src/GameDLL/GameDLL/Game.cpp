@@ -335,21 +335,17 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 //   return tr;
 // }
 
-//  #include <iostream>                  // for std::cout
-//  #include <utility>                   // for std::pair
-//  #include <algorithm>                 // for std::for_each
-//  #include <boost/graph/graph_traits.hpp>
-//  #include <boost/graph/adjacency_list.hpp>
-
-//   // *and also inputVars which is std::vector<std::vector<int>>*
-//   // *so inputVars can be used as an adjacency list to generate the strongly connected components*
+// move includes
+//include <boost/graph/strong_components.hpp>
+//include <boost/graph/adjacency_list.hpp>
+//include <boost/graph/graph_utility.hpp>
 //std::vector<std::vector<std::vector<int>::size_type>> Game::connectedComponents() {
 //  using namespace boost;
 //  typedef adjacency_list <vecS, vecS, undirectedS> Graph;
 
 //  Graph G;
 //  for (std::vector<std::vector<int>>::size_type i = 0; i < attractors.qn.inputVars.size(); i++) {
-//    for (int j : attractors.qn.inputVars[i]) add_edge(j, i, G);
+//    for (int j : attractors.qn.inputVars[i]) add_edge(j, i, G); // flipping direction of these edges should make no difference
 //  }
     
 //  std::vector<int> component(num_vertices(G));
@@ -360,11 +356,11 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 //  for (std::vector<int>::size_type i = 0; i < component.size(); i++) {
 //    std::cout << "Vertex " << name[i]
 //         <<" is in component " << component[i] << std::endl;
-//
-//    ret[component[i]].push_back(attractors.qn.inputVars[i]); // need to make sure the order of the graph indices matches my indices
+//    ret[component[i]].push_back(i); // need to make sure the order of the graph indices matches my indices
 //  }
 //  return ret;
 //}
+
 
 // current version
 // BDD Game::buildMutantSyncQNTransitionRelation() const {
