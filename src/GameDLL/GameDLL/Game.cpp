@@ -203,73 +203,6 @@ ADD Game::unmutate(int level, const ADD& states) const {
   return states.Permute(&permute[0]);
 }
 
-// proposed randomised version
-// BDD Game::buildMutantSyncQNTransitionRelation() const {
-//   BDD bdd = attractors.manager.bddOne();
-
-//   std::cout << "in buildMutantTR" << std::endl;
-
-//   std::vector<std::vector<int>::size_type> shuffled_indices(attractors.ranges.size());
-//   std::iota(shuffled_indices.begin(), shuffled_indices.end(), 0);
-
-//   auto rng = std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
-//   std::shuffle(std::begin(shuffled_indices), std::end(shuffled_indices), rng);
-//   auto start = std::chrono::steady_clock::now();
-  
-//   int i = 0;
-//   for (auto v : shuffled_indices) {
-//     std::cout << "variables done:" << i << std::endl;
-//     i++;
-//     std::cout << "on variable " << v << std::endl;
-
-//     if (attractors.ranges[v] > 0) {
-//       const auto& iVars = attractors.qn.inputVars[v];
-//       const auto& iValues = attractors.qn.inputValues[v];
-//       const auto& oValues = attractors.qn.outputValues[v];
-//       std::vector<BDD> states(attractors.ranges[v] + 1, attractors.manager.bddZero());
-//       for (std::vector<int>::size_type i = 0; i < oValues.size(); i++) {
-// 	states[oValues[i]] += attractors.representStateQN(iVars, iValues[i]);
-//       }
-
-//       BDD targetFunction = attractors.manager.bddOne();
-
-//       for (int val = 0; val <= attractors.ranges[v]; val++) {
-// 	BDD vPrime = attractors.representPrimedVarQN(v, val);
-// 	targetFunction *= logicalEquivalence(states[val], vPrime);
-//       }
-     
-//       auto koIt = std::find(koVars.begin(), koVars.end(), v);
-      
-//       if (koIt != koVars.end()) { // rename to mutation vars - oe-ing not ko-ing
-// 	int k = std::distance(koVars.begin(), koIt);  
-// 	BDD isMutated = attractors.manager.bddZero();
-				
-// 	for (int lvl = 0; lvl < numMutations; lvl++) {
-// 	  isMutated += representMutation(lvl, k);
-// 	}
-				
-// 	int max = attractors.ranges[v];
-// 	bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
-//       }
-//       else {
-// 	auto oeIt = std::find(oeVars.begin(), oeVars.end(), v);
-// 	if (oeIt != oeVars.end()) { // rename to treat vars - koing not oe-ing
-// 	  int o = std::distance(oeVars.begin(), oeIt);        
-// 	  BDD isTreated = representTreatment(o);
-// 	  bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
-// 	}
-// 	else {
-// 	  bdd *= targetFunction;
-// 	}
-// 	auto diff = std::chrono::steady_clock::now() - start;
-// 	std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
-
-//       }
-//     }
-//   }
-//   return bdd;
-// }
-// proposed strongly connected components version. then make a randomised and connected components version - shuffle the components and the nodes inside each component connected component version
 BDD Game::buildMutantSyncQNTransitionRelation() const {
   BDD tr = attractors.manager.bddOne();
 
@@ -282,6 +215,8 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
   std::sort(components.begin(), components.end(),
    	    [](const std::vector<std::vector<int>::size_type>& a,
    	       const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
+
+  auto start = std::chrono::steady_clock::now();
  
   int vars_done = 0;
   int comp_num = 0;
@@ -333,100 +268,38 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
         }
       }
     }
+    auto diff = std::chrono::steady_clock::now() - start;
+    std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
+
     std::cout << "adding connected component " << comp_num << std::endl;
     comp_num++;
     tr *= bdd;
+
+    diff = std::chrono::steady_clock::now() - start;
+    std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
   }
 
   return tr;
 }
 
 std::vector<std::vector<std::vector<int>::size_type>> Game::connectedComponents() const {
-  //using namespace boost;
-  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS> graph;
- graph G;
- for (std::vector<std::vector<int>>::size_type i = 0; i < attractors.qn.inputVars.size(); i++) {
-   for (int j : attractors.qn.inputVars[i]) boost::add_edge(j, i, G); // flipping direction of these edges should make no difference
- }
+  boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS> graph;
+  for (std::vector<std::vector<int>>::size_type i = 0; i < attractors.qn.inputVars.size(); i++) {
+    for (int j : attractors.qn.inputVars[i]) boost::add_edge(j, i, graph); // flipping direction of these edges should make no difference
+  }
     
- std::vector<int> component(boost::num_vertices(G));
- int num = boost::strong_components(G, &component[0]);
+  std::vector<int> component(boost::num_vertices(graph));
+  int num = boost::strong_components(graph, &component[0]);
 
- std::vector<std::vector<std::vector<int>::size_type>> ret(num);
+  std::vector<std::vector<std::vector<int>::size_type>> ret(num);
 
- for (std::vector<int>::size_type i = 0; i < component.size(); i++) {
-   std::cout << "Vertex " << i
-        <<" is in component " << component[i] << std::endl;
-   ret[component[i]].push_back(i); // need to make sure the order of the graph indices matches my indices
- }
- return ret;
+  for (std::vector<int>::size_type i = 0; i < component.size(); i++) {
+    std::cout << "Vertex " << i
+	      << " is in component " << component[i] << std::endl;
+    ret[component[i]].push_back(i); // need to make sure the order of the graph indices matches my indices
+  }
+  return ret;
 }
-
-  // int num = strong_components(G, make_iterator_property_map(component.begin(), get(vertex_index, G)), 
-  //                             root_map(make_iterator_property_map(root.begin(), get(vertex_index, G))).
-  //                             color_map(make_iterator_property_map(color.begin(), get(vertex_index, G))).
-  //                             discover_time_map(make_iterator_property_map(discover_time.begin(), get(vertex_index, G))));
-
-// current version
-// BDD Game::buildMutantSyncQNTransitionRelation() const {
-//   BDD bdd = attractors.manager.bddOne();
-
-//   std::vector<int>::size_type k = 0;
-//   std::vector<int>::size_type o = 0;
-
-//   std::cout << "in buildMutantTR" << std::endl;
-//   auto start = std::chrono::steady_clock::now();
-
-//   for (std::vector<int>::size_type v = 0; v < attractors.ranges.size(); v++) {
-//     std::cout << "on variable " << v << std::endl;
-    
-//     if (attractors.ranges[v] > 0) {
-//       const auto& iVars = attractors.qn.inputVars[v];
-//       const auto& iValues = attractors.qn.inputValues[v];
-//       const auto& oValues = attractors.qn.outputValues[v];
-//       std::vector<BDD> states(attractors.ranges[v] + 1, attractors.manager.bddZero());
-//       for (std::vector<int>::size_type i = 0; i < oValues.size(); i++) {
-// 	states[oValues[i]] += attractors.representStateQN(iVars, iValues[i]);
-//       }
-
-//       BDD targetFunction = attractors.manager.bddOne();
-
-//       for (int val = 0; val <= attractors.ranges[v]; val++) {
-// 	BDD vPrime = attractors.representPrimedVarQN(v, val);
-// 	targetFunction *= logicalEquivalence(states[val], vPrime);
-//       }
-
-//       // assuming koVars and oeVars are disjoint. and sorted. we call sort in entry point
-
-//       if (k < koVars.size() && koVars[k] == v) { // rename to mutation vars - oe-ing not ko-ing
-// 	BDD isMutated = attractors.manager.bddZero();
-				
-// 	for (int lvl = 0; lvl < numMutations; lvl++) {
-// 	  isMutated += representMutation(lvl, k);
-// 	}
-				
-// 	int max = attractors.ranges[v];
-// 	bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
-				
-// 	k++;
-//       }
-		
-//       else if (o < oeVars.size() && oeVars[o] == v) { // rename to treat vars - koing not oe-ing
-// 	BDD isTreated = representTreatment(o);
-// 	bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
-// 	o++;
-//       }
-//       else {
-// 	bdd *= targetFunction;
-//       }
-
-//       auto diff = std::chrono::steady_clock::now() - start;
-//       std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
-//     }
-//   }
-
-//   return bdd;
-// }
 
 ADD Game::renameBDDVarsAddingPrimes(const ADD& add) const {
   int *permute = new int[chosenMutationsIndices().back() + 1];

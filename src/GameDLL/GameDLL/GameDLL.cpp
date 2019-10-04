@@ -87,8 +87,8 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	ADD out = g.minimax();
 
 
-	std::cout << "\nFinal output of minimax:" << std::endl;
-	out.PrintMinterm();
+	// std::cout << "\nFinal output of minimax:" << std::endl;
+	// out.PrintMinterm();
 
 
 	// both of these blocks cause a crash

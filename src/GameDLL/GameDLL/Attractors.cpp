@@ -234,11 +234,11 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
   removeInvalidBitCombinations(S);
   S *= !statesToRemove;
 
-  std::cout << "statesToKeep:" << std::endl;
-  statesToKeep.PrintMinterm();
+  // std::cout << "statesToKeep:" << std::endl;
+  // statesToKeep.PrintMinterm();
 
-  std::cout << "S:" << std::endl;
-  S.PrintMinterm();
+  // std::cout << "S:" << std::endl;
+  // S.PrintMinterm();
     
   while (!S.IsZero()) {
     BDD sOriginal = randomState(S);
