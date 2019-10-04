@@ -23,3 +23,8 @@
 #include <unordered_set>
 #include <chrono>
 #include <random>
+
+// only needed if we go with connected components version
+#include <boost/graph/strong_components.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/graph_utility.hpp>

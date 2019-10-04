@@ -21,7 +21,7 @@ struct Game {
   std::vector<int> mutationVarsIndices() const;
   std::vector<int> chosenTreatmentsIndices() const;
   std::vector<int> chosenMutationsIndices() const;
-
+  std::vector<std::vector<std::vector<int>::size_type>> connectedComponents() const; // only needed if we go with connected components
   ADD buildScoreRelation(int apopVar) const;
   ADD renameBDDVarsAddingPrimes(const ADD& add) const;
   ADD renameBDDVarsRemovingPrimes(const ADD& add) const;

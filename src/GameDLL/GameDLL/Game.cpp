@@ -204,163 +204,162 @@ ADD Game::unmutate(int level, const ADD& states) const {
 }
 
 // proposed randomised version
-BDD Game::buildMutantSyncQNTransitionRelation() const {
-  BDD bdd = attractors.manager.bddOne();
-
-  std::cout << "in buildMutantTR" << std::endl;
-
-  std::vector<std::vector<int>::size_type> shuffled_indices(attractors.ranges.size());
-  std::iota(shuffled_indices.begin(), shuffled_indices.end(), 0);
-
-  auto rng = std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
-  std::shuffle(std::begin(shuffled_indices), std::end(shuffled_indices), rng);
-  auto start = std::chrono::steady_clock::now();
-  
-  int i = 0;
-  for (auto v : shuffled_indices) {
-    std::cout << "variables done:" << i << std::endl;
-    i++;
-    std::cout << "on variable " << v << std::endl;
-
-    if (attractors.ranges[v] > 0) {
-      const auto& iVars = attractors.qn.inputVars[v];
-      const auto& iValues = attractors.qn.inputValues[v];
-      const auto& oValues = attractors.qn.outputValues[v];
-      std::vector<BDD> states(attractors.ranges[v] + 1, attractors.manager.bddZero());
-      for (std::vector<int>::size_type i = 0; i < oValues.size(); i++) {
-	states[oValues[i]] += attractors.representStateQN(iVars, iValues[i]);
-      }
-
-      BDD targetFunction = attractors.manager.bddOne();
-
-      for (int val = 0; val <= attractors.ranges[v]; val++) {
-	BDD vPrime = attractors.representPrimedVarQN(v, val);
-	targetFunction *= logicalEquivalence(states[val], vPrime);
-      }
-     
-      auto koIt = std::find(koVars.begin(), koVars.end(), v);
-      
-      if (koIt != koVars.end()) { // rename to mutation vars - oe-ing not ko-ing
-	int k = std::distance(koVars.begin(), koIt);  
-	BDD isMutated = attractors.manager.bddZero();
-				
-	for (int lvl = 0; lvl < numMutations; lvl++) {
-	  isMutated += representMutation(lvl, k);
-	}
-				
-	int max = attractors.ranges[v];
-	bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
-      }
-      else {
-	auto oeIt = std::find(oeVars.begin(), oeVars.end(), v);
-	if (oeIt != oeVars.end()) { // rename to treat vars - koing not oe-ing
-	  int o = std::distance(oeVars.begin(), oeIt);        
-	  BDD isTreated = representTreatment(o);
-	  bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
-	}
-	else {
-	  bdd *= targetFunction;
-	}
-	auto diff = std::chrono::steady_clock::now() - start;
-	std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
-
-      }
-    }
-  }
-  return bdd;
-}
-// proposed strongly connected components version. then make a randomised and connected components version - shuffle the components and the nodes inside each component connected component version
 // BDD Game::buildMutantSyncQNTransitionRelation() const {
-//   BDD tr = attractors.manager.bddOne();
+//   BDD bdd = attractors.manager.bddOne();
 
 //   std::cout << "in buildMutantTR" << std::endl;
 
-// _auto components = connectedComponents();_
-// _std::cout << "num connected components: " << components.size() << std::endl;_
-// _shuffle here_
-//  _for (auto comp : components) {_
-//    _shuffle here_
-//    int i = 0;
-//     _BDD bdd = attractors.manager.bddOne();_
-  //   for (auto v : comp) {
-    //   std::cout << "variables done:" << i << std::endl;
-    //    i++;
-  //      std::cout << "node " v << << std::endl;
-  //     if (attractors.ranges[v] > 0) {
-  //       const auto& iVars = attractors.qn.inputVars[v];
-  //       const auto& iValues = attractors.qn.inputValues[v];
-  //       const auto& oValues = attractors.qn.outputValues[v];
-  //       std::vector<BDD> states(attractors.ranges[v] + 1, attractors.manager.bddZero());
-  //       for (std::vector<int>::size_type i = 0; i < oValues.size(); i++) {
-  // 	   states[oValues[i]] += attractors.representStateQN(iVars, iValues[i]);
-  //       }
+//   std::vector<std::vector<int>::size_type> shuffled_indices(attractors.ranges.size());
+//   std::iota(shuffled_indices.begin(), shuffled_indices.end(), 0);
 
-  //       BDD targetFunction = attractors.manager.bddOne();
+//   auto rng = std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
+//   std::shuffle(std::begin(shuffled_indices), std::end(shuffled_indices), rng);
+//   auto start = std::chrono::steady_clock::now();
+  
+//   int i = 0;
+//   for (auto v : shuffled_indices) {
+//     std::cout << "variables done:" << i << std::endl;
+//     i++;
+//     std::cout << "on variable " << v << std::endl;
 
-  //       for (int val = 0; val <= attractors.ranges[v]; val++) {
-  // 	   BDD vPrime = attractors.representPrimedVarQN(v, val);
-  // 	   targetFunction *= logicalEquivalence(states[val], vPrime);
-  //       }
+//     if (attractors.ranges[v] > 0) {
+//       const auto& iVars = attractors.qn.inputVars[v];
+//       const auto& iValues = attractors.qn.inputValues[v];
+//       const auto& oValues = attractors.qn.outputValues[v];
+//       std::vector<BDD> states(attractors.ranges[v] + 1, attractors.manager.bddZero());
+//       for (std::vector<int>::size_type i = 0; i < oValues.size(); i++) {
+// 	states[oValues[i]] += attractors.representStateQN(iVars, iValues[i]);
+//       }
+
+//       BDD targetFunction = attractors.manager.bddOne();
+
+//       for (int val = 0; val <= attractors.ranges[v]; val++) {
+// 	BDD vPrime = attractors.representPrimedVarQN(v, val);
+// 	targetFunction *= logicalEquivalence(states[val], vPrime);
+//       }
      
-  //       std::vector<int>::iterator koIt = std::find(koVars.begin(), koVars.end(), v);
-  //       
-  //       if (koIt != koVars.end()) { // rename to mutation vars - oe-ing not ko-ing
-  //         int k = std::distance(koVars.begin(), koIt);  
-  // 	     BDD isMutated = attractors.manager.bddZero();
+//       auto koIt = std::find(koVars.begin(), koVars.end(), v);
+      
+//       if (koIt != koVars.end()) { // rename to mutation vars - oe-ing not ko-ing
+// 	int k = std::distance(koVars.begin(), koIt);  
+// 	BDD isMutated = attractors.manager.bddZero();
 				
-  // 	   for (int lvl = 0; lvl < numMutations; lvl++) {
-  // 	     isMutated += representMutation(lvl, k);
-  //  	   }
-  				
-  // 	   int max = attractors.ranges[v];
-  // 	   bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
-  // 	 }
-  //	 else {
-  //         std::vector<int>::iterator oeIt = std::find(oeVars.begin(), oeVars.end(), v);
-  //         if (oIt != oeVars.end()) { // rename to treat vars - koing not oe-ing
-  //           int o = std::distance(oeVars.begin(), oeIt);        
-  // 	     BDD isTreated = representTreatment(o);
-  // 	     bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
-  //         }
-  // 	   else {
-  // 	     bdd *= targetFunction;
-  //         }
-  //       }
-  //   }
+// 	for (int lvl = 0; lvl < numMutations; lvl++) {
+// 	  isMutated += representMutation(lvl, k);
+// 	}
+				
+// 	int max = attractors.ranges[v];
+// 	bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
+//       }
+//       else {
+// 	auto oeIt = std::find(oeVars.begin(), oeVars.end(), v);
+// 	if (oeIt != oeVars.end()) { // rename to treat vars - koing not oe-ing
+// 	  int o = std::distance(oeVars.begin(), oeIt);        
+// 	  BDD isTreated = representTreatment(o);
+// 	  bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
+// 	}
+// 	else {
+// 	  bdd *= targetFunction;
+// 	}
+// 	auto diff = std::chrono::steady_clock::now() - start;
+// 	std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
+
+//       }
+//     }
 //   }
-//   std::cout << "adding connected component " v << << std::endl;
-//   _tr *= bdd;_
-//  }
-//
-//   return tr;
+//   return bdd;
 // }
+// proposed strongly connected components version. then make a randomised and connected components version - shuffle the components and the nodes inside each component connected component version
+BDD Game::buildMutantSyncQNTransitionRelation() const {
+  BDD tr = attractors.manager.bddOne();
 
-// move includes
-//include <boost/graph/strong_components.hpp>
-//include <boost/graph/adjacency_list.hpp>
-//include <boost/graph/graph_utility.hpp>
-//std::vector<std::vector<std::vector<int>::size_type>> Game::connectedComponents() {
-//  using namespace boost;
-//  typedef adjacency_list <vecS, vecS, undirectedS> Graph;
+  std::cout << "in buildMutantTR" << std::endl;
 
-//  Graph G;
-//  for (std::vector<std::vector<int>>::size_type i = 0; i < attractors.qn.inputVars.size(); i++) {
-//    for (int j : attractors.qn.inputVars[i]) add_edge(j, i, G); // flipping direction of these edges should make no difference
-//  }
+  auto components = connectedComponents();
+  std::cout << "num connected components: " << components.size() << std::endl;
+  //_shuffle here_
+  for (auto comp : components) {
+    //_shuffle here_
+    int comp_num = 0;
+    BDD bdd = attractors.manager.bddOne();
+    for (auto v : comp) {
+      //std::cout << "variables done:" << i << std::endl;
+      std::cout << "node " << v << std::endl;
+      if (attractors.ranges[v] > 0) {
+        const auto& iVars = attractors.qn.inputVars[v];
+        const auto& iValues = attractors.qn.inputValues[v];
+        const auto& oValues = attractors.qn.outputValues[v];
+        std::vector<BDD> states(attractors.ranges[v] + 1, attractors.manager.bddZero());
+        for (std::vector<int>::size_type i = 0; i < oValues.size(); i++) {
+	  states[oValues[i]] += attractors.representStateQN(iVars, iValues[i]);
+        }
+
+        BDD targetFunction = attractors.manager.bddOne();
+
+        for (int val = 0; val <= attractors.ranges[v]; val++) {
+	  BDD vPrime = attractors.representPrimedVarQN(v, val);
+	  targetFunction *= logicalEquivalence(states[val], vPrime);
+        }
+     
+        auto koIt = std::find(koVars.begin(), koVars.end(), v);
+        
+        if (koIt != koVars.end()) { // rename to mutation vars - oe-ing not ko-ing
+          int k = std::distance(koVars.begin(), koIt);  
+	  BDD isMutated = attractors.manager.bddZero();
+				
+	  for (int lvl = 0; lvl < numMutations; lvl++) {
+	    isMutated += representMutation(lvl, k);
+	  }
+  				
+	  int max = attractors.ranges[v];
+	  bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
+	}
+	else {
+          auto oeIt = std::find(oeVars.begin(), oeVars.end(), v);
+          if (oeIt != oeVars.end()) { // rename to treat vars - koing not oe-ing
+            int o = std::distance(oeVars.begin(), oeIt);        
+	    BDD isTreated = representTreatment(o);
+	    bdd *= isTreated.Ite(attractors.representPrimedVarQN(v, 0), targetFunction);
+          }
+	  else {
+	    bdd *= targetFunction;
+          }
+        }
+      }
+    }
+    comp_num++;
+    std::cout << "adding connected component " << comp_num << std::endl;
+    tr *= bdd;
+  }
+
+  return tr;
+}
+
+std::vector<std::vector<std::vector<int>::size_type>> Game::connectedComponents() const {
+  //using namespace boost;
+  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS> graph;
+ graph G;
+ for (std::vector<std::vector<int>>::size_type i = 0; i < attractors.qn.inputVars.size(); i++) {
+   for (int j : attractors.qn.inputVars[i]) boost::add_edge(j, i, G); // flipping direction of these edges should make no difference
+ }
     
-//  std::vector<int> component(num_vertices(G));
-//  int num = strong_components(G, &component[0]);
+ std::vector<int> component(boost::num_vertices(G));
+ int num = boost::strong_components(G, &component[0]);
 
-//  std::vector<std::vector<std::vector<int>::size_type>> ret(num);
+ std::vector<std::vector<std::vector<int>::size_type>> ret(num);
 
-//  for (std::vector<int>::size_type i = 0; i < component.size(); i++) {
-//    std::cout << "Vertex " << name[i]
-//         <<" is in component " << component[i] << std::endl;
-//    ret[component[i]].push_back(i); // need to make sure the order of the graph indices matches my indices
-//  }
-//  return ret;
-//}
+ for (std::vector<int>::size_type i = 0; i < component.size(); i++) {
+   std::cout << "Vertex " << i
+        <<" is in component " << component[i] << std::endl;
+   ret[component[i]].push_back(i); // need to make sure the order of the graph indices matches my indices
+ }
+ return ret;
+}
 
+  // int num = strong_components(G, make_iterator_property_map(component.begin(), get(vertex_index, G)), 
+  //                             root_map(make_iterator_property_map(root.begin(), get(vertex_index, G))).
+  //                             color_map(make_iterator_property_map(color.begin(), get(vertex_index, G))).
+  //                             discover_time_map(make_iterator_property_map(discover_time.begin(), get(vertex_index, G))));
 
 // current version
 // BDD Game::buildMutantSyncQNTransitionRelation() const {
@@ -452,7 +451,7 @@ ADD Game::renameBDDVarsRemovingPrimes(const ADD& add) const {
   return add.Permute(&permute[0]);
 }
 
-// want also immediateForwardMean
+// want also immediateForwardMean. Not for sync networks, there is only one possible successor (and predecessor if you are in a loop)
 ADD Game::immediateForwardMax(const ADD& states) const {
   ADD add = mutantTransitionRelation.Add() * states;
   add = add.MaxAbstract(attractors.nonPrimeVariables.Add());
@@ -476,12 +475,14 @@ ADD Game::backMax(const ADD& states) const {
   return reachable;
 }
 
+// a Mean version of this should be easy - CUDD has no mean, but you can either implement that or do scored = (scored + fr) / constant(2)
 ADD Game::scoreLoop(const BDD& loop, const ADD& scoreRelation) const {
   ADD scored = loop.Add() * scoreRelation;
 
   for (std::vector<int>::size_type i = 0; i < attractors.ranges.size(); i++) { // ranges.size is temp.. need to make work for all loop sizes
     ADD fr = immediateForwardMax(scored);
     scored = scored.Maximum(fr);
+    // scored = (scored + fr).Divide(attractors.manager.constant(2)); // mean version
   }
 
   return scored;
@@ -582,6 +583,8 @@ ADD Game::minimax() const {
   std::cout << "treatment?" << false << std::endl;
   std::cout << "numTreatments: " << numTreatments << std::endl;
   std::cout << "numMutations: " << numMutations << std::endl;
+
+  std::cout << "calling scoreAttractors..." << std::endl;
   ADD states = scoreAttractors(false, numMutations);
   height--;
   maximisingPlayer = true; // temp..............
@@ -593,7 +596,9 @@ ADD Game::minimax() const {
       std::cout << "treatment?" << maximisingPlayer << std::endl;
       std::cout << "numTreatments" << numTreatments << std::endl;
       std::cout << "numMutations" << numMutations << std::endl;
+      std::cout << "calling backMax..." << std::endl;
       states = backMax(states); // should this be backMin if we support async networks?
+      std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
       states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // removing the treatment = 0 forcing variables
 		
@@ -602,8 +607,10 @@ ADD Game::minimax() const {
       std::cout << "treatment?" << maximisingPlayer << std::endl;
       std::cout << "numTreatments" << numTreatments << std::endl;
       std::cout << "numMutations" << numMutations << std::endl;
+      std::cout << "calling backMax..." << std::endl;
       states = backMax(states); // should this be backMin if we support async networks?
       states = unmutate(numMutations, states);
+      std::cout << "calling scoreAttractors..." << std::endl;
       att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
       states *= att.Add();
     }
@@ -614,11 +621,12 @@ ADD Game::minimax() const {
       std::cout << "treatment?" << maximisingPlayer << std::endl;
       std::cout << "numTreatments" << numTreatments << std::endl;
       std::cout << "numMutations" << numMutations << std::endl;
+      std::cout << "calling backMax..." << std::endl;
       states = backMax(states); // should this be backMin if we support async networks?
       states = untreat(numTreatments, states);
+      std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
       states *= att.Add();
-
     }
 
     maximisingPlayer = !maximisingPlayer;

@@ -211,7 +211,7 @@ BDD Attractors::forwardReachableStates(const BDD& transitionBdd, const BDD& valu
 }
 
 BDD Attractors::immediatePredecessorStates(const BDD& transitionBdd, const BDD& valuesBdd) const {
-  BDD bdd = renameAddingPrimes(valuesBdd);    
+  BDD bdd = renameAddingPrimes(valuesBdd);
   bdd *= transitionBdd;
   return bdd.ExistAbstract(primeVariables);
 }
@@ -236,28 +236,83 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
 
   std::cout << "statesToKeep:" << std::endl;
   statesToKeep.PrintMinterm();
+
+  std::cout << "S:" << std::endl;
+  S.PrintMinterm();
     
   while (!S.IsZero()) {
-    BDD s = randomState(S) * statesToKeep; // should really be called variables to keep?
+    BDD sOriginal = randomState(S);
+    BDD s = sOriginal * statesToKeep; // should really be called variables to keep?
+    //BDD s = randomState(S) * S; // temp.. does this work?
 
-    for (std::vector<int>::size_type i = 0; i < ranges.size() /*10000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number, especially for Game
+    //    std::cout << "here1" << std::endl;
+
+    // TEMP!
+    for (std::vector<int>::size_type i = 0; i < ranges.size() /* * 10*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number, especially for Game
       BDD sP = immediateSuccessorStates(transitionBdd, s);
       s = randomState(sP) * statesToKeep;
+      //s = randomState(S) * S; // temp.. does this work?
     }
 
+    //std::cout << "here2" << std::endl;
+
+    // br doesn't seem to work..
     BDD fr = forwardReachableStates(transitionBdd, s);
-    BDD br = backwardReachableStates(transitionBdd, s);
+    BDD br = backwardReachableStates(transitionBdd, s); // how come this only seems to have one mut/treat configuration?
 
     BDD variablesToKeepNonZero = fr.ExistAbstract(nonPrimeVariables) * br.ExistAbstract(nonPrimeVariables); // print minterm
     BDD frIntersected = fr * variablesToKeepNonZero;
     BDD brIntersected = br * variablesToKeepNonZero;
 
+    //std::cout << "here3" << std::endl;
     // seems like we don't need brIntersected. frIntersected * !br would work
     if ((frIntersected * !brIntersected).IsZero()) {
-      attractors.push_back(fr);
+      std::cout << "pushing attractor" << std::endl;
+      //attractors.push_back(fr);
+
+      // temp, a set would be better
+      if (std::find(attractors.begin(), attractors.end(), frIntersected) == attractors.end()) {
+	attractors.push_back(frIntersected); // is this right?
+      }
+      else {
+	std::cout << "repeated attractor" << std::endl;
+      }
+      //      fr.PrintMinterm();
+
+      // std::cout << "frIntersected:" << std::endl;
+      // frIntersected.PrintMinterm();
+
+      // std::cout << "fr:" << std::endl;
+      // fr.PrintMinterm();
+
+      // std::cout << "br:" << std::endl;
+      // br.PrintMinterm();
+
+      // std::cout << "brIntersected:" << std::endl;
+      // brIntersected.PrintMinterm();
+
+      // std::cout << "s:" << std::endl;
+      // s.PrintMinterm();
+
+      
+      // std::cout << "frIntersected:" << std::endl;
+      // frIntersected.PrintMinterm();
+      // std::cout << "s" << std::endl;
+      // s.PrintMinterm();
+      // std::cout << "br" << std::endl;
+      // br.PrintMinterm();
+      // std::cout << "brIntersected" << std::endl;
+      // brIntersected.PrintMinterm();
+
     }
 
-    S *= !(s + br);
+    auto S_old = S;
+    S *= !(s + br); // would it be better here if i exist out statesToKeep? in theory should make no difference?
+    //S *= !(sOriginal + s + br); // temp
+    // should be safe to remove s under all configs. unclear why this is leading to a loop though
+    if (S == S_old) std::cout << "S unchanged!" << std::endl;
+    // std::cout << "S:" << std::endl;
+    // S.PrintMinterm();
   }
   return attractors;
 }
