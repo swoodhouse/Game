@@ -277,11 +277,15 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 
   auto components = connectedComponents();
   std::cout << "num connected components: " << components.size() << std::endl;
-  //_shuffle here_
+
+  // do i want to sort in ascending or descending order?
+  // std::sort(components.begin(), components.end(),
+  // 	    [](const std::vector<std::vector<std::vector<int>::size_type>>& a,
+  // 	       xconst std::vector<std::vector<std::vector<int>::size_type>>& b){ return a.size() < b.size(); });
+
   int vars_done = 0;
   int comp_num = 0;
   for (auto comp : components) {
-    //_shuffle here_
     BDD bdd = attractors.manager.bddOne();
     for (auto v : comp) {
       std::cout << "variables done:" << vars_done << std::endl;
@@ -329,8 +333,8 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
         }
       }
     }
-    comp_num++;
     std::cout << "adding connected component " << comp_num << std::endl;
+    comp_num++;
     tr *= bdd;
   }
 
