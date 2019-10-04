@@ -278,12 +278,14 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
   auto components = connectedComponents();
   std::cout << "num connected components: " << components.size() << std::endl;
   //_shuffle here_
+  int vars_done = 0;
+  int comp_num = 0;
   for (auto comp : components) {
     //_shuffle here_
-    int comp_num = 0;
     BDD bdd = attractors.manager.bddOne();
     for (auto v : comp) {
-      //std::cout << "variables done:" << i << std::endl;
+      std::cout << "variables done:" << vars_done << std::endl;
+      vars_done++;
       std::cout << "node " << v << std::endl;
       if (attractors.ranges[v] > 0) {
         const auto& iVars = attractors.qn.inputVars[v];
