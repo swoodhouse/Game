@@ -279,10 +279,10 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
   std::cout << "num connected components: " << components.size() << std::endl;
 
   // do i want to sort in ascending or descending order?
-  // std::sort(components.begin(), components.end(),
-  // 	    [](const std::vector<std::vector<std::vector<int>::size_type>>& a,
-  // 	       xconst std::vector<std::vector<std::vector<int>::size_type>>& b){ return a.size() < b.size(); });
-
+  std::sort(components.begin(), components.end(),
+   	    [](const std::vector<std::vector<int>::size_type>& a,
+   	       const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
+ 
   int vars_done = 0;
   int comp_num = 0;
   for (auto comp : components) {
