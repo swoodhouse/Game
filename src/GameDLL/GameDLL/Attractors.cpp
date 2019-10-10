@@ -239,19 +239,37 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
 
   // std::cout << "S:" << std::endl;
   // S.PrintMinterm();
-    
-  while (!S.IsZero()) {
-    BDD sOriginal = randomState(S);
-    BDD s = sOriginal * statesToKeep; // should really be called variables to keep?
-    //BDD s = randomState(S) * S; // temp.. does this work?
+  int i = 0;
+  while (!S.IsZero()) { // S will never be fully zero?????????
+    std::cout << "iteration " << i << std::endl;
+    i++;
+    //BDD sOriginal = randomState(S);
+    //BDD s = sOriginal * statesToKeep; // should really be called variables to keep?
+    BDD s = randomState(S) * S; // temp.. does this work? Yes, on simple benchmark
+    // NO IT DOESN'T WORK:
+    // std::cout << "sOriginal:" << std::endl;
+    // sOriginal.PrintMinterm();
+    // std::cout << "s:" << std::endl;
+    // s.PrintMinterm();
 
+    // std::cout << "S:" << std::endl;
+    // S.PrintMinterm();
+
+    // BDD sAlt = sOriginal * statesToKeep;
+    // std::cout << "sAlt:" << std::endl;
+    // sAlt.PrintMinterm();
+    
+    // temp
+    // if (!(sOriginal * !S).IsZero()) {
+    //   std::cout << "s - S is not zero!" << std::endl;
+    //}
     //    std::cout << "here1" << std::endl;
 
     // TEMP!
     for (std::vector<int>::size_type i = 0; i < ranges.size() /* * 10*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number, especially for Game
       BDD sP = immediateSuccessorStates(transitionBdd, s);
-      s = randomState(sP) * statesToKeep;
-      //s = randomState(S) * S; // temp.. does this work?
+      //s = randomState(sP) * statesToKeep;      
+      s = randomState(sP) * S; // temp.. does this work? YES ON SIMPLE BENCHMARK
     }
 
     //std::cout << "here2" << std::endl;
@@ -311,6 +329,14 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
     //S *= !(sOriginal + s + br); // temp
     // should be safe to remove s under all configs. unclear why this is leading to a loop though
     if (S == S_old) std::cout << "S unchanged!" << std::endl;
+
+    if (s.IsZero()) {
+      std::cout << "s == 0!" << std::endl;
+    }
+    if (br.IsZero()) {
+      std::cout << "br == 0!" << std::endl;
+    }
+    //    if (br.isO
     // std::cout << "S:" << std::endl;
     // S.PrintMinterm();
   }
