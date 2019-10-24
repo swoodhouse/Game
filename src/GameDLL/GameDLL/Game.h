@@ -45,7 +45,6 @@ struct Game {
   ADD untreat(int level, const ADD& states) const;
   void removeInvalidTreatmentBitCombinations(BDD& S) const;
   void removeInvalidMutationBitCombinations(BDD& S) const;
-  BDD representNonPrimedMutVars() const;
   ADD unmutate(int level, const ADD& states) const;
 
   Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,

@@ -95,17 +95,6 @@ std::vector<int> Game::chosenMutationsIndices() const {
   return v;
 }
 
-BDD Game::representNonPrimedMutVars() const {
-  BDD bdd = attractors.manager.bddOne();
-
-  for (int i : mutationVarsIndices()) {
-    BDD var = attractors.manager.bddVar(i);
-    bdd *= var;
-  }
-
-  return bdd;
-}
-
 void Game::removeInvalidTreatmentBitCombinations(BDD& S) const {
   int b = bits(oeVars.size() + 1);
   int theoreticalMax = (1 << b) - 1;
@@ -152,8 +141,7 @@ BDD Game::nMutations(int n) const {
   }
   else if (n == 1) {
     if (numMutations == 2) {
-      return (representSomeMutation(0) * representMutationNone(1)) +
-	(representSomeMutation(1) * representMutationNone(0));
+      return representSomeMutation(0) * representMutationNone(1); // new - lexicographically ordred
     }
     else if (numMutations == 1) {
       return representSomeMutation(0);
@@ -211,7 +199,7 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
   auto components = connectedComponents();
   std::cout << "num connected components: " << components.size() << std::endl;
 
-  // do i want to sort in ascending or descending order?
+  // do i want to sort in ascending or descending order? ascending
   std::sort(components.begin(), components.end(),
    	    [](const std::vector<std::vector<int>::size_type>& a,
    	       const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
@@ -253,7 +241,9 @@ BDD Game::buildMutantSyncQNTransitionRelation() const {
 	  }
   				
 	  int max = attractors.ranges[v];
-	  bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
+	  //bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, max), targetFunction);
+	  // temp! hard coding to one to match mathew's benchmark model
+	  bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 1), targetFunction);
 	}
 	else {
           auto oeIt = std::find(oeVars.begin(), oeVars.end(), v);
@@ -420,15 +410,21 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	
   BDD mutsAndTreats = treatment * nMutations(numMutations);
 
-  // temp. need this
-  // removeInvalidTreatmentBitCombinations(mutsAndTreats); // refacotr this out.. can be computed once too
-  // removeInvalidMutationBitCombinations(mutsAndTreats); // temp
-  //forceMutationLexicographicalOrdering(initial); // temp
-
+  std::cout << "mutationsBDD:" << std::endl;
+  nMutations(numMutations).PrintMinterm();
+  
   BDD statesToRemove = !mutsAndTreats;
   std::list<BDD> loops = attractors.attractors(mutantTransitionRelation, statesToRemove, mutsAndTreats);
   std::cout << "loops.len:" << loops.size() << std::endl; // 64..?
-	
+
+  // temp............................ print these out to debug
+  // int j = 0;
+  // for (auto loop : loops) {
+  //   std::cout << "loop " << j << ":" << std::endl;
+  //   j++;
+  //   loop.PrintMinterm();
+  // }
+  
   int i = 0;
   for (const BDD& a : loops) {
     ADD scored = scoreLoop(a, scoreRelation);
@@ -448,6 +444,50 @@ BDD Game::representTreatmentVariables() const {
   return bdd;
 }
 
+// switching to the order matthew suggests - treatment goes last
+// have this:
+// height:5
+// treatment? 0, numMutations: 2
+// loops.len:289
+// height:4
+// treatment? 1, numMutations 2
+// loops.len:292
+// treatment? 1, numMutations 1
+// loops.len:288
+// height:3
+// treatment? 0, numMutations 1
+// loops.len:288
+// height:2
+// treatment? 1, numMutations 1
+// loops.len:288
+// treatment? 1, numMutations 0
+// loops.len:164
+// height:1
+// treatment? 0, numMutations 0
+// loops.len:1
+// finishing
+
+// want exactly the same without h = 5
+// but switching maximising player and decreasing h gives an empty csv.. well it's not doing the correct ordering for some reason now:
+// in minimax
+// maximisingPlayer:1
+// height:4
+// treatment? 1, numMutations: 2
+// loops.len:292
+// height:3
+// treatment? 0, numMutations 2
+// loops.len:289
+// height:2
+// treatment? 1, numMutations 2
+// loops.len:292
+// treatment? 1, numMutations 1
+// loops.len:288
+// height:1
+// treatment? 0, numMutations 1
+// loops.len:288
+// finishing
+
+// this isn't really doing minimax, it's computing the game tree
 ADD Game::minimax() const {
   std::cout << "\n\n\nin minimax" << std::endl;
   int height = this->height;
@@ -455,57 +495,152 @@ ADD Game::minimax() const {
   int numMutations = this->numMutations;
   bool maximisingPlayer = this->maximisingPlayerLast;
 
-  maximisingPlayer = false; // temp..............
+  maximisingPlayer = false; // temp.............. this is how it originally was
+  //maximisingPlayer = true; // temp.............. this is how i should change to be with matthew's ordering
 
   std::cout << "maximisingPlayer:" << maximisingPlayer << std::endl;
   std::cout << "height:" << height << std::endl;
-  std::cout << "treatment?" << false << std::endl;
-  std::cout << "numTreatments: " << numTreatments << std::endl;
-  std::cout << "numMutations: " << numMutations << std::endl;
+  std::cout << "treatment? " << maximisingPlayer;
+  //std::cout << "numTreatments: " << numTreatments << std::endl;
+  std::cout << ", numMutations: " << numMutations << std::endl;
 
-  std::cout << "calling scoreAttractors..." << std::endl;
-  ADD states = scoreAttractors(false, numMutations);
+  //std::cout << "calling scoreAttractors..." << std::endl;
+  ADD states = scoreAttractors(maximisingPlayer, numMutations);
   height--;
-  maximisingPlayer = true; // temp..............
-	
+  maximisingPlayer = true; // temp.............. this is how it originally was
+  //maximisingPlayer = false; // temp.............. this is how i should change to be with matthew's ordering
+
+  // temp, print attractors from leaves
+  // std::ofstream csv;
+  // csv.open("LeafAttractors.csv", std::ios_base::app);
+  // csv << std::endl << prettyPrint(states) << std::endl;
+  
   for (; height > 0; height--) { // do i have an off by one error
     std::cout << "height:" << height << std::endl;
     if (maximisingPlayer) {
       // add t
-      std::cout << "treatment?" << maximisingPlayer << std::endl;
-      std::cout << "numTreatments" << numTreatments << std::endl;
-      std::cout << "numMutations" << numMutations << std::endl;
-      std::cout << "calling backMax..." << std::endl;
+      std::cout << "treatment? " << maximisingPlayer;
+      //std::cout << "numTreatments" << numTreatments << std::endl;
+      std::cout << ", numMutations " << numMutations << std::endl;
+      //std::cout << "calling backMax..." << std::endl;
       states = backMax(states); // should this be backMin if we support async networks?
-      std::cout << "calling scoreAttractors..." << std::endl;
+      //std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
       states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // removing the treatment = 0 forcing variables
 		
       // then remove m...			
       numMutations--;
-      std::cout << "treatment?" << maximisingPlayer << std::endl;
-      std::cout << "numTreatments" << numTreatments << std::endl;
-      std::cout << "numMutations" << numMutations << std::endl;
-      std::cout << "calling backMax..." << std::endl;
+      std::cout << "treatment? " << maximisingPlayer;
+      //std::cout << "numTreatments" << numTreatments << std::endl;
+      std::cout << ", numMutations " << numMutations << std::endl;
+      //std::cout << "calling backMax..." << std::endl;
+
+      std::cout << "states mutation vars before backmax" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+      
       states = backMax(states); // should this be backMin if we support async networks?
+
+      // temp
+      std::cout << "states mutation vars before unmutate" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
       states = unmutate(numMutations, states);
-      std::cout << "calling scoreAttractors..." << std::endl;
+
+      
+      // temp
+      std::cout << "states mutation vars after unmutate" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
+      
+      //std::cout << "calling scoreAttractors..." << std::endl;
       att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+
+      // temp
+      std::cout << "att mutation vars" << std::endl;
+      att.ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
+      
       states *= att.Add();
+
+      std::cout << "states mutation vars after intersect" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
     }
 
     else {
       // remove t
       numTreatments--;
-      std::cout << "treatment?" << maximisingPlayer << std::endl;
-      std::cout << "numTreatments" << numTreatments << std::endl;
-      std::cout << "numMutations" << numMutations << std::endl;
-      std::cout << "calling backMax..." << std::endl;
+      std::cout << "treatment? " << maximisingPlayer;
+      //std::cout << "numTreatments" << numTreatments << std::endl;
+      std::cout << ", numMutations " << numMutations << std::endl;
+      //std::cout << "calling backMax..." << std::endl;
+
+      std::cout << "states mutation vars before backmax" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
       states = backMax(states); // should this be backMin if we support async networks?
+
+      std::cout << "states mutation vars before untreat" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
       states = untreat(numTreatments, states);
-      std::cout << "calling scoreAttractors..." << std::endl;
+
+      // HERE: at height 1 here we still have unequal chosen muts ...................................
+      std::cout << "states mutation vars after untreat" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm(); // this is wrong, the maxabstract
+      
+      //std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+
+      // temp
+      std::cout << "att mutation vars" << std::endl;
+      att.ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
+      // HERE............... this is where things stangely go wrong at height = 1. maybe mutliply the bddpatterns and see if that also happens
+      // temp, debugging
+      // it could be that i really can't reach att from one of the states that mutates unequal nodes...............................................
+      // except we have no mutations here, we are untreating ................
+      // snippet:
+// -100001-111-0101---1-1------------------------000001011001  2
+// --10000-111-0101-----1------------------------000001011001  2
+// --10001-111-0101---1-1------------------------000001011001  2
+// -001000-111-0101-----1------------------------000001011001  2
+// -001001-111-0101---1-1------------------------000001011001  2
+// 000-100-111-0101-----1------------------------000001011001  2
+// 000-101-111-0101---1-1------------------------000001011001  2
+// 000--10-111-0101-----1------------------------000001011001  2
+// 000--11-111-0101---1-1------------------------000001011001  2
+// 000000--0-------------------------------------000001101010  4
+// 000000--0-------------------------------------000001011010  3
+// 0000000010------------------------------------000001101010  8
+      // vs att:
+// 0000001100000000000000----------------------000000--------  1
+           
+      // if (height == 1) {
+      // 	std::cout << "at height 1, debugging. states:" << std::endl;
+      //   states.PrintMinterm();
+      // }
+      if (height == 1) {
+      	std::cout << "at height 1, debugging. att:" << std::endl;
+        att.PrintMinterm();
+
+	std::cout << "as an ADD:" << std::endl;
+	att.Add().PrintMinterm();
+      }
+
+      std::cout << "states mutation vars after intersect, but as a BDD" << std::endl;
+      (states.BddPattern() * att).ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
+      
       states *= att.Add();
+
+      // HERE: but here, at height 1, we do not, which makes no sense, just a multiplication....................................
+      std::cout << "states mutation vars after intersect" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
+      if (height == 1) {
+	std::cout << "at height 1, debugging. states:" << std::endl;
+        states.PrintMinterm();
+      }
     }
 
     maximisingPlayer = !maximisingPlayer;

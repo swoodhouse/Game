@@ -87,19 +87,12 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	ADD out = g.minimax();
 
 
-	// std::cout << "\nFinal output of minimax:" << std::endl;
-	// out.PrintMinterm();
+	std::cout << "\nFinal output of minimax:" << std::endl;
+	out.PrintMinterm();
 
-
-	// both of these blocks cause a crash
-	//std::cout << "Cudd_ReadNodeCount:" << Cudd_ReadNodeCount(g.attractors.manager.getManager()) << std::endl;
-	//std::cout << "Cudd_ReadSize:" << Cudd_ReadSize(g.attractors.manager.getManager()) << std::endl;
-
-	// the below causes the whole program to crash before even starting anything..
 	std::ofstream csv;
 	csv.open("Minimax.csv", std::ios_base::app);
 	csv << std::endl << g.prettyPrint(out) << std::endl;
-	//std::cout << g.prettyPrint(out) << std::endl;
 
     return 0;
 }

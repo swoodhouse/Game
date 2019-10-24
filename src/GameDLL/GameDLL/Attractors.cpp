@@ -227,118 +227,44 @@ BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& val
   return reachable;
 }
 
-// i don't think this is an optimal implementation, will do repeated work - if state a is ruled out under mutations X but not Y, will be run again under X and Y
+// statesToKeep no longer used
 std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& statesToKeep) const {
   std::list<BDD> attractors;
   BDD S = manager.bddOne();
   removeInvalidBitCombinations(S);
   S *= !statesToRemove;
 
-  // std::cout << "statesToKeep:" << std::endl;
-  // statesToKeep.PrintMinterm();
-
-  // std::cout << "S:" << std::endl;
-  // S.PrintMinterm();
   int i = 0;
-  while (!S.IsZero()) { // S will never be fully zero?????????
-    std::cout << "iteration " << i << std::endl;
+  while (!S.IsZero()) {
+    //std::cout << "iteration " << i << std::endl;
     i++;
-    //BDD sOriginal = randomState(S);
-    //BDD s = sOriginal * statesToKeep; // should really be called variables to keep?
-    BDD s = randomState(S) * S; // temp.. does this work? Yes, on simple benchmark
-    // NO IT DOESN'T WORK:
-    // std::cout << "sOriginal:" << std::endl;
-    // sOriginal.PrintMinterm();
-    // std::cout << "s:" << std::endl;
-    // s.PrintMinterm();
-
-    // std::cout << "S:" << std::endl;
-    // S.PrintMinterm();
-
-    // BDD sAlt = sOriginal * statesToKeep;
-    // std::cout << "sAlt:" << std::endl;
-    // sAlt.PrintMinterm();
-    
-    // temp
-    // if (!(sOriginal * !S).IsZero()) {
-    //   std::cout << "s - S is not zero!" << std::endl;
-    //}
-    //    std::cout << "here1" << std::endl;
+    BDD s = randomState(S) * S;
 
     // TEMP!
-    for (std::vector<int>::size_type i = 0; i < ranges.size() /* * 10*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number, especially for Game
+    for (std::vector<int>::size_type i = 0; i < ranges.size()/* * 1000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number, especially for Game
       BDD sP = immediateSuccessorStates(transitionBdd, s);
-      //s = randomState(sP) * statesToKeep;      
-      s = randomState(sP) * S; // temp.. does this work? YES ON SIMPLE BENCHMARK
+      s = randomState(sP) * S;
     }
 
-    //std::cout << "here2" << std::endl;
-
-    // br doesn't seem to work..
     BDD fr = forwardReachableStates(transitionBdd, s);
-    BDD br = backwardReachableStates(transitionBdd, s); // how come this only seems to have one mut/treat configuration?
+    BDD br = backwardReachableStates(transitionBdd, s);
 
-    BDD variablesToKeepNonZero = fr.ExistAbstract(nonPrimeVariables) * br.ExistAbstract(nonPrimeVariables); // print minterm
+    BDD variablesToKeepNonZero = fr.ExistAbstract(nonPrimeVariables) * br.ExistAbstract(nonPrimeVariables);
     BDD frIntersected = fr * variablesToKeepNonZero;
     BDD brIntersected = br * variablesToKeepNonZero;
 
-    //std::cout << "here3" << std::endl;
     // seems like we don't need brIntersected. frIntersected * !br would work
     if ((frIntersected * !brIntersected).IsZero()) {
-      std::cout << "pushing attractor" << std::endl;
-      //attractors.push_back(fr);
-
-      // temp, a set would be better
+      // temp, a set would be better. remove this, should never hit
       if (std::find(attractors.begin(), attractors.end(), frIntersected) == attractors.end()) {
 	attractors.push_back(frIntersected); // is this right?
       }
       else {
 	std::cout << "repeated attractor" << std::endl;
       }
-      //      fr.PrintMinterm();
-
-      // std::cout << "frIntersected:" << std::endl;
-      // frIntersected.PrintMinterm();
-
-      // std::cout << "fr:" << std::endl;
-      // fr.PrintMinterm();
-
-      // std::cout << "br:" << std::endl;
-      // br.PrintMinterm();
-
-      // std::cout << "brIntersected:" << std::endl;
-      // brIntersected.PrintMinterm();
-
-      // std::cout << "s:" << std::endl;
-      // s.PrintMinterm();
-
-      
-      // std::cout << "frIntersected:" << std::endl;
-      // frIntersected.PrintMinterm();
-      // std::cout << "s" << std::endl;
-      // s.PrintMinterm();
-      // std::cout << "br" << std::endl;
-      // br.PrintMinterm();
-      // std::cout << "brIntersected" << std::endl;
-      // brIntersected.PrintMinterm();
-
     }
 
-    auto S_old = S;
-    S *= !(s + br); // would it be better here if i exist out statesToKeep? in theory should make no difference?
-    //S *= !(sOriginal + s + br); // temp
-    // should be safe to remove s under all configs. unclear why this is leading to a loop though
-    if (S == S_old) std::cout << "S unchanged!" << std::endl;
-
-    if (s.IsZero()) {
-      std::cout << "s == 0!" << std::endl;
-    }
-    if (br.IsZero()) {
-      std::cout << "br == 0!" << std::endl;
-    }
-    //    if (br.isO
-    // std::cout << "S:" << std::endl;
-    // S.PrintMinterm();
+    S *= !(s + br);
   }
   return attractors;
 }
