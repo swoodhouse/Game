@@ -410,8 +410,8 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	
   BDD mutsAndTreats = treatment * nMutations(numMutations);
 
-  std::cout << "mutationsBDD:" << std::endl;
-  nMutations(numMutations).PrintMinterm();
+  // std::cout << "mutationsBDD:" << std::endl;
+  // nMutations(numMutations).PrintMinterm();
   
   BDD statesToRemove = !mutsAndTreats;
   std::list<BDD> loops = attractors.attractors(mutantTransitionRelation, statesToRemove, mutsAndTreats);
@@ -462,6 +462,16 @@ ADD Game::minimax() const {
 
   std::cout << "calling scoreAttractors..." << std::endl;
   ADD states = scoreAttractors(false, numMutations);
+
+  // temp, debugging
+  std::cout << "states muts/treats/chosen vars at very beginning:" << std::endl;
+  states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+  
+  // temp, debugging
+  std::ofstream csv;
+  csv.open("Minimax_level_" + std::to_string(height) + ".csv", std::ios_base::app);
+  csv << std::endl << prettyPrint(states) << std::endl;
+
   height--;
   maximisingPlayer = true; // temp..............
 	
@@ -475,17 +485,47 @@ ADD Game::minimax() const {
       std::cout << "calling backMax..." << std::endl;
 
       // temp, testing
-      BDD oldStates = states.BddPattern();
+      //BDD oldStates = states.BddPattern();
       
       states = backMax(states); // should this be backMin if we support async networks?
+
+      // temp, debugging
+      std::cout << "states muts/treats/chosen vars after backMax:" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
+      
       std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+
+      // temp, debugging
+      std::ofstream csv2;
+      csv2.open("Minimax_level_" + std::to_string(height) + "_a.csv", std::ios_base::app);
+      csv2 << std::endl << prettyPrint(att.Add()) << std::endl;
+
+
       states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // removing the treatment = 0 forcing variables
 
+      // temp, debugging
+      std::cout << "states muts/treats/chosen vars after MaxAbstract out treatments and intersecting att:" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
+      
       // temp, testing
-      BDD testStates = att.ExistAbstract(representTreatmentVariables()) * representTreatmentNone();
-      testStates = attractors.forwardReachableStates(mutantTransitionRelation, testStates);
-      std::cout << "are forward test states contained in original states? " << (testStates * !oldStates).IsZero() << std::endl;
+      // BDD testStates = att.ExistAbstract(representTreatmentVariables()) * representTreatmentNone();
+      // testStates = attractors.forwardReachableStates(mutantTransitionRelation, testStates);
+      // // this seems to always be false on benchmark
+      // // and actually, most the time on the simple-benchark
+      // std::cout << ">>> are forward test states contained in original states? " << (testStates * !oldStates).IsZero() << std::endl;
+      // std::cout << "(testStates * !oldStates):" << std::endl;
+      // (testStates * !oldStates).PrintMinterm();
+      // std::cout << "oldStates:" << std::endl;
+      // oldStates.PrintMinterm();
+      // std::cout << "testStates:" << std::endl;
+      // testStates.PrintMinterm();
+      // std::cout << "(oldStates * !testStates):" << std::endl;
+      // (oldStates * !testStates).PrintMinterm();
+
+	
       // they should be.. because we have computed attractors from all possible states
 
 		
@@ -497,11 +537,44 @@ ADD Game::minimax() const {
       std::cout << "calling backMax..." << std::endl;
 
       states = backMax(states); // should this be backMin if we support async networks?
+
+      // temp, debugging
+      std::cout << "states muts/treats/chosen vars after backMax:" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
+      
+      // temp, testing
+      // BDD testBackStates = attractors.backwardReachableStates(mutantTransitionRelation, states.BddPattern());
+      // std::cout << "does backMax = backward?" << (testBackStates == states.BddPattern()) << std::endl;
+
+
+      // std::cout << "states before unmutate:" << std::endl;
+      // states.PrintMinterm();
+      
       states = unmutate(numMutations, states);
+
+
+      // temp, debugging
+      std::cout << "states muts/treats/chosen vars after unmutate:" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
+      
+      // std::cout << "states after unmutate:" << std::endl;
+      // states.PrintMinterm();
+      
       std::cout << "calling scoreAttractors..." << std::endl;
       att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
       
+      // temp, debugging
+      std::ofstream csv3;
+      csv3.open("Minimax_level_" + std::to_string(height) + "_b.csv", std::ios_base::app);
+      csv3 << std::endl << prettyPrint(att.Add()) << std::endl;
+      
       states *= att.Add();
+
+        // temp, debugging
+      std::cout << "states muts/treats/chosen vars after intersection with att:" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
     }
 
     else {
@@ -513,21 +586,54 @@ ADD Game::minimax() const {
       std::cout << "calling backMax..." << std::endl;
 
       // temp, testing
-      BDD oldStates = states.BddPattern();
+      // BDD oldStates = states.BddPattern();
 
       states = backMax(states); // should this be backMin if we support async networks?
+
+      // temp, debugging
+      std::cout << "states muts/treats/chosen vars after backMax:" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
+      
       states = untreat(numTreatments, states);
+
+      // temp, debugging
+      std::cout << "states muts/treats/chosen vars after untreat:" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
 
       std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
 
+      // temp, debugging
+      std::ofstream csv2;
+      csv2.open("Minimax_level_" + std::to_string(height) + ".csv", std::ios_base::app);
+      csv2 << std::endl << prettyPrint(att.Add()) << std::endl;
+
+      
       // temp, testing. treat the attractor and run forwards
-      BDD testStates = att.ExistAbstract(representTreatmentVariables()) * representSomeTreatment();
-      testStates = attractors.forwardReachableStates(mutantTransitionRelation, testStates);
-      std::cout << "are forward test states contained in original states? " << (testStates * !oldStates).IsZero() << std::endl;
+      // BDD testStates = att.ExistAbstract(representTreatmentVariables()) * representSomeTreatment();
+      // testStates = attractors.forwardReachableStates(mutantTransitionRelation, testStates);
+      // // this seems to always be false on benchmark
+      // // and actually, most the time on the simple-benchark
+      // std::cout << ">>> are forward test states contained in original states? " << (testStates * !oldStates).IsZero() << std::endl;
+      // std::cout << "(testStates * !oldStates):" << std::endl;
+      // (testStates * !oldStates).PrintMinterm();
+      // std::cout << "oldStates:" << std::endl;
+      // oldStates.PrintMinterm();
+      // std::cout << "testStates:" << std::endl;
+      // testStates.PrintMinterm();
+      // std::cout << "(oldStates * !testStates):" << std::endl;
+      // (oldStates * !testStates).PrintMinterm();
+      
       // they should be.. because we have computed attractors from all possible states
 
-      states *= att.Add();
+      states *= att.Add(); // if they are disappearing somewhere here could it be that some combos lead to a zero bdd attractor..
+
+      // temp, debugging
+      std::cout << "states muts/treats/chosen vars after intersection with att:" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
     }
 
     maximisingPlayer = !maximisingPlayer;
