@@ -572,6 +572,9 @@ ADD Game::minimax() const {
       
       states *= att.Add();
 
+      std::cout << "att muts/treats/chosen vars:" << std::endl;
+      att.ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
         // temp, debugging
       std::cout << "states muts/treats/chosen vars after intersection with att:" << std::endl;
       states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
