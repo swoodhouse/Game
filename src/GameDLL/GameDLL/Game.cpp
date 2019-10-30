@@ -205,37 +205,80 @@ ADD Game::untreat(int level, const ADD& states) const {
     permute[n + i] = n + j;
   }
 
+  // new, bug fix: abstract out the actual QN variable that was treated, too.
+  // rename to primed each var in oeVars
+  for (int treatVar : oeVars) {
+    permute[treatVar] = treatVar + attractors.numUnprimedBDDVars;
+  }
+
   ADD permuted = states.Permute(&permute[0]);
 
-  // new, bug fix:
-  // abstract out the actual QN variable that was treated, too
-  // maxabstract fine in a sync network, i think
-
-  std::cout << "here1" << std::endl;
-  BDD toAbstract = attractors.manager.bddOne();
-  for (int treatVar : oeVars) {
-    toAbstract *= attractors.manager.bddVar(treatVar);
-  }
-  
-  std::cout << "toAbstract:" << std::endl;
-  toAbstract.PrintMinterm();
-
-  std::cout << "states before permuting:" << std::endl;
-  states.PrintMinterm();
-  
-  // std::cout << "states before abstracting treatvars:" << std::endl;
-  // permuted.PrintMinterm();
-
-  // std::cout << "and after:" << std::endl;
-  // permuted.MaxAbstract(toAbstract.Add()).PrintMinterm();
-  
-  return permuted.MaxAbstract(toAbstract.Add());
-
-  // the above does not work. a better idea: rename to primed each var in oeVars,
+  // new, bug fix: then multiply by a transition ADD that selectively existentially quantifies
   // then mult by (If representChosenTreatment(j, level) then qnvar(j) = 0 or 1 or 2 or 3 or ... else qnvar(j) = qnvar'(j) for all j in oeVars)
+  BDD abstractRelation = treatmentAbstractRelation(level);
+  ADD abstracted = permuted * abstractRelation.Add();
+  
+  // then abstract out the primed vars
+  return abstracted.MaxAbstract(attractors.primeVariables.Add());
 }
 
-ADD Game::unmutate(int level, const ADD& states) const {
+BDD Game::treatmentAbstractRelation(int level) const {  
+  BDD abstractRelation = attractors.manager.bddOne();
+  for (int treatIndex = 0; treatIndex < oeVars.size(); treatIndex++) { // size_type not int 
+    int treatVar = oeVars[treatIndex];
+    BDD disjunction = attractors.manager.bddOne(); // could this be written as an exist, or does it even need to be anythign at all.. probably can use an implication rather than an Ite
+    BDD equality = attractors.manager.bddOne();
+
+    for (int val = 0; val <= attractors.ranges[treatVar]; val++) {
+      equality *= logicalEquivalence(attractors.representUnprimedVarQN(treatVar, val),
+				     attractors.representPrimedVarQN(treatVar, val));
+    }
+    
+    abstractRelation *= representChosenTreatment(level, treatIndex).Ite(disjunction, equality); // not level + 1 or level - 1?
+  }
+  
+  return abstractRelation;
+}
+
+BDD Game::mutationAbstractRelation(int level) const {
+  BDD abstractRelation = attractors.manager.bddOne();
+  for (int mutIndex = 0; mutIndex < koVars.size(); mutIndex++) { // size_type not int
+    int mutVar = oeVars[mutIndex];
+    BDD disjunction = attractors.manager.bddOne(); // could this be written as an exist, or does it even need to be anythign at all.. probably can use an implication rather than an Ite
+    BDD equality = attractors.manager.bddOne();
+
+    for (int val = 0; val <= attractors.ranges[mutVar]; val++) {
+      equality *= logicalEquivalence(attractors.representUnprimedVarQN(mutVar, val),
+				     attractors.representPrimedVarQN(mutVar, val));
+    }
+
+    abstractRelation *= representChosenMutation(level, mutIndex).Ite(disjunction, equality); // not level + 1 or level - 1?
+  }
+  
+  return abstractRelation;
+}
+
+// abstracts based on not last chosen treatment but currently 
+BDD Game::treatmentAbstractRelation2() const {  
+  BDD abstractRelation = attractors.manager.bddOne();
+  for (int treatIndex = 0; treatIndex < oeVars.size(); treatIndex++) { // size_type not int 
+    int treatVar = oeVars[treatIndex];
+    BDD disjunction = attractors.manager.bddOne(); // could this be written as an exist, or does it even need to be anythign at all.. probably can use an implication rather than an Ite
+    BDD equality = attractors.manager.bddOne();
+
+    for (int val = 0; val <= attractors.ranges[treatVar]; val++) {
+      equality *= logicalEquivalence(attractors.representUnprimedVarQN(treatVar, val),
+				     attractors.representPrimedVarQN(treatVar, val));
+    }
+    
+    abstractRelation *= representTreatment(treatIndex).Ite(disjunction, equality); // not level + 1 or level - 1?
+  }
+  
+  return abstractRelation;
+}
+
+// this may have copy and paste errors
+ADD Game::unmutate(int level, const ADD& states) const { 
   std::vector<int> permute(chosenMutationsIndices().back() + 1);
   std::iota(permute.begin(), permute.end(), 0);
 
@@ -245,21 +288,20 @@ ADD Game::unmutate(int level, const ADD& states) const {
   for (int n = 0; n < b; n++) { // duplication
     permute[n + i] = n + j;
   }
+  
+  //new, bug fix: abstract out the actual QN variable that was mutated, too.
+  for (int mutVar : koVars) {
+    permute[mutVar] = mutVar + attractors.numUnprimedBDDVars;
+  }
 
   ADD permuted = states.Permute(&permute[0]);
 
   // new, bug fix:
-  BDD toAbstract = attractors.manager.bddOne();
-  for (int mutVar : koVars) {
-    toAbstract *= attractors.manager.bddVar(mutVar);
-  }
+  BDD abstractRelation = mutationAbstractRelation(level);
+  ADD abstracted = permuted * abstractRelation.Add();
   
-  std::cout << "toAbstract:" << std::endl;
-  toAbstract.PrintMinterm();
-  
-  return permuted.MaxAbstract(toAbstract.Add());
-
-  // the above does not work. see above for a real fix
+  // then abstract out the primed vars
+  return abstracted.MaxAbstract(attractors.primeVariables.Add());
 }
 
 BDD Game::buildMutantSyncQNTransitionRelation() const {
@@ -574,7 +616,25 @@ ADD Game::minimax() const {
       csv2 << std::endl << prettyPrint(att.Add()) << std::endl;
 
 
-      states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // removing the treatment = 0 forcing variables
+
+        // new, bug fix...............................
+  std::vector<int> permute(chosenMutationsIndices().back() + 1);
+  std::iota(permute.begin(), permute.end(), 0);
+  // new, bug fix: abstract out the actual QN variable that was treated, too.
+  // rename to primed each var in oeVars
+  for (int treatVar : oeVars) {
+    permute[treatVar] = treatVar + attractors.numUnprimedBDDVars;
+  }
+  states = states.Permute(&permute[0]);
+
+// selectively exist out the QN var that is actually treated
+  states *= treatmentAbstractRelation2().Add();
+  
+  // then abstract out the primed vars
+  states = states.MaxAbstract(attractors.primeVariables.Add());
+
+  //////////////////////
+  states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // removing the treatment = 0 forcing variables
 
       // temp, debugging
       // std::cout << "states muts/treats/chosen vars after MaxAbstract out treatments and intersecting att:" << std::endl;
