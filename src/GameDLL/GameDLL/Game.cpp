@@ -565,16 +565,18 @@ ADD Game::minimax() const {
   int numMutations = this->numMutations;
   bool maximisingPlayer = this->maximisingPlayerLast;
 
-  maximisingPlayer = false; // temp..............
+  //maximisingPlayer = false; // temp..............
+  // new, flipping this to be in line with Matthew
+  maximisingPlayer = true;
 
   std::cout << "maximisingPlayer:" << maximisingPlayer << std::endl;
   std::cout << "height:" << height << std::endl;
-  std::cout << "treatment?" << false << std::endl;
+  std::cout << "treatment?" << maximisingPlayer << std::endl;
   std::cout << "numTreatments: " << numTreatments << std::endl;
   std::cout << "numMutations: " << numMutations << std::endl;
 
   std::cout << "calling scoreAttractors..." << std::endl;
-  ADD states = scoreAttractors(false, numMutations);
+  ADD states = scoreAttractors(maximisingPlayer, numMutations);
 
   // temp, debugging
   // std::cout << "states muts/treats/chosen vars at very beginning:" << std::endl;
@@ -591,22 +593,27 @@ ADD Game::minimax() const {
   for (; height > 0; height--) { // do i have an off by one error
     std::cout << "height:" << height << std::endl;
     if (maximisingPlayer) {
-      // add t
-      std::cout << "treatment?" << maximisingPlayer << std::endl;
-      std::cout << "numTreatments" << numTreatments << std::endl;
-      std::cout << "numMutations" << numMutations << std::endl;
-      std::cout << "calling backMax..." << std::endl;
-
       // temp, testing
       //BDD oldStates = states.BddPattern();
       
-      states = backMax(states); // should this be backMin if we support async networks?
+
 
       // temp, debugging
       // std::cout << "states muts/treats/chosen vars after backMax:" << std::endl;
       // states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
 
       
+      // new, bringing in line with Matthew's model
+      if (height < this->height - 1) {
+      // add t
+      std::cout << "treatment?" << maximisingPlayer << std::endl;
+      std::cout << "numTreatments" << numTreatments << std::endl;
+      std::cout << "numMutations" << numMutations << std::endl;
+      std::cout << "calling backMax..." << std::endl;
+
+
+	states = backMax(states); // should this be backMin if we support async networks?
+
       std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
 
@@ -615,9 +622,7 @@ ADD Game::minimax() const {
       csv2.open("Minimax_level_" + std::to_string(height) + "_a.csv", std::ios_base::app);
       csv2 << std::endl << prettyPrint(att.Add()) << std::endl;
 
-
-
-        // new, bug fix...............................
+	// new, bug fix...............................
   std::vector<int> permute(chosenMutationsIndices().back() + 1);
   std::iota(permute.begin(), permute.end(), 0);
   // new, bug fix: abstract out the actual QN variable that was treated, too.
@@ -634,8 +639,10 @@ ADD Game::minimax() const {
   states = states.MaxAbstract(attractors.primeVariables.Add());
 
   //////////////////////
-  states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // removing the treatment = 0 forcing variables
 
+
+  states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // removing the treatment = 0 forcing variables
+    }
       // temp, debugging
       // std::cout << "states muts/treats/chosen vars after MaxAbstract out treatments and intersecting att:" << std::endl;
       // states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
@@ -694,7 +701,7 @@ ADD Game::minimax() const {
       // states.PrintMinterm();
       
       std::cout << "calling scoreAttractors..." << std::endl;
-      att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+      BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
       
       // temp, debugging
       std::ofstream csv3;
@@ -713,6 +720,7 @@ ADD Game::minimax() const {
 
     else {
       // remove t
+
       numTreatments--;
       std::cout << "treatment?" << maximisingPlayer << std::endl;
       std::cout << "numTreatments" << numTreatments << std::endl;
