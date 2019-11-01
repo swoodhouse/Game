@@ -194,6 +194,24 @@ BDD Game::nMutations(int n) const {
 ADD Game::untreat(int level, const ADD& states) const {
   // this has the effect of remembering the treatment by storing it in remember@level and removing treatment var
 
+  // is the result the same if i switch to relation2()?
+  // BDD abstractRelation = treatmentAbstractRelation2();
+  // ADD abstracted = states * abstractRelation.Add();
+
+  BDD treatedQNvars = attractors.manager.bddOne();
+  for (int i = 0; i < attractors.numUnprimedBDDVars; i++) {
+    if (std::find(oeVars.begin(), oeVars.end(), i) == oeVars.end()) {
+      treatedQNvars *= attractors.manager.bddVar(i);
+
+      thi could not be more wrong
+    }
+  }
+
+  std::cout << "treated QN vars before untreating:" << std::endl;
+
+  states.MaxAbstract(treatedQNvars.Add()).PrintMinterm();
+
+  
   std::vector<int> permute(chosenMutationsIndices().back() + 1);
   std::iota(permute.begin(), permute.end(), 0);
 
@@ -208,6 +226,7 @@ ADD Game::untreat(int level, const ADD& states) const {
   // new, bug fix: abstract out the actual QN variable that was treated, too.
   // rename to primed each var in oeVars
   for (int treatVar : oeVars) {
+    this is also so wrong..
     permute[treatVar] = treatVar + attractors.numUnprimedBDDVars;
   }
 
@@ -215,11 +234,22 @@ ADD Game::untreat(int level, const ADD& states) const {
 
   // new, bug fix: then multiply by a transition ADD that selectively existentially quantifies
   // then mult by (If representChosenTreatment(j, level) then qnvar(j) = 0 or 1 or 2 or 3 or ... else qnvar(j) = qnvar'(j) for all j in oeVars)
+  // is the result the same if i switch to relation2()?
   BDD abstractRelation = treatmentAbstractRelation(level);
   ADD abstracted = permuted * abstractRelation.Add();
+  //abstracted = abstracted.Permute(&permute[0]);
+
+  //  wait... this won't work..
   
   // then abstract out the primed vars
-  return abstracted.MaxAbstract(attractors.primeVariables.Add());
+  abstracted = abstracted.MaxAbstract(attractors.primeVariables.Add());
+
+  std::cout << "treated QN vars after untreating:" << std::endl;
+
+  abstracted.MaxAbstract(treatedQNvars.Add()).PrintMinterm();
+  // put these calls elsewhere too
+  
+  return abstracted;
 }
 
 BDD Game::treatmentAbstractRelation(int level) const {  
@@ -271,14 +301,29 @@ BDD Game::treatmentAbstractRelation2() const {
 				     attractors.representPrimedVarQN(treatVar, val));
     }
     
-    abstractRelation *= representTreatment(treatIndex).Ite(disjunction, equality); // not level + 1 or level - 1?
+    abstractRelation *= representTreatment(treatIndex).Ite(disjunction, equality);
   }
   
   return abstractRelation;
 }
 
 // this may have copy and paste errors
-ADD Game::unmutate(int level, const ADD& states) const { 
+ADD Game::unmutate(int level, const ADD& states) const {
+
+
+  BDD mutatedQNvars = attractors.manager.bddOne();
+  for (int i = 0; i < attractors.numUnprimedBDDVars; i++) {
+    if (std::find(koVars.begin(), koVars.end(), i) == koVars.end()) {
+      mutatedQNvars *= attractors.manager.bddVar(i);
+    }
+  }
+
+  std::cout << "mutated QN vars before unmutating:" << std::endl;
+
+  states.MaxAbstract(mutatedQNvars.Add()).PrintMinterm();
+
+
+  
   std::vector<int> permute(chosenMutationsIndices().back() + 1);
   std::iota(permute.begin(), permute.end(), 0);
 
@@ -299,9 +344,16 @@ ADD Game::unmutate(int level, const ADD& states) const {
   // new, bug fix:
   BDD abstractRelation = mutationAbstractRelation(level);
   ADD abstracted = permuted * abstractRelation.Add();
+
+  abstracted = abstracted.MaxAbstract(attractors.primeVariables.Add());
+ 
+  std::cout << "mutated QN vars after unmutating:" << std::endl;
+
+  abstracted.MaxAbstract(mutatedQNvars.Add()).PrintMinterm();
+
   
   // then abstract out the primed vars
-  return abstracted.MaxAbstract(attractors.primeVariables.Add());
+  return abstracted;
 }
 
 BDD Game::buildMutantSyncQNTransitionRelation() const {
@@ -579,8 +631,10 @@ ADD Game::minimax() const {
   ADD states = scoreAttractors(maximisingPlayer, numMutations);
 
   // temp, debugging
+  std::cout << "states muts/treats/chosen vars at very beginning:" << std::endl;
+  states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
   // std::cout << "states muts/treats/chosen vars at very beginning:" << std::endl;
-  // states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+  // states.MaxAbstract(attractors.nonPrimeVariables.Add()).PrintMinterm();
   
   // temp, debugging
   std::ofstream csv;
@@ -622,6 +676,18 @@ ADD Game::minimax() const {
       csv2.open("Minimax_level_" + std::to_string(height) + "_a.csv", std::ios_base::app);
       csv2 << std::endl << prettyPrint(att.Add()) << std::endl;
 
+      // temp, debugging
+  BDD treatedQNvars = attractors.manager.bddOne();
+  for (int i = 0; i < attractors.numUnprimedBDDVars; i++) {
+    if (std::find(oeVars.begin(), oeVars.end(), i) == oeVars.end()) {
+      treatedQNvars *= attractors.manager.bddVar(i);
+    }
+  }
+
+  std::cout << "treated QN vars before untreating (abstractrel2):" << std::endl;
+
+  states.MaxAbstract(treatedQNvars.Add()).PrintMinterm();
+
 	// new, bug fix...............................
   std::vector<int> permute(chosenMutationsIndices().back() + 1);
   std::iota(permute.begin(), permute.end(), 0);
@@ -634,38 +700,27 @@ ADD Game::minimax() const {
 
 // selectively exist out the QN var that is actually treated
   states *= treatmentAbstractRelation2().Add();
-  
+
   // then abstract out the primed vars
   states = states.MaxAbstract(attractors.primeVariables.Add());
+
+  
+  std::cout << "treated QN vars after untreating (abstractrel2):" << std::endl;
+
+  states.MaxAbstract(treatedQNvars.Add()).PrintMinterm();
 
   //////////////////////
 
 
   states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // removing the treatment = 0 forcing variables
+
+  //temp, debugging
+      std::cout << "states muts/treats/chosen vars after MaxAbstract out treatments and intersecting att:" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
     }
-      // temp, debugging
-      // std::cout << "states muts/treats/chosen vars after MaxAbstract out treatments and intersecting att:" << std::endl;
-      // states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
-
       
-      // temp, testing
-      // BDD testStates = att.ExistAbstract(representTreatmentVariables()) * representTreatmentNone();
-      // testStates = attractors.forwardReachableStates(mutantTransitionRelation, testStates);
-      // // this seems to always be false on benchmark
-      // // and actually, most the time on the simple-benchark
-      // std::cout << ">>> are forward test states contained in original states? " << (testStates * !oldStates).IsZero() << std::endl;
-      // std::cout << "(testStates * !oldStates):" << std::endl;
-      // (testStates * !oldStates).PrintMinterm();
-      // std::cout << "oldStates:" << std::endl;
-      // oldStates.PrintMinterm();
-      // std::cout << "testStates:" << std::endl;
-      // testStates.PrintMinterm();
-      // std::cout << "(oldStates * !testStates):" << std::endl;
-      // (oldStates * !testStates).PrintMinterm();
-
-	
-      // they should be.. because we have computed attractors from all possible states
-
+      
 		
       // then remove m... representNonPrimedMutVars() can be removed...........			
       numMutations--;
@@ -677,29 +732,18 @@ ADD Game::minimax() const {
       states = backMax(states); // should this be backMin if we support async networks?
 
       // temp, debugging
-      // std::cout << "states muts/treats/chosen vars after backMax:" << std::endl;
-      // states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+      std::cout << "states muts/treats/chosen vars after backMax:" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
 
-      
-      // temp, testing
-      // BDD testBackStates = attractors.backwardReachableStates(mutantTransitionRelation, states.BddPattern());
-      // std::cout << "does backMax = backward?" << (testBackStates == states.BddPattern()) << std::endl;
-
-
-      // std::cout << "states before unmutate:" << std::endl;
-      // states.PrintMinterm();
-      
+     
       states = unmutate(numMutations, states);
 
 
       // temp, debugging
-      // std::cout << "states muts/treats/chosen vars after unmutate:" << std::endl;
-      // states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+      std::cout << "states muts/treats/chosen vars after unmutate:" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
 
-      
-      // std::cout << "states after unmutate:" << std::endl;
-      // states.PrintMinterm();
-      
+            
       std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
       
@@ -733,12 +777,18 @@ ADD Game::minimax() const {
       states = backMax(states); // should this be backMin if we support async networks?
 
       // temp, debugging
-      // std::cout << "states muts/treats/chosen vars after backMax:" << std::endl;
-      // states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+      std::cout << "states muts/treats/chosen vars after backMax:" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
 
+      // std::cout << "states before untreat:" << std::endl;
+      // states.PrintMinterm();
       
       states = untreat(numTreatments, states);
 
+      // std::cout << "states after untreat:" << std::endl;
+      // states.PrintMinterm();
+      
+      
       // temp, debugging
       // std::cout << "states muts/treats/chosen vars after untreat:" << std::endl;
       // states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
@@ -752,29 +802,11 @@ ADD Game::minimax() const {
       csv2.open("Minimax_level_" + std::to_string(height) + ".csv", std::ios_base::app);
       csv2 << std::endl << prettyPrint(att.Add()) << std::endl;
 
-      
-      // temp, testing. treat the attractor and run forwards
-      // BDD testStates = att.ExistAbstract(representTreatmentVariables()) * representSomeTreatment();
-      // testStates = attractors.forwardReachableStates(mutantTransitionRelation, testStates);
-      // // this seems to always be false on benchmark
-      // // and actually, most the time on the simple-benchark
-      // std::cout << ">>> are forward test states contained in original states? " << (testStates * !oldStates).IsZero() << std::endl;
-      // std::cout << "(testStates * !oldStates):" << std::endl;
-      // (testStates * !oldStates).PrintMinterm();
-      // std::cout << "oldStates:" << std::endl;
-      // oldStates.PrintMinterm();
-      // std::cout << "testStates:" << std::endl;
-      // testStates.PrintMinterm();
-      // std::cout << "(oldStates * !testStates):" << std::endl;
-      // (oldStates * !testStates).PrintMinterm();
-      
-      // they should be.. because we have computed attractors from all possible states
-
       states *= att.Add(); // if they are disappearing somewhere here could it be that some combos lead to a zero bdd attractor..
 
       // temp, debugging
-      // std::cout << "states muts/treats/chosen vars after intersection with att:" << std::endl;
-      // states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+      std::cout << "states muts/treats/chosen vars after intersection with att:" << std::endl;
+      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
 
     }
 
