@@ -43,8 +43,6 @@ struct Game {
   BDD representChosenMutation(int level, int mutation) const;
   BDD nMutations(int n) const;
   ADD untreat(int level, const ADD& states) const;
-  void removeInvalidTreatmentBitCombinations(BDD& S) const; // remove?
-  void removeInvalidMutationBitCombinations(BDD& S) const; // remove?
   ADD unmutate(int level, const ADD& states) const;
 
   BDD treatmentAbstractRelation(int level) const;
