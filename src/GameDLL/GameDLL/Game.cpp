@@ -643,8 +643,8 @@ ADD Game::minimax() const {
   
   // temp, debugging
   std::ofstream csv;
-  csv.open("Minimax_level_" + std::to_string(height) + ".csv", std::ios_base::app);
-  csv << std::endl << prettyPrint(states) << std::endl;
+  csv.open("Minimax_level_" + std::to_string(height) + ".csv");
+  csv << prettyPrint(states) << std::endl;
 
   height--;
   maximisingPlayer = true; // temp..............
@@ -665,6 +665,7 @@ ADD Game::minimax() const {
       // new, bringing in line with Matthew's model
       if (height < this->height - 1) {
       // add t
+      std::cout << "a branch" << std::endl;
       std::cout << "treatment?" << maximisingPlayer << std::endl;
       std::cout << "numTreatments" << numTreatments << std::endl;
       std::cout << "numMutations" << numMutations << std::endl;
@@ -678,8 +679,8 @@ ADD Game::minimax() const {
 
       // temp, debugging
       std::ofstream csv2;
-      csv2.open("Minimax_level_" + std::to_string(height) + "_a.csv", std::ios_base::app);
-      csv2 << std::endl << prettyPrint(att.Add()) << std::endl;
+      csv2.open("Minimax_level_" + std::to_string(height) + "_a.csv");
+      csv2 << prettyPrint(att.Add()) << std::endl;
 
       // temp, debugging
   // BDD treatedQNvars = attractors.manager.bddOne();
@@ -744,6 +745,7 @@ ADD Game::minimax() const {
 		
       // then remove m... representNonPrimedMutVars() can be removed...........			
       numMutations--;
+      std::cout << "b branch" << std::endl;
       std::cout << "treatment?" << maximisingPlayer << std::endl;
       std::cout << "numTreatments" << numTreatments << std::endl;
       std::cout << "numMutations" << numMutations << std::endl;
@@ -769,8 +771,8 @@ ADD Game::minimax() const {
       
       // temp, debugging
       std::ofstream csv3;
-      csv3.open("Minimax_level_" + std::to_string(height) + "_b.csv", std::ios_base::app);
-      csv3 << std::endl << prettyPrint(att.Add()) << std::endl;
+      csv3.open("Minimax_level_" + std::to_string(height) + "_b.csv");
+      csv3 << prettyPrint(att.Add()) << std::endl;
       
       states *= att.Add();
 
@@ -819,8 +821,8 @@ ADD Game::minimax() const {
 
       // temp, debugging
       std::ofstream csv2;
-      csv2.open("Minimax_level_" + std::to_string(height) + ".csv", std::ios_base::app);
-      csv2 << std::endl << prettyPrint(att.Add()) << std::endl;
+      csv2.open("Minimax_level_" + std::to_string(height) + ".csv");
+      csv2 << prettyPrint(att.Add()) << std::endl;
 
       states *= att.Add(); // if they are disappearing somewhere here could it be that some combos lead to a zero bdd attractor..
 
