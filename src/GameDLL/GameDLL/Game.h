@@ -10,7 +10,8 @@ struct Game {
   int numUnprimedBDDVars;
   Attractors attractors;
  
-  /*const*/ BDD mutantTransitionRelation;
+  /*const*/ BDD mutantTransitionRelationAtt;
+  /*const*/ BDD mutantTransitionRelationBack;
   /*const*/ ADD scoreRelation;
 	
   static int calcNumMutations(int height, bool maximisingPlayerGoesLast);
@@ -32,7 +33,7 @@ struct Game {
   ADD scoreAttractors(bool maximisingPlayer, int numMutations) const;
   BDD representTreatmentVariables() const;
   std::string prettyPrint(const ADD & states) const;
-  BDD buildMutantSyncQNTransitionRelation() const;
+  BDD buildMutantSyncQNTransitionRelation(bool back) const;
   BDD representTreatment(int val) const;
   BDD representTreatmentNone() const;
   BDD representSomeTreatment() const;
@@ -65,7 +66,8 @@ struct Game {
     int temp = chosenMutationsIndices().back() + 1;
 
     attractors = Attractors(minVals, rangesV, qn, temp);    
-    mutantTransitionRelation = buildMutantSyncQNTransitionRelation();
+    mutantTransitionRelationAtt = buildMutantSyncQNTransitionRelation(false);
+    mutantTransitionRelationBack = buildMutantSyncQNTransitionRelation(true);
     scoreRelation = buildScoreRelation(apopVar);
   };
     
