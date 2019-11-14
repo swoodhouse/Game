@@ -214,6 +214,8 @@ let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatme
         | _ -> 0, 0
 
     let header = variables @
+                [for i in 1 .. numTreatments do yield sprintf "Treatment%i" i] @
+                [for i in 1 .. numMutations do yield sprintf "Mutation%i" i] @
                 [for i in 1 .. numTreatments do yield sprintf "chosenTreatment%i" i] @
                 [for i in 1 .. numMutations do yield sprintf "chosenMutation%i" i] @
                 ["Score"]

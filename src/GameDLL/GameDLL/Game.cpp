@@ -515,10 +515,28 @@ std::string Game::prettyPrint(const ADD& states) const {
       i += b;
     }
 
+    // new: get the mut and treat vars too
+    // need to add to the header too in the F# code..
+    i = treatmentVarIndices().front();
+    for (int v = 0; v < numTreatments; v++) {
+      int b = bits(oeVars.size() + 1);
+      auto val = fromBinary(line.substr(i, b), 0);
+      output.push_back(val);
+      i += b;
+    }
+
+    i = mutationVarsIndices().front();
+    for (int v = 0; v < numMutations; v++) {
+      int b = bits(koVars.size() + 1);
+      auto val = fromBinary(line.substr(i, b), 0);
+      output.push_back(val);
+      i += b;
+    }
+
     i = chosenTreatmentsIndices().front();
     for (int v = 0; v < numTreatments; v++) {
       int b = bits(oeVars.size() + 1);
-      auto val = fromBinary(line.substr(i, b), 0); //-1; // TEMP! we have to subtract one in current encoding
+      auto val = fromBinary(line.substr(i, b), 0);
       output.push_back(val);
       i += b;
     }
@@ -526,7 +544,7 @@ std::string Game::prettyPrint(const ADD& states) const {
     i = chosenMutationsIndices().front();
     for (int v = 0; v < numMutations; v++) {
       int b = bits(koVars.size() + 1);
-      auto val = fromBinary(line.substr(i, b), 0); // -1; // TEMP! we have to subtract one in current encoding
+      auto val = fromBinary(line.substr(i, b), 0);
       output.push_back(val);
       i += b;
     }
