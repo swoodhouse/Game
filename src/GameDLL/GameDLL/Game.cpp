@@ -249,26 +249,6 @@ BDD Game::mutationAbstractRelation(int level) const {
   return abstractRelation;
 }
 
-
-// abstracts based on not last chosen treatment but currently 
-BDD Game::treatmentAbstractRelation2() const {  
-  BDD abstractRelation = attractors.manager.bddOne();
-  for (int treatIndex = 0; treatIndex < oeVars.size(); treatIndex++) { // size_type not int 
-    int treatVar = oeVars[treatIndex];
-    BDD disjunction = attractors.manager.bddOne(); // could this be written as an exist, or does it even need to be anythign at all.. probably can use an implication rather than an Ite
-    BDD equality = attractors.manager.bddOne();
-
-    for (int val = 0; val <= attractors.ranges[treatVar]; val++) {
-      equality *= logicalEquivalence(attractors.representUnprimedVarQN(treatVar, val),
-				     attractors.representPrimedVarQN(treatVar, val));
-    }
-    
-    abstractRelation *= representTreatment(treatIndex).Ite(disjunction, equality);
-  }
-  
-  return abstractRelation;
-}
-
 ADD Game::unmutate(int level, const ADD& states) const { 
   std::vector<int> permute(chosenMutationsIndices().back() + 1);
   std::iota(permute.begin(), permute.end(), 0);
@@ -657,98 +637,128 @@ ADD Game::minimax() const {
 	std::cout << "numMutations" << numMutations << std::endl;
 	std::cout << "calling backMax..." << std::endl;
 
-
-	// can print before back too..
 	states = backMax(states); // should this be backMin if we support async networks?
 
-	// temp
-	std::ofstream csv3;
-	csv3.open("Minimax_level_" + std::to_string(height) + "_a_states_back.csv");
-	csv3 << prettyPrint(states) << std::endl;
-
-
-
-	
 	std::cout << "calling scoreAttractors..." << std::endl;
 	BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
 
 	// temp, debugging
 	std::ofstream csv2;
-	csv2.open("Minimax_level_" + std::to_string(height) + "_a_att.csv");
+	csv2.open("Minimax_level_" + std::to_string(height) + "_a.csv");
 	csv2 << prettyPrint(att.Add()) << std::endl;
 
-	// temp, debugging
-	// BDD treatedQNvars = attractors.manager.bddOne();
-	// for (int i = 0; i < attractors.numUnprimedBDDVars; i++) {
-	//   if (std::find(oeVars.begin(), oeVars.end(), i) == oeVars.end()) {
-	//     very wrong
-	//     treatedQNvars *= attractors.manager.bddVar(i);
-	//   }
-	// }
+ 
+	states = states.MaxAbstract(representTreatmentVariables().Add()) * att.Add(); // removing the treatment = 0 forcing variables
 
-	// std::cout << "treated QN vars before untreating (abstractrel2):" << std::endl;
-
-	// states.MaxAbstract(treatedQNvars.Add()).PrintMinterm();
-
-	// new, bug fix...............................
-	// new, bug fix: abstract out the actual QN variable that was treated, too.
-	// rename to primed each var in oeVars
-
-	std::vector<int> permute(chosenMutationsIndices().back() + 1);
-	std::iota(permute.begin(), permute.end(), 0);
-
-	int i = 0;
-	for (int var = 0; var < attractors.ranges.size(); var++) {
-	  int b = bits(attractors.ranges[var]);
-
-	  if (std::find(oeVars.begin(), oeVars.end(), var) != oeVars.end()) {
-	    for (int n = 0; n < b; n++) {
-	      permute[i] = i + attractors.numUnprimedBDDVars;
-	      i++;
-	    }
-	  }
-	  else {
-	    i += b;
-	  }
-	}
-
-  
-	states = states.Permute(&permute[0]);
-
-	// selectively exist out the QN var that is actually treated
-	states *= treatmentAbstractRelation2().Add();
-
-	// then abstract out the primed vars
-	states = states.MaxAbstract(attractors.primeVariables.Add());
-
-  
-	// std::cout << "treated QN vars after untreating (abstractrel2):" << std::endl;
-
-	// states.MaxAbstract(treatedQNvars.Add()).PrintMinterm();
-
-	//////////////////////
-
-
-	states = states.MaxAbstract(representTreatmentVariables().Add());  // removing the treatment = 0 forcing variables
-
-	// temp
-	std::ofstream csv4;
-	csv4.open("Minimax_level_" + std::to_string(height) + "_a_untreat.csv");
-	csv4 << prettyPrint(states) << std::endl;
-
-	states *= att.Add();
-
-	// temp
-	std::ofstream csvI;
-	csvI.open("Minimax_level_" + std::to_string(height) + "_a_intersect.csv");
-	csvI << prettyPrint(states) << std::endl;
-
-  
-	//temp, debugging
-	std::cout << "states muts/treats/chosen vars after MaxAbstract out treatments and intersecting att:" << std::endl;
-	states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+	std::ofstream csv3;
+	csv3.open("Minimax_level_" + std::to_string(height) + "_a_intersect.csv");
+	csv3 << prettyPrint(att.Add()) << std::endl;
 
       }
+
+
+
+      
+      // if (height < this->height - 1) {
+      // 	// add t
+      // 	std::cout << "a branch" << std::endl;
+      // 	std::cout << "treatment?" << maximisingPlayer << std::endl;
+      // 	std::cout << "numTreatments" << numTreatments << std::endl;
+      // 	std::cout << "numMutations" << numMutations << std::endl;
+      // 	std::cout << "calling backMax..." << std::endl;
+
+
+      // 	// can print before back too..
+      // 	states = backMax(states); // should this be backMin if we support async networks?
+
+      // 	// temp
+      // 	std::ofstream csv3;
+      // 	csv3.open("Minimax_level_" + std::to_string(height) + "_a_states_back.csv");
+      // 	csv3 << prettyPrint(states) << std::endl;
+
+
+
+	
+      // 	std::cout << "calling scoreAttractors..." << std::endl;
+      // 	BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+
+      // 	// temp, debugging
+      // 	std::ofstream csv2;
+      // 	csv2.open("Minimax_level_" + std::to_string(height) + "_a_att.csv");
+      // 	csv2 << prettyPrint(att.Add()) << std::endl;
+
+      // 	// temp, debugging
+      // 	// BDD treatedQNvars = attractors.manager.bddOne();
+      // 	// for (int i = 0; i < attractors.numUnprimedBDDVars; i++) {
+      // 	//   if (std::find(oeVars.begin(), oeVars.end(), i) == oeVars.end()) {
+      // 	//     very wrong
+      // 	//     treatedQNvars *= attractors.manager.bddVar(i);
+      // 	//   }
+      // 	// }
+
+      // 	// std::cout << "treated QN vars before untreating (abstractrel2):" << std::endl;
+
+      // 	// states.MaxAbstract(treatedQNvars.Add()).PrintMinterm();
+
+      // 	// new, bug fix...............................
+      // 	// new, bug fix: abstract out the actual QN variable that was treated, too.
+      // 	// rename to primed each var in oeVars
+
+      // 	std::vector<int> permute(chosenMutationsIndices().back() + 1);
+      // 	std::iota(permute.begin(), permute.end(), 0);
+
+      // 	int i = 0;
+      // 	for (int var = 0; var < attractors.ranges.size(); var++) {
+      // 	  int b = bits(attractors.ranges[var]);
+
+      // 	  if (std::find(oeVars.begin(), oeVars.end(), var) != oeVars.end()) {
+      // 	    for (int n = 0; n < b; n++) {
+      // 	      permute[i] = i + attractors.numUnprimedBDDVars;
+      // 	      i++;
+      // 	    }
+      // 	  }
+      // 	  else {
+      // 	    i += b;
+      // 	  }
+      // 	}
+
+  
+      // 	states = states.Permute(&permute[0]);
+
+      // 	// selectively exist out the QN var that is actually treated
+      // 	states *= treatmentAbstractRelation2().Add();
+
+      // 	// then abstract out the primed vars
+      // 	states = states.MaxAbstract(attractors.primeVariables.Add());
+
+  
+      // 	// std::cout << "treated QN vars after untreating (abstractrel2):" << std::endl;
+
+      // 	// states.MaxAbstract(treatedQNvars.Add()).PrintMinterm();
+
+      // 	//////////////////////
+
+
+      // 	states = states.MaxAbstract(representTreatmentVariables().Add());  // removing the treatment = 0 forcing variables
+
+      // 	// temp
+      // 	std::ofstream csv4;
+      // 	csv4.open("Minimax_level_" + std::to_string(height) + "_a_untreat.csv");
+      // 	csv4 << prettyPrint(states) << std::endl;
+
+      // 	states *= att.Add();
+
+      // 	// temp
+      // 	std::ofstream csvI;
+      // 	csvI.open("Minimax_level_" + std::to_string(height) + "_a_intersect.csv");
+      // 	csvI << prettyPrint(states) << std::endl;
+
+  
+      // 	//temp, debugging
+      // 	std::cout << "states muts/treats/chosen vars after MaxAbstract out treatments and intersecting att:" << std::endl;
+      // 	states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+
+      // }
       
       
 		

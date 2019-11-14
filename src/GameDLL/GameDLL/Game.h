@@ -47,7 +47,6 @@ struct Game {
   ADD unmutate(int level, const ADD& states) const;
 
   BDD treatmentAbstractRelation(int level) const;
-  BDD treatmentAbstractRelation2() const;
   BDD mutationAbstractRelation(int level) const;
   
   Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,
