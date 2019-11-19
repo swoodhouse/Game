@@ -120,7 +120,11 @@ BDD Game::nMutations(int n) const {
   }
   else if (n == 1) {
     if (numMutations == 2) {
-      return representSomeMutation(0) * representMutationNone(1); // new - lexicographically ordred
+      //return representSomeMutation(0) * representMutationNone(1); // testing
+
+      // how does moving from the above to the below break both mutations and treatments?
+      return ((representSomeMutation(0) * representMutationNone(1)) +
+              (representSomeMutation(1) * representMutationNone(0))); // new - not lexicographically ordered
     }
     else if (numMutations == 1) {
       return representSomeMutation(0);
@@ -130,7 +134,7 @@ BDD Game::nMutations(int n) const {
       throw std::runtime_error("nmutations > 2 not implemented");
     }
   }
-  else if (n == 2 && numMutations > 1) {
+  else if (n == 2 && numMutations == 2) {
     return (representSomeMutation(0) * representSomeMutation(1));
   }
   else {
@@ -518,15 +522,12 @@ std::string Game::prettyPrint(const ADD& states) const {
     // new: get the mut and treat vars too
     // need to add to the header too in the F# code..
     i = treatmentVarIndices().front();
-    for (int v = 0; v < numTreatments; v++) {
-      int b = bits(oeVars.size() + 1);
-      auto val = fromBinary(line.substr(i, b), 0);
-      output.push_back(val);
-      i += b;
-    }
+    int b = bits(oeVars.size() + 1);
+    auto val = fromBinary(line.substr(i, b), 0);
+    output.push_back(val);
 
     i = mutationVarsIndices().front();
-    for (int v = 0; v < numMutations; v++) {
+    for (int v = 0; v < numMutations; v++) { // is nMutations here correct??
       int b = bits(koVars.size() + 1);
       auto val = fromBinary(line.substr(i, b), 0);
       output.push_back(val);
@@ -564,6 +565,11 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
 	
   BDD mutsAndTreats = treatment * nMutations(numMutations);
 
+  // temp!!!!!!!!!!!!!!!!
+  //return treatment.Add();
+  //return nMutations(numMutations).Add();
+  //return mutsAndTreats.Add();
+  
   // std::cout << "mutationsBDD:" << std::endl;
   // nMutations(numMutations).PrintMinterm();
   
@@ -600,6 +606,28 @@ BDD Game::representTreatmentVariables() const {
 
 // this isn't really doing minimax, it's computing the game tree
 ADD Game::minimax() const {
+
+  std::cout << "attractorsIndices:" << std::endl;
+  for (int i : attractorsIndicies()) std::cout << i << " ";
+  std::cout << std::endl;
+
+  std::cout << "treatmentIndices:" << std::endl;
+  for (int i : treatmentVarIndices()) std::cout << i << " ";
+  std::cout << std::endl;
+
+  std::cout << "mutationIndices:" << std::endl;
+  for (int i : mutationVarsIndices()) std::cout << i << " ";
+  std::cout << std::endl;
+
+  std::cout << "chosenTreatmentindices:" << std::endl;
+  for (int i : chosenTreatmentsIndices()) std::cout << i << " ";
+  std::cout << std::endl;
+
+  std::cout << "chosenMutationsIndices:" << std::endl;
+  for (int i : chosenMutationsIndices()) std::cout << i << " ";
+  std::cout << std::endl;
+
+  
   std::cout << "\n\n\nin minimax" << std::endl;
   int height = this->height;
   int numTreatments = this->numTreatments;
