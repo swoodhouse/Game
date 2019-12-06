@@ -48,6 +48,12 @@ struct Game {
 
   BDD treatmentAbstractRelation(int level) const;
   BDD mutationAbstractRelation(int level) const;
+
+
+  BDD temp_mutate(const BDD& states, int level) const;
+  void testReachability(const BDD& att1, const BDD& att2, int level) const; // temp
+  void testTreatmentTransfer(int level, const ADD& treated, const ADD& untreated) const; // temp
+  void testMutationTransfer(int level, const ADD& mutated, const ADD& unmutated) const; // temp
   
   Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,
        bool maximisingPlayerGoesLast)

@@ -44,11 +44,11 @@ let extendQN qn mutations treatments = // eventually needs to be two classes of 
 
     // switching these.. ko should be rename mutation and oe treatment
     let extendTFwithKo (node : QN.node) (koNode : QN.node) = 
-        let range = snd node.range
         Expr.Times (Expr.Minus (Expr.Const 1, Expr.Var koNode.var), node.f)
     
     let extendTFwithOe (n : QN.node) (oeNode : QN.node) =
         let range = snd n.range
+        //let range = 1 // TEMP, FIXING OE TO 1 NOT MAX(RANGE)
         Expr.Plus(Expr.Times(Expr.Const range, Expr.Var oeNode.var), Expr.Times(n.f, Expr.Minus(Expr.Const 1, Expr.Var oeNode.var)))
 //    let extendTFwithKo (n : QN.node) (koNode : QN.node) = 
 //        let range = snd n.range

@@ -564,34 +564,16 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
   BDD treatment = applyTreatments ? representSomeTreatment() : representTreatmentNone();
 	
   BDD mutsAndTreats = treatment * nMutations(numMutations);
-
-  // temp!!!!!!!!!!!!!!!!
-  //return treatment.Add();
-  //return nMutations(numMutations).Add();
-  //return mutsAndTreats.Add();
-  
-  // std::cout << "mutationsBDD:" << std::endl;
-  // nMutations(numMutations).PrintMinterm();
   
   BDD statesToRemove = !mutsAndTreats;
   std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, statesToRemove, mutsAndTreats);
   std::cout << "loops.len:" << loops.size() << std::endl; // 64..?
-
-  // temp............................ print these out to debug
-  // int j = 0;
-  // for (auto loop : loops) {
-  //   std::cout << "loop " << j << ":" << std::endl;
-  //   j++;
-  //   loop.PrintMinterm();
-  // }
   
-  int i = 0;
   for (const BDD& a : loops) {
     ADD scored = scoreLoop(a, scoreRelation);
     states = states.Maximum(scored);
-    i++;
   }
-
+  
   return states;
 }
 
@@ -604,30 +586,89 @@ BDD Game::representTreatmentVariables() const {
   return bdd;
 }
 
-// this isn't really doing minimax, it's computing the game tree
-ADD Game::minimax() const {
+// temp
+BDD Game::temp_mutate(const BDD& states, int level) const {
+  // exist out just treatment vars
+  // multiply by nmuts
+  // hmmmmmm... no, has to be just one level
+  //BDD mutsAndTreats = treatment * nMutations(numMutations);
 
-  std::cout << "attractorsIndices:" << std::endl;
-  for (int i : attractorsIndicies()) std::cout << i << " ";
-  std::cout << std::endl;
-
-  std::cout << "treatmentIndices:" << std::endl;
-  for (int i : treatmentVarIndices()) std::cout << i << " ";
-  std::cout << std::endl;
-
-  std::cout << "mutationIndices:" << std::endl;
-  for (int i : mutationVarsIndices()) std::cout << i << " ";
-  std::cout << std::endl;
-
-  std::cout << "chosenTreatmentindices:" << std::endl;
-  for (int i : chosenTreatmentsIndices()) std::cout << i << " ";
-  std::cout << std::endl;
-
-  std::cout << "chosenMutationsIndices:" << std::endl;
-  for (int i : chosenMutationsIndices()) std::cout << i << " ";
-  std::cout << std::endl;
+  BDD oldMut = attractors.manager.bddOne();
+  int b = bits(koVars.size() + 1);
+  int i = mutationVarsIndices().front() + level * b;
+  for (int n = 0; n < b; n++) {
+    BDD var = attractors.manager.bddVar(i);
+    oldMut *= var;
+    i++;
+  }
 
   
+  
+  BDD newMut = representSomeMutation(level) ;
+  // is this good enough or does it have to be level | other levels
+  return states.ExistAbstract(oldMut) * newMut;
+}
+
+// also need temp_treat
+
+// temp
+void Game::testReachability(const BDD& att1, const BDD& att2, int level) const {
+  // what is this method supposed to do...
+  // 1. each att2 is in forward(mut(att1)), and in attractors(mut(att1)) // this is not true
+  // 2. mut(att1) is in back(att2)) // this is true
+  // 3. mut(att1) |> fwd |> intersect ........
+  // 4. att2 |> back |> intersect (mut att1) |> attractors = att2 // this isn't true you have to do another round
+
+  // where mut.. you ened to write.. and also treat
+  // and you need to exist out chosen vars
+
+    //  mut
+  //attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& statesToKeep)
+
+  bool test2 = (temp_mutate(att1, level) * !backMax(att2.Add()).BddPattern()).IsZero();
+  std::cout << "is mut(att1) in back(att2)?" << test2 << std::endl;
+  
+  //bool test4 = attractors.attractors(..., !(backMax(att2.Add()) * temp_mutate(att1)), ...) == att2; // this isnt true
+  //std::cout << "does att2 |> back |> intersect (mut att1) |> attractors = att2?" << test4 << std::endl;
+}
+
+// temp
+void Game::testTreatmentTransfer(int level, const ADD& treated, const ADD& untreated) const {
+  //BDD representTreatment(int val) const;
+  //BDD representTreatmentNone() const;
+  //BDD representChosenTreatment(int level, int treatment) const;
+
+  // hmm well in treated we have free chosen level and fixed treat and in untreated we have the opposite
+  // so conjunction, then check those vars are exactly equal??
+  BDD treatedBDD = treated.BddPattern();
+  BDD untreatedBDD = untreated.BddPattern();
+
+  BDD conj = treatedBDD * untreatedBDD;
+
+  //  conj with !(treat i == chosentreat i). result should be zero
+
+  BDD equality = attractors.manager.bddOne();
+
+  for (std::vector<int>::size_type i = 0; i < oeVars.size(); i++) {
+    equality *= logicalEquivalence(representTreatment(i), representChosenTreatment(level, i));
+  }
+
+
+  bool test = (conj * !equality).IsZero();
+  
+  std::cout << "is treatment transferred correctly? " << test << std::endl;
+}
+
+// temp
+void Game::testMutationTransfer(int level, const ADD& mutated, const ADD& unmutated) const {
+  bool test = false;
+  //BDD representChosenMutation(int level, int mutation) const;
+
+  std::cout << "is mutation transferred correctly? " << test << std::endl;
+}
+
+// this isn't really doing minimax, it's computing the game tree
+ADD Game::minimax() const { 
   std::cout << "\n\n\nin minimax" << std::endl;
   int height = this->height;
   int numTreatments = this->numTreatments;
@@ -660,15 +701,13 @@ ADD Game::minimax() const {
 
   height--;
   maximisingPlayer = true; // temp..............
+
+  BDD temp_oldAtts = states.BddPattern();
 	
   for (; height > 0; height--) { // do i have an off by one error
     std::cout << "height:" << height << std::endl;
     if (maximisingPlayer) {
       // temp, testing
-      //BDD oldStates = states.BddPattern();
-      
-
-
       // temp, debugging
       // std::cout << "states muts/treats/chosen vars after backMax:" << std::endl;
       // states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
@@ -683,15 +722,29 @@ ADD Game::minimax() const {
 	std::cout << "numMutations" << numMutations << std::endl;
 	std::cout << "calling backMax..." << std::endl;
 
+	// temp
+	//	BDD temp_oldStates = states.BddPattern();
+      
 	states = backMax(states); // should this be backMin if we support async networks?
+
+	// temp
+	// std::cout << "old states in forward states? " <<
+	//   (temp_oldStates * attractors.forwardReachableStates(mutantTransitionRelationAtt, states)) << std::endl;
+	// temp_oldStates in forward states. attractors from states = temp_oldStates
 
 	std::ofstream csv3;
        	csv3.open("Minimax_level_" + std::to_string(height) + "_a_back.csv");
        	csv3 << prettyPrint(states) << std::endl;
 	
 	std::cout << "calling scoreAttractors..." << std::endl;
+
 	BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
 
+	// wait only do this on the mut introducing ones
+	// testReachability(att, temp_oldAtts); // temp
+	temp_oldAtts = att;
+	
+	
 	// temp, debugging
 	std::ofstream csv2;
 	csv2.open("Minimax_level_" + std::to_string(height) + "_a_att.csv");
@@ -747,6 +800,10 @@ ADD Game::minimax() const {
       std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
       
+      // only do this on unmutate
+      testReachability(att, temp_oldAtts, numMutations); // temp
+      temp_oldAtts = att;
+	
       // temp, debugging
       std::ofstream csv5;
       csv5.open("Minimax_level_" + std::to_string(height) + "_b_att.csv");
@@ -793,9 +850,12 @@ ADD Game::minimax() const {
 
       // std::cout << "states before untreat:" << std::endl;
       // states.PrintMinterm();
+
+      ADD beforeUntreat_temp = states;
       
       states = untreat(numTreatments, states);
 
+      testTreatmentTransfer(numTreatments, beforeUntreat_temp, states);
       
   std::ofstream csv4;
   csv4.open("Minimax_level_" + std::to_string(height) + "_untreat.csv");
@@ -812,6 +872,11 @@ ADD Game::minimax() const {
       std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
 
+      // only do this on unmutate
+      //testReachability(att, temp_oldAtts); // temp
+      temp_oldAtts = att;
+
+      
       // temp, debugging
       std::ofstream csv2;
       csv2.open("Minimax_level_" + std::to_string(height) + "_att.csv");
