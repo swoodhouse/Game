@@ -634,26 +634,44 @@ void Game::testReachability(const BDD& att1, const BDD& att2, int level) const {
 
 // temp
 void Game::testTreatmentTransfer(int level, const ADD& treated, const ADD& untreated) const {
-  //BDD representTreatment(int val) const;
-  //BDD representTreatmentNone() const;
-  //BDD representChosenTreatment(int level, int treatment) const;
-
   // hmm well in treated we have free chosen level and fixed treat and in untreated we have the opposite
   // so conjunction, then check those vars are exactly equal??
   BDD treatedBDD = treated.BddPattern();
   BDD untreatedBDD = untreated.BddPattern();
 
+  // std::cout << "treatedBDD:" << std::endl;
+  // treatedBDD.PrintMinterm();
+  
+  // std::cout << "untreatedBDD:" << std::endl;
+  // untreatedBDD.PrintMinterm();
+
+  
   BDD conj = treatedBDD * untreatedBDD;
+
+  // std::cout << "conj:" << std::endl;
+  // conj.PrintMinterm();
 
   //  conj with !(treat i == chosentreat i). result should be zero
 
   BDD equality = attractors.manager.bddOne();
 
-  for (std::vector<int>::size_type i = 0; i < oeVars.size(); i++) {
-    equality *= logicalEquivalence(representTreatment(i), representChosenTreatment(level, i));
+  //failing.. print conj
+  // should it be level-1 / + 1?
+  // have i found a bug in logical equivalence??? seems like not.. but i'm doing something wrong
+  // oh we need no treatment too - 0. 0 should never be chosen though
+  // i think there could be some indexing issue here between chosen and current treatment. also level index could be off.. although would see in csv
+  for (int i = 0; i < oeVars.size() + 1; i++) {
+    equality *= logicalEquivalence(representTreatment(i - 1), representChosenTreatment(level, i - 1));
   }
 
+  std::cout << "equality:" << std::endl;
+  equality.PrintMinterm();
+    
+  // std::cout << "conj * !equality:" << std::endl;
 
+  std::cout << "conj * !equality:" << std::endl;
+  (conj * !equality).PrintMinterm();
+  
   bool test = (conj * !equality).IsZero();
   
   std::cout << "is treatment transferred correctly? " << test << std::endl;
@@ -661,9 +679,17 @@ void Game::testTreatmentTransfer(int level, const ADD& treated, const ADD& untre
 
 // temp
 void Game::testMutationTransfer(int level, const ADD& mutated, const ADD& unmutated) const {
-  bool test = false;
   //BDD representChosenMutation(int level, int mutation) const;
+  BDD conj = mutated.BddPattern() * unmutated.BddPattern();
 
+  BDD equality = attractors.manager.bddOne();
+
+  for (std::vector<int>::size_type i = 0; i < oeVars.size(); i++) {
+    equality *= logicalEquivalence(representMutation(level, i), representChosenMutation(level, i));
+  }  
+
+  bool test = (conj * !equality).IsZero();
+  
   std::cout << "is mutation transferred correctly? " << test << std::endl;
 }
 
@@ -751,7 +777,7 @@ ADD Game::minimax() const {
 	csv2 << prettyPrint(att.Add()) << std::endl;
 
  
-	states = states.MaxAbstract(representTreatmentVariables().Add());
+	states = states.MaxAbstract(representTreatmentVariables().Add()); //is this a problem... allows value 3...?
       	std::ofstream csv4;
       	csv4.open("Minimax_level_" + std::to_string(height) + "_a_untreat.csv");
       	csv4 << prettyPrint(states) << std::endl;
@@ -784,8 +810,12 @@ ADD Game::minimax() const {
       std::cout << "states muts/treats/chosen vars after backMax:" << std::endl;
       states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
 
-     
+
+      ADD beforeUnmutate_temp = states;
+      
       states = unmutate(numMutations, states);
+
+      testMutationTransfer(numMutations, beforeUnmutate_temp, states);
 
 	// temp
   std::ofstream csv4;
