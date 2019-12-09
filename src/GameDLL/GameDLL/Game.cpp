@@ -1036,3 +1036,52 @@ ADD Game::buildScoreRelation(int apopVar) const {
 
   return score;
 }
+
+///////////////////
+// temp
+BDD Game::representChosenVariables() const {
+  BDD bdd = attractors.manager.bddOne();
+
+  for (auto i : chosenTreatmentsIndices()) {
+    BDD var = attractors.manager.bddVar(i);
+    bdd *= var;
+  }
+
+  for (auto i : chosenMutationsIndices()) {
+    BDD var = attractors.manager.bddVar(i);
+    bdd *= var;
+  }
+
+  return bdd;
+}
+
+// temp
+void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) const {
+  BDD abstractedBack = back.ExistAbstract(representChosenVariables());
+
+  BDD test = treated ? attractors.manager.bddOne() : representTreatmentNone();
+
+  if (treated) {
+    BDD bdd = attractors.manager.bddZero();
+    for (int t = 0; t < oeVars.size(); t++) {
+      int var = oeVars[t];
+      bdd += representTreatment(t) * attractors.representUnprimedVarQN(var, 0);
+    }
+    test *= bdd;
+  }
+
+  for (int i = 0; i <= numMutations; i++) { // <= or <????
+    BDD bdd = attractors.manager.bddZero();
+    for (int m = 0; m < koVars.size(); m++) {
+      int var = koVars[m];
+      // temp! hard coding to one to match matthew's benchmark model
+      bdd += representMutation(i, m) * attractors.representUnprimedVarQN(var, 1);
+    }
+    test *= bdd;
+  }
+
+  std::cout << "does back reach everything?:" << (test == abstractedBack) << std::endl;
+}
+// testBackReachesAll(level, unmutate(bk(states)))
+// testBackReachesAll(level, untreat(bk(states)))
+
