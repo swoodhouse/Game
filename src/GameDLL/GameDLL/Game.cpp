@@ -664,13 +664,13 @@ void Game::testTreatmentTransfer(int level, const ADD& treated, const ADD& untre
     equality *= logicalEquivalence(representTreatment(i - 1), representChosenTreatment(level, i - 1));
   }
 
-  std::cout << "equality:" << std::endl;
-  equality.PrintMinterm();
+  //  std::cout << "equality:" << std::endl;
+  //equality.PrintMinterm();
     
   // std::cout << "conj * !equality:" << std::endl;
 
-  std::cout << "conj * !equality:" << std::endl;
-  (conj * !equality).PrintMinterm();
+  //std::cout << "conj * !equality:" << std::endl;
+  //(conj * !equality).PrintMinterm();
   
   bool test = (conj * !equality).IsZero();
   
@@ -753,6 +753,8 @@ ADD Game::minimax() const {
       
 	states = backMax(states); // should this be backMin if we support async networks?
 
+	testBackReachesAll(numMutations, !maximisingPlayer, states.BddPattern());
+	
 	// temp
 	// std::cout << "old states in forward states? " <<
 	//   (temp_oldStates * attractors.forwardReachableStates(mutantTransitionRelationAtt, states)) << std::endl;
@@ -801,6 +803,7 @@ ADD Game::minimax() const {
 
       states = backMax(states); // should this be backMin if we support async networks?
 
+      testBackReachesAll(numMutations, !maximisingPlayer, states.BddPattern());
   std::ofstream csv3;
   csv3.open("Minimax_level_" + std::to_string(height) + "_b_back.csv");
   csv3 << prettyPrint(states) << std::endl;
@@ -868,7 +871,7 @@ ADD Game::minimax() const {
       // BDD oldStates = states.BddPattern();
 
       states = backMax(states); // should this be backMin if we support async networks?
-
+      testBackReachesAll(numMutations, !maximisingPlayer, states.BddPattern());
       
   std::ofstream csv3;
   csv3.open("Minimax_level_" + std::to_string(height) + "_back.csv");
@@ -1081,6 +1084,12 @@ void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) c
   }
 
   std::cout << "does back reach everything?:" << (test == abstractedBack) << std::endl;
+
+  std::cout << "test:" << std::endl;
+  test.PrintMinterm();
+
+  std::cout << "abstractedBack:" << std::endl;
+  abstractedBack.PrintMinterm();
 }
 // testBackReachesAll(level, unmutate(bk(states)))
 // testBackReachesAll(level, untreat(bk(states)))
