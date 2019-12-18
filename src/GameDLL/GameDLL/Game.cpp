@@ -803,10 +803,9 @@ ADD Game::minimax() const {
 
       states = backMax(states); // should this be backMin if we support async networks?
 
-      testBackReachesAll(numMutations, !maximisingPlayer, states.BddPattern());
-  std::ofstream csv3;
-  csv3.open("Minimax_level_" + std::to_string(height) + "_b_back.csv");
-  csv3 << prettyPrint(states) << std::endl;
+      std::ofstream csv3;
+      csv3.open("Minimax_level_" + std::to_string(height) + "_b_back.csv");
+      csv3 << prettyPrint(states) << std::endl;
 
       
       // temp, debugging
@@ -815,10 +814,11 @@ ADD Game::minimax() const {
 
 
       ADD beforeUnmutate_temp = states;
+
+      testBackReachesAll(numMutations, maximisingPlayer, states.BddPattern());
+      testBackReachesAll(numMutations-1, maximisingPlayer, states.BddPattern());
       
       states = unmutate(numMutations, states);
-
-      testMutationTransfer(numMutations, beforeUnmutate_temp, states);
 
 	// temp
   std::ofstream csv4;
@@ -829,7 +829,14 @@ ADD Game::minimax() const {
       std::cout << "states muts/treats/chosen vars after unmutate:" << std::endl;
       states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
 
-            
+       //testBackReachesAll(numMutations, !maximisingPlayer, states.BddPattern()); // this was wrong
+      testBackReachesAll(numMutations - 1, maximisingPlayer, states.BddPattern());
+      //supposed to be after unmutate... right..
+
+      testMutationTransfer(numMutations, beforeUnmutate_temp, states);
+
+
+      
       std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
       
