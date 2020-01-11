@@ -753,7 +753,7 @@ ADD Game::minimax() const {
       
 	states = backMax(states); // should this be backMin if we support async networks?
 
-	testBackReachesAll(numMutations, !maximisingPlayer, states.BddPattern());
+	testBackReachesAll(numMutations, false, states.BddPattern()); // this one failing?
 	
 	// temp
 	// std::cout << "old states in forward states? " <<
@@ -815,9 +815,9 @@ ADD Game::minimax() const {
 
       ADD beforeUnmutate_temp = states;
 
-      testBackReachesAll(numMutations, maximisingPlayer, states.BddPattern());
-      testBackReachesAll(numMutations-1, maximisingPlayer, states.BddPattern());
-      
+      //do i need an if statement here?
+      testBackReachesAll(numMutations+1, (height < this->height - 1), states.BddPattern()); // this one failing?
+     
       states = unmutate(numMutations, states);
 
 	// temp
@@ -829,10 +829,6 @@ ADD Game::minimax() const {
       std::cout << "states muts/treats/chosen vars after unmutate:" << std::endl;
       states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
 
-       //testBackReachesAll(numMutations, !maximisingPlayer, states.BddPattern()); // this was wrong
-      testBackReachesAll(numMutations - 1, maximisingPlayer, states.BddPattern());
-      //supposed to be after unmutate... right..
-
       testMutationTransfer(numMutations, beforeUnmutate_temp, states);
 
 
@@ -841,7 +837,7 @@ ADD Game::minimax() const {
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
       
       // only do this on unmutate
-      testReachability(att, temp_oldAtts, numMutations); // temp
+      //testReachability(att, temp_oldAtts, numMutations); // temp
       temp_oldAtts = att;
 	
       // temp, debugging
@@ -878,7 +874,7 @@ ADD Game::minimax() const {
       // BDD oldStates = states.BddPattern();
 
       states = backMax(states); // should this be backMin if we support async networks?
-      testBackReachesAll(numMutations, !maximisingPlayer, states.BddPattern());
+      testBackReachesAll(numMutations, true, states.BddPattern()); // this one passing now too?
       
   std::ofstream csv3;
   csv3.open("Minimax_level_" + std::to_string(height) + "_back.csv");
@@ -943,13 +939,8 @@ ADD Game::minimax() const {
   std::cout << "numMutations: " << numMutations << std::endl;
   std::cout << "maximisingPlayer: " << maximisingPlayer << std::endl;
   
-  std::cout << "find testBackReaches all [parameter set 1 - this one should be correct]:" << std::endl;
-  testBackReachesAll(numMutations, !maximisingPlayer, backMax(states).BddPattern());
-
-  // std::cout << "find testBackReaches all [parameter set 2]:" << std::endl;
-  // testBackReachesAll(numMutations, maximisingPlayer, backMax(states).BddPattern());
-
-
+  std::cout << "final testBackReaches all:" << std::endl;
+  testBackReachesAll(numMutations, false, backMax(states).BddPattern());
 
   return states;
 }
