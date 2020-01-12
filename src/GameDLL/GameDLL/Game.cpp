@@ -938,6 +938,19 @@ ADD Game::minimax() const {
     maximisingPlayer = !maximisingPlayer;
   }
 
+  // THIS IS REVEALING A LOT. the test is wrong here
+
+  std::cout << "numMutations: " << numMutations << std::endl;
+  std::cout << "maximisingPlayer: " << maximisingPlayer << std::endl;
+  
+  std::cout << "find testBackReaches all [parameter set 1 - this one should be correct]:" << std::endl;
+  testBackReachesAll(numMutations, !maximisingPlayer, backMax(states).BddPattern());
+
+  // std::cout << "find testBackReaches all [parameter set 2]:" << std::endl;
+  // testBackReachesAll(numMutations, maximisingPlayer, backMax(states).BddPattern());
+
+
+
   return states;
 }
 
@@ -1079,15 +1092,19 @@ void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) c
     }
     test *= bdd;
   }
-
-  for (int i = 0; i <= numMutations; i++) { // <= or <????
+  
+  for (int i = 1; i <= numMutations; i++) { // <= or <????
     BDD bdd = attractors.manager.bddZero();
     for (int m = 0; m < koVars.size(); m++) {
       int var = koVars[m];
       // temp! hard coding to one to match matthew's benchmark model
-      bdd += representMutation(i, m) * attractors.representUnprimedVarQN(var, 1);
+      bdd += representMutation(i - 1, m) * attractors.representUnprimedVarQN(var, 1);
     }
     test *= bdd;
+  }
+
+  for (int i = numMutations; i < this->numMutations; i++) {
+    test *= representMutationNone(i);
   }
 
   std::cout << "does back reach everything?:" << (test == abstractedBack) << std::endl;
