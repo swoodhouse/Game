@@ -714,6 +714,8 @@ ADD Game::minimax() const {
   std::cout << "calling scoreAttractors..." << std::endl;
   ADD states = scoreAttractors(maximisingPlayer, numMutations);
 
+  std::cout << "[[at beginning; " << numMutations << " mutations, 1 treat]]" << std::endl;
+
   // temp, debugging
   std::cout << "states muts/treats/chosen vars at very beginning:" << std::endl;
   states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
@@ -766,8 +768,10 @@ ADD Game::minimax() const {
 	
 	std::cout << "calling scoreAttractors..." << std::endl;
 
-	BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+	BDD att = scoreAttractors(true, numMutations).BddPattern(); // to score then unscore is not ideal
 
+	std::cout << "[[maximising branch (a): " << numMutations << " mutations, 1 treat]]" << std::endl;
+	
 	// wait only do this on the mut introducing ones
 	// testReachability(att, temp_oldAtts); // temp
 	temp_oldAtts = att;
@@ -815,8 +819,10 @@ ADD Game::minimax() const {
 
       ADD beforeUnmutate_temp = states;
 
-      //do i need an if statement here?
-      testBackReachesAll(numMutations+1, (height < this->height - 1), states.BddPattern()); // this one failing?
+      //do i need an if statement here? no.. it should be irrelavant. if you run from an attractor you should hit everything
+      // this has to be conditional on whether the above if statement was triggered
+      //testBackReachesAll(numMutations+1, true, states.BddPattern()); // this one failing?
+      testBackReachesAll(numMutations+1, height < this->height - 1, states.BddPattern());
      
       states = unmutate(numMutations, states);
 
@@ -835,7 +841,7 @@ ADD Game::minimax() const {
       
       std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
-      
+      std::cout << "[[maximising branch (b): " << numMutations << " mutations, 1 treat]]" << std::endl;      
       // only do this on unmutate
       //testReachability(att, temp_oldAtts, numMutations); // temp
       temp_oldAtts = att;
@@ -908,6 +914,7 @@ ADD Game::minimax() const {
       std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
 
+      std::cout << "[[minimising branch: " << numMutations << " mutations, 0 treat]]" << std::endl;      
       // only do this on unmutate
       //testReachability(att, temp_oldAtts); // temp
       temp_oldAtts = att;
