@@ -756,6 +756,11 @@ ADD Game::minimax() const {
 	states = backMax(states); // should this be backMin if we support async networks?
 
 	testBackReachesAll(numMutations, false, states.BddPattern()); // this one failing?
+	std::cout << "[[back params (from previous): " << numMutations << " mutations, 0 treats]]" << std::endl;
+
+	std::ofstream csv_backtest;
+	csv_backtest.open("backtest.csv");
+	csv_backtest << prettyPrint(states) << std::endl;
 	
 	// temp
 	// std::cout << "old states in forward states? " <<
@@ -821,8 +826,11 @@ ADD Game::minimax() const {
 
       //do i need an if statement here? no.. it should be irrelavant. if you run from an attractor you should hit everything
       // this has to be conditional on whether the above if statement was triggered
-      //testBackReachesAll(numMutations+1, true, states.BddPattern()); // this one failing?
-      testBackReachesAll(numMutations+1, height < this->height - 1, states.BddPattern());
+      testBackReachesAll(numMutations+1, true, states.BddPattern()); // this one failing?
+      std::cout << "[[back params (from previous): " << numMutations + 1 << " mutations, 1 treat]]" << std::endl;
+      
+      //testBackReachesAll(numMutations+1, height < this->height - 1, states.BddPattern());
+      //std::cout << "[[back params (from previous): " << numMutations + 1 << " mutations, " << (height < this->height - 1) << " treats]]" << std::endl;
      
       states = unmutate(numMutations, states);
 
@@ -881,6 +889,7 @@ ADD Game::minimax() const {
 
       states = backMax(states); // should this be backMin if we support async networks?
       testBackReachesAll(numMutations, true, states.BddPattern()); // this one passing now too?
+      std::cout << "[[back params (from previous): " << numMutations << " mutations, 1 treat]]" << std::endl;
       
   std::ofstream csv3;
   csv3.open("Minimax_level_" + std::to_string(height) + "_back.csv");
@@ -948,7 +957,8 @@ ADD Game::minimax() const {
   
   std::cout << "final testBackReaches all:" << std::endl;
   testBackReachesAll(numMutations, false, backMax(states).BddPattern());
-
+  std::cout << "[[back params (from previous): " << numMutations << " mutations, 0 treats]]" << std::endl;
+ 
   return states;
 }
 
