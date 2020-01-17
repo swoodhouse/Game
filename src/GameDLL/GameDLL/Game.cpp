@@ -757,10 +757,6 @@ ADD Game::minimax() const {
 
 	testBackReachesAll(numMutations, false, states.BddPattern()); // this one failing?
 	std::cout << "[[back params (from previous): " << numMutations << " mutations, 0 treats]]" << std::endl;
-
-	std::ofstream csv_backtest;
-	csv_backtest.open("backtest.csv");
-	csv_backtest << prettyPrint(states) << std::endl;
 	
 	// temp
 	// std::cout << "old states in forward states? " <<
@@ -828,6 +824,11 @@ ADD Game::minimax() const {
       // this has to be conditional on whether the above if statement was triggered
       testBackReachesAll(numMutations+1, true, states.BddPattern()); // this one failing?
       std::cout << "[[back params (from previous): " << numMutations + 1 << " mutations, 1 treat]]" << std::endl;
+
+      std::ofstream csv_backtest;
+      csv_backtest.open("backtest_h" + std::to_string(height) + ".csv");
+      csv_backtest << prettyPrint(states) << std::endl;
+
       
       //testBackReachesAll(numMutations+1, height < this->height - 1, states.BddPattern());
       //std::cout << "[[back params (from previous): " << numMutations + 1 << " mutations, " << (height < this->height - 1) << " treats]]" << std::endl;
@@ -1122,6 +1123,17 @@ void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) c
 
   std::cout << "abstractedBack:" << std::endl;
   abstractedBack.PrintMinterm();
+
+  if (test != abstractedBack) {
+    std::cout << "printing conflicted back() - test * !abstractedBack" << std::endl;
+   
+    std::ofstream csv;
+    csv.open("unreachable.csv");
+    csv << prettyPrint((test * (!abstractedBack)).Add()) << std::endl;
+
+    std::cout << "and printing here abstractedBack * !test:" << std::endl;
+    (abstractedBack * (!test)).PrintMinterm();
+  }
 }
 // testBackReachesAll(level, unmutate(bk(states)))
 // testBackReachesAll(level, untreat(bk(states)))
