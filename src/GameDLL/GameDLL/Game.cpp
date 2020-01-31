@@ -1103,8 +1103,10 @@ void Game::repeatedBackTests(int numMutations, bool treated) const {
   for (int i = 0; i < 10; i++) {
     std::cout << "repeatedBackTests " << i << std::endl;
     BDD s = attractors.randomState(S) * S;
+    if (s.IsZero()) break;
     ADD states = backMax(s.Add());
-    testBackReachesAll(numMutations, treated, states.BddPattern());    
+    testBackReachesAll(numMutations, treated, states.BddPattern());
+    S = S * !s;
   }
 }
 
