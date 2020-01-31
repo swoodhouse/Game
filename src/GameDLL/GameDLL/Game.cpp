@@ -829,6 +829,8 @@ ADD Game::minimax() const {
       csv_backtest.open("backtest_h" + std::to_string(height) + ".csv");
       csv_backtest << prettyPrint(states) << std::endl;
 
+
+      if (numMutations+1 == 2) repeatedBackTests(numMutations+1, true);
       
       //testBackReachesAll(numMutations+1, height < this->height - 1, states.BddPattern());
       //std::cout << "[[back params (from previous): " << numMutations + 1 << " mutations, " << (height < this->height - 1) << " treats]]" << std::endl;
@@ -1087,7 +1089,25 @@ BDD Game::representChosenVariables() const {
   return bdd;
 }
 
-// temp
+void Game::repeatedBackTests(int numMutations, bool treated) const {
+  BDD treatment = treated ? representSomeTreatment() : representTreatmentNone();
+	
+  BDD mutsAndTreats = treatment * nMutations(numMutations);
+  
+  BDD statesToRemove = !mutsAndTreats;
+
+  BDD S = attractors.manager.bddOne();
+  attractors.removeInvalidBitCombinations(S);
+  S *= !statesToRemove;
+  
+  for (int i = 0; i < 10; i++) {
+    std::cout << "repeatedBackTests " << i << std::endl;
+    BDD s = attractors.randomState(S) * S;
+    ADD states = backMax(s.Add());
+    testBackReachesAll(numMutations, treated, states.BddPattern());    
+  }
+}
+
 void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) const {
   BDD abstractedBack = back.ExistAbstract(representChosenVariables());
 
@@ -1101,7 +1121,7 @@ void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) c
     }
     test *= bdd;
   }
-  
+ 
   for (int i = 1; i <= numMutations; i++) { // <= or <????
     BDD bdd = attractors.manager.bddZero();
     for (int m = 0; m < koVars.size(); m++) {
@@ -1127,14 +1147,26 @@ void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) c
   if (test != abstractedBack) {
     std::cout << "printing conflicted back() - test * !abstractedBack" << std::endl;
    
+    BDD unreachable = test * (!abstractedBack);
     std::ofstream csv;
     csv.open("unreachable.csv");
-    csv << prettyPrint((test * (!abstractedBack)).Add()) << std::endl;
+    csv << prettyPrint(unreachable.Add()) << std::endl;
 
+
+    std::ofstream csv_expected;
+    csv_expected.open("expected_reachable.csv");
+    csv_expected << prettyPrint(test.Add()) << std::endl;
+
+    std::ofstream csv_reach;
+    csv_reach.open("reachable.csv");
+    csv_reach << prettyPrint(abstractedBack.Add()) << std::endl;
+    
     std::cout << "and printing here abstractedBack * !test:" << std::endl;
     (abstractedBack * (!test)).PrintMinterm();
+
+    BDD fwdFromUnreachable = attractors.forwardReachableStates(mutantTransitionRelationAtt, unreachable);
+
+    std::cout << "printing here fwd(unreachable):" << std::endl;
+    fwdFromUnreachable.PrintMinterm();
   }
 }
-// testBackReachesAll(level, unmutate(bk(states)))
-// testBackReachesAll(level, untreat(bk(states)))
-
