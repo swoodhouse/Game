@@ -1151,5 +1151,7 @@ void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) c
 
     std::cout << "printing here unreachable * back_1(fwd_1(rand(unreachable))):" << std::endl;
     (backAgain2 * unreachable).PrintMinterm(); // maybe it could be backmax then...?
+
+    // maybe it breaks when you deal with sets???????????????
   }
 }
