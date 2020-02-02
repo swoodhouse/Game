@@ -57,8 +57,6 @@ struct Game {
 
   BDD representChosenVariables() const;
   void testBackReachesAll(int numMutations, bool treated, const BDD& back) const;
-
-  void repeatedBackTests(int numMutations, bool treated) const;
   
   Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,
        bool maximisingPlayerGoesLast)

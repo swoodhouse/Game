@@ -757,7 +757,7 @@ ADD Game::minimax() const {
 
 	testBackReachesAll(numMutations, false, states.BddPattern()); // this one failing?
 	std::cout << "[[back params (from previous): " << numMutations << " mutations, 0 treats]]" << std::endl;
-	
+
 	// temp
 	// std::cout << "old states in forward states? " <<
 	//   (temp_oldStates * attractors.forwardReachableStates(mutantTransitionRelationAtt, states)) << std::endl;
@@ -829,8 +829,6 @@ ADD Game::minimax() const {
       csv_backtest.open("backtest_h" + std::to_string(height) + ".csv");
       csv_backtest << prettyPrint(states) << std::endl;
 
-
-      if (numMutations+1 == 2) repeatedBackTests(numMutations+1, true);
       
       //testBackReachesAll(numMutations+1, height < this->height - 1, states.BddPattern());
       //std::cout << "[[back params (from previous): " << numMutations + 1 << " mutations, " << (height < this->height - 1) << " treats]]" << std::endl;
@@ -893,7 +891,7 @@ ADD Game::minimax() const {
       states = backMax(states); // should this be backMin if we support async networks?
       testBackReachesAll(numMutations, true, states.BddPattern()); // this one passing now too?
       std::cout << "[[back params (from previous): " << numMutations << " mutations, 1 treat]]" << std::endl;
-      
+
   std::ofstream csv3;
   csv3.open("Minimax_level_" + std::to_string(height) + "_back.csv");
   csv3 << prettyPrint(states) << std::endl;
@@ -960,6 +958,8 @@ ADD Game::minimax() const {
   
   std::cout << "final testBackReaches all:" << std::endl;
   testBackReachesAll(numMutations, false, backMax(states).BddPattern());
+
+
   std::cout << "[[back params (from previous): " << numMutations << " mutations, 0 treats]]" << std::endl;
  
   return states;
@@ -1089,27 +1089,6 @@ BDD Game::representChosenVariables() const {
   return bdd;
 }
 
-void Game::repeatedBackTests(int numMutations, bool treated) const {
-  BDD treatment = treated ? representSomeTreatment() : representTreatmentNone();
-	
-  BDD mutsAndTreats = treatment * nMutations(numMutations);
-  
-  BDD statesToRemove = !mutsAndTreats;
-
-  BDD S = attractors.manager.bddOne();
-  attractors.removeInvalidBitCombinations(S);
-  S *= !statesToRemove;
-  
-  for (int i = 0; i < 10; i++) {
-    std::cout << "repeatedBackTests " << i << std::endl;
-    BDD s = attractors.randomState(S) * S;
-    if (s.IsZero()) break;
-    ADD states = backMax(s.Add());
-    testBackReachesAll(numMutations, treated, states.BddPattern());
-    S = S * !s;
-  }
-}
-
 void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) const {
   BDD abstractedBack = back.ExistAbstract(representChosenVariables());
 
@@ -1140,15 +1119,7 @@ void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) c
 
   std::cout << "does back reach everything?:" << (test == abstractedBack) << std::endl;
 
-  std::cout << "test:" << std::endl;
-  test.PrintMinterm();
-
-  std::cout << "abstractedBack:" << std::endl;
-  abstractedBack.PrintMinterm();
-
   if (test != abstractedBack) {
-    std::cout << "printing conflicted back() - test * !abstractedBack" << std::endl;
-   
     BDD unreachable = test * (!abstractedBack);
     std::ofstream csv;
     csv.open("unreachable.csv");
@@ -1162,13 +1133,23 @@ void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) c
     std::ofstream csv_reach;
     csv_reach.open("reachable.csv");
     csv_reach << prettyPrint(abstractedBack.Add()) << std::endl;
-    
-    std::cout << "and printing here abstractedBack * !test:" << std::endl;
-    (abstractedBack * (!test)).PrintMinterm();
 
-    BDD fwdFromUnreachable = attractors.forwardReachableStates(mutantTransitionRelationAtt, unreachable);
+    BDD fwdFromUnreachable = attractors.immediateSuccessorStates(mutantTransitionRelationAtt, unreachable);
 
-    std::cout << "printing here fwd(unreachable):" << std::endl;
-    fwdFromUnreachable.PrintMinterm();
+    // std::cout << "printing here fwd_1(unreachable):" << std::endl;
+    // fwdFromUnreachable.PrintMinterm();
+
+    // BDD backAgain = attractors.immediatePredecessorStates(mutantTransitionRelationBack, fwdFromUnreachable);
+    // std::cout << "printing here back_1(fwd_1(unreachable)):" << std::endl;
+    // backAgain.PrintMinterm();
+
+    BDD s = attractors.randomState(unreachable) * unreachable;
+    BDD fwdFromUnreachable2 = attractors.immediateSuccessorStates(mutantTransitionRelationAtt, s);
+    BDD backAgain2 = attractors.immediatePredecessorStates(mutantTransitionRelationBack, fwdFromUnreachable2);
+    std::cout << "printing here back_1(fwd_1(rand(unreachable))):" << std::endl;
+    backAgain2.PrintMinterm();
+
+    std::cout << "printing here unreachable * back_1(fwd_1(rand(unreachable))):" << std::endl;
+    (backAgain2 * unreachable).PrintMinterm(); // maybe it could be backmax then...?
   }
 }
