@@ -73,7 +73,8 @@ struct Game {
     this->numUnprimedBDDVars = std::accumulate(rangesV.begin(), rangesV.begin() + rangesV.size(), 0, lambda); // same as rangesV.end()?
     int temp = chosenMutationsIndices().back() + 1;
 
-    attractors = Attractors(minVals, rangesV, qn, temp);    
+    attractors = Attractors(minVals, rangesV, qn, temp);
+    
     mutantTransitionRelationAtt = buildMutantSyncQNTransitionRelation(false);
     mutantTransitionRelationBack = buildMutantSyncQNTransitionRelation(true);
     scoreRelation = buildScoreRelation(apopVar);

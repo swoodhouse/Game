@@ -227,8 +227,7 @@ BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& val
   return reachable;
 }
 
-// statesToKeep no longer used
-std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& statesToKeep) const {
+std::list<BDD> Attractors::attractors(const BDD& transitionBddFwd, const BDD& transitionBddBwd, const BDD& statesToRemove) const {
   std::list<BDD> attractors;
   BDD S = manager.bddOne();
   removeInvalidBitCombinations(S);
@@ -242,12 +241,12 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
 
     // TEMP!
     for (std::vector<int>::size_type i = 0; i < ranges.size()/* * 1000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number, especially for Game
-      BDD sP = immediateSuccessorStates(transitionBdd, s);
+      BDD sP = immediateSuccessorStates(transitionBddFwd, s);
       s = randomState(sP) * S;
     }
 
-    BDD fr = forwardReachableStates(transitionBdd, s);
-    BDD br = backwardReachableStates(transitionBdd, s);
+    BDD fr = forwardReachableStates(transitionBddFwd, s);
+    BDD br = backwardReachableStates(transitionBddBwd, s);
 
     BDD variablesToKeepNonZero = fr.ExistAbstract(nonPrimeVariables) * br.ExistAbstract(nonPrimeVariables);
     BDD frIntersected = fr * variablesToKeepNonZero;
@@ -268,6 +267,48 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
   }
   return attractors;
 }
+
+// statesToKeep no longer used
+// std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& statesToKeep) const {
+//   std::list<BDD> attractors;
+//   BDD S = manager.bddOne();
+//   removeInvalidBitCombinations(S);
+//   S *= !statesToRemove;
+
+//   int i = 0;
+//   while (!S.IsZero()) {
+//     //std::cout << "iteration " << i << std::endl;
+//     i++;
+//     BDD s = randomState(S) * S;
+
+//     // TEMP!
+//     for (std::vector<int>::size_type i = 0; i < ranges.size()/* * 1000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number, especially for Game
+//       BDD sP = immediateSuccessorStates(transitionBdd, s);
+//       s = randomState(sP) * S;
+//     }
+
+//     BDD fr = forwardReachableStates(transitionBdd, s);
+//     BDD br = backwardReachableStates(transitionBdd, s);
+
+//     BDD variablesToKeepNonZero = fr.ExistAbstract(nonPrimeVariables) * br.ExistAbstract(nonPrimeVariables);
+//     BDD frIntersected = fr * variablesToKeepNonZero;
+//     BDD brIntersected = br * variablesToKeepNonZero;
+
+//     // seems like we don't need brIntersected. frIntersected * !br would work
+//     if ((frIntersected * !brIntersected).IsZero()) {
+//       // temp, a set would be better. remove this, should never hit
+//       if (std::find(attractors.begin(), attractors.end(), frIntersected) == attractors.end()) {
+// 	attractors.push_back(frIntersected); // is this right?
+//       }
+//       else {
+// 	std::cout << "repeated attractor" << std::endl;
+//       }
+//     }
+
+//     S *= !(s + br);
+//   }
+//   return attractors;
+// }
 
 std::string Attractors::prettyPrint(const BDD& attractor) const {
   // ideally would not use a temp file

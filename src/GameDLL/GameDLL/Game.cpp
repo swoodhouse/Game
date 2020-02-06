@@ -352,8 +352,8 @@ BDD Game::buildMutantSyncQNTransitionRelation(bool back) const {
 	  // backMax isn't worrking.. it's still allowing things to spontenously unmutate.. is it because we don't set the ranges for them?
 	  // intersect with S?
 	  if (back) {
-	    std::cout << "isMutated:" << std::endl;
-	    isMutated.PrintMinterm();
+	    //std::cout << "isMutated:" << std::endl;
+	    //isMutated.PrintMinterm();
 	    //bdd *= isMutated.Ite(attractors.representPrimedVarQN(v, 1) * attractors.representUnprimedVarQN(v, 1),
 	    //			 targetFunction);
 	    // temp
@@ -566,7 +566,18 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
   BDD mutsAndTreats = treatment * nMutations(numMutations);
   
   BDD statesToRemove = !mutsAndTreats;
-  std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, statesToRemove, mutsAndTreats);
+  //std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, statesToRemove, mutsAndTreats);
+
+
+  //std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, mutantTransitionRelationAtt, statesToRemove);
+  // this is throwing an exception..........
+  //std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, mutantTransitionRelationBack, statesToRemove);
+  //std::list<BDD> loops = attractors.attractors(mutantTransitionRelationBack, mutantTransitionRelationBack, statesToRemove);
+
+  //BDD tempBackCopy = buildMutantSyncQNTransitionRelation(true); // this will be very slow if it works at all. still crashes
+  BDD tempBackCopy = buildMutantSyncQNTransitionRelation(false); // a check.. this is fwd
+  std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, tempBackCopy, statesToRemove);
+  
   std::cout << "loops.len:" << loops.size() << std::endl; // 64..?
   
   for (const BDD& a : loops) {
@@ -1153,5 +1164,13 @@ void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) c
     (backAgain2 * unreachable).PrintMinterm(); // maybe it could be backmax then...?
 
     // maybe it breaks when you deal with sets??????????????? or when running multiple steps
+
+    // BDD treatment = treated ? representSomeTreatment() : representTreatmentNone();
+    // BDD mutations = nMutations(numMutations);
+    // BDD mutsAndTreats = treatment * nMutations(numMutations);
+
+    // // oh.. the attractors repeatedly does backward compuation, but in the fwd bdd..........................
+    // std::list<BDD> att = attractors.attractors(mutantTransitionRelationAtt, !s, mutsAndTreats);
+    //std::cout << "length of atts(rand(unreachable)): " << att.size() << std::endl; // can go bck from here too..
   }
 }
