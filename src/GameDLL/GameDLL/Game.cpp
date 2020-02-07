@@ -306,13 +306,15 @@ BDD Game::buildMutantSyncQNTransitionRelation(bool back) const {
    	    [](const std::vector<std::vector<int>::size_type>& a,
    	       const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
 
-  auto start = std::chrono::steady_clock::now();
+  //  auto start = std::chrono::steady_clock::now();
  
   int vars_done = 0;
   int comp_num = 0;
   for (auto comp : components) {
+    std::cout << "here3" << std::endl;
     BDD bdd = attractors.manager.bddOne();
     for (auto v : comp) {
+      std::cout << "here4" << std::endl;
       std::cout << "variables done:" << vars_done << std::endl;
       vars_done++;
       std::cout << "node " << v << std::endl;
@@ -398,17 +400,19 @@ BDD Game::buildMutantSyncQNTransitionRelation(bool back) const {
         }
       }
     }
-    auto diff = std::chrono::steady_clock::now() - start;
-    std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
+    //auto diff = std::chrono::steady_clock::now() - start;
+    //std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
 
     std::cout << "adding connected component " << comp_num << std::endl;
     comp_num++;
     tr *= bdd;
-
-    diff = std::chrono::steady_clock::now() - start;
-    std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
+    std::cout << "here1" << std::endl;
+    
+    //diff = std::chrono::steady_clock::now() - start;
+    //std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
   }
 
+  std::cout << "here at end" << std::endl;
   return tr;
 }
 
@@ -574,8 +578,11 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
   //std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, mutantTransitionRelationBack, statesToRemove);
   //std::list<BDD> loops = attractors.attractors(mutantTransitionRelationBack, mutantTransitionRelationBack, statesToRemove);
 
-  //BDD tempBackCopy = buildMutantSyncQNTransitionRelation(true); // this will be very slow if it works at all. still crashes
-  BDD tempBackCopy = buildMutantSyncQNTransitionRelation(false); // a check.. this is fwd
+  BDD tempBackCopy = buildMutantSyncQNTransitionRelation(true); // this will be very slow if it works at all. still crashes
+  //BDD tempBackCopy = buildMutantSyncQNTransitionRelation(false); // a check.. this is fwd
+
+  std::cout << "here, about to call attractors" << std::endl;
+  
   std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, tempBackCopy, statesToRemove);
   
   std::cout << "loops.len:" << loops.size() << std::endl; // 64..?
