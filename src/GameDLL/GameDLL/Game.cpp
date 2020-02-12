@@ -570,20 +570,9 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
   BDD mutsAndTreats = treatment * nMutations(numMutations);
   
   BDD statesToRemove = !mutsAndTreats;
-  //std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, statesToRemove, mutsAndTreats);
-
-
-  //std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, mutantTransitionRelationAtt, statesToRemove);
-  // this is throwing an exception..........
   //std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, mutantTransitionRelationBack, statesToRemove);
-  //std::list<BDD> loops = attractors.attractors(mutantTransitionRelationBack, mutantTransitionRelationBack, statesToRemove);
-
-  BDD tempBackCopy = buildMutantSyncQNTransitionRelation(true); // this will be very slow if it works at all. still crashes
-  //BDD tempBackCopy = buildMutantSyncQNTransitionRelation(false); // a check.. this is fwd
-
-  std::cout << "here, about to call attractors" << std::endl;
-  
-  std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, tempBackCopy, statesToRemove);
+  // temp
+  std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, mutantTransitionRelationAtt, statesToRemove);
   
   std::cout << "loops.len:" << loops.size() << std::endl; // 64..?
   

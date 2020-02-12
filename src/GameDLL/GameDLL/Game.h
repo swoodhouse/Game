@@ -10,7 +10,7 @@ struct Game {
   int numUnprimedBDDVars;
   Attractors attractors;
  
-  /*const*/ BDD mutantTransitionRelationAtt;
+  /*const*/ BDD mutantTransitionRelationAtt; // rename this Fwd
   /*const*/ BDD mutantTransitionRelationBack;
   /*const*/ ADD scoreRelation;
 	
