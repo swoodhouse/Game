@@ -570,9 +570,9 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
   BDD mutsAndTreats = treatment * nMutations(numMutations);
   
   BDD statesToRemove = !mutsAndTreats;
-  //std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, mutantTransitionRelationBack, statesToRemove);
+  std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, mutantTransitionRelationBack, statesToRemove);
   // temp
-  std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, mutantTransitionRelationAtt, statesToRemove);
+  //std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, mutantTransitionRelationAtt, statesToRemove);
   
   std::cout << "loops.len:" << loops.size() << std::endl; // 64..?
   
