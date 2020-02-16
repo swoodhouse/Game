@@ -304,34 +304,46 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBddFwd, const BDD& tr
     
     
     // crashing in here then
-    for (std::vector<int>::size_type i = 0; i < ranges.size()/* * 1000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number, especially for Game
+    // for (std::vector<int>::size_type i = 0; i < ranges.size()/* * 1000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number, especially for Game
 
-      BDD sP = immediateSuccessorStates(transitionBddFwd, s);
+    //   BDD sP = immediateSuccessorStates(transitionBddFwd, s);
 
-      //so it's crashing here............. which is weird.. because that should have zero dependence on bwd bdd
-      // it could be that the array is the wrong size now..
-      //s = randomState(sP) * S; // Nir thinks there may be a problem.. maybe here I should expand back out to N states
-      // I think I agree.. the first randomstate above is correct, but then it goes in other directions
-      // this should be
-      // actually this second random is redundant for synch qns. in asynch would have to pick a single state, per mutation
-      s = sP; // actually maybe calling randomstate was not incorrect, but it is not optimal in our sync case
+    //   //so it's crashing here............. which is weird.. because that should have zero dependence on bwd bdd
+    //   // it could be that the array is the wrong size now..
+    //   //s = randomState(sP) * S; // Nir thinks there may be a problem.. maybe here I should expand back out to N states
+    //   // I think I agree.. the first randomstate above is correct, but then it goes in other directions
+    //   // this should be
+    //   // actually this second random is redundant for synch qns. in asynch would have to pick a single state, per mutation
+    //   s = sP; // actually maybe calling randomstate was not incorrect, but it is not optimal in our sync case
+    // }
+
+    // here we unroll until we hit an attractor.. this is wrong though........
+    // in this implementation i really do need a fwd and a bwd attractor, because 
+    BDD reached = manager.bddZero();
+    while (!((s * !reached).IsZero())) { // while s - reached = 0
+      reached += s;
+      s = immediateSuccessorStates(transitionBddFwd, s);
     }
 
+    
     BDD fr = forwardReachableStates(transitionBddFwd, s);
     BDD br = backwardReachableStates(transitionBddBwd, s); // if i use the bwd bdd here i get repeated attractors. is it because back(false) is wierd?
 
     // this still needed? this is to remove the special variables -
     // this is to be careful about intersecting states from different mutation configurations
-    BDD variablesToKeepNonZero = fr.ExistAbstract(nonPrimeVariables) * br.ExistAbstract(nonPrimeVariables); // this is chosen and mutation that are not zero in both fr and br - those that still have some states remaining
-    BDD frIntersected = fr * variablesToKeepNonZero;
-    BDD brIntersected = br * variablesToKeepNonZero;
+    // BDD variablesToKeepNonZero = fr.ExistAbstract(nonPrimeVariables) * br.ExistAbstract(nonPrimeVariables); // this is chosen and mutation that are not zero in both fr and br - those that still have some states remaining
+    // BDD frIntersected = fr * variablesToKeepNonZero;
+    // BDD brIntersected = br * variablesToKeepNonZero;
 
     // TODO: document this code
     // seems like we don't need brIntersected. frIntersected * !br would work
-    if ((frIntersected * !brIntersected).IsZero()) { // fr * !br == 0
+    //if ((frIntersected * !brIntersected).IsZero()) { // fr * !br == 0 // seems like this isn't needed??
+    if ((fr * !br).IsZero()) {
       // temp, a set would be better. remove this, should never hit
-      if (std::find(attractors.begin(), attractors.end(), frIntersected) == attractors.end()) {
-	attractors.push_back(frIntersected); // is this right? // doesn't this contain additional unwanted states?
+      //if (std::find(attractors.begin(), attractors.end(), frIntersected) == attractors.end()) {
+      if (std::find(attractors.begin(), attractors.end(), fr) == attractors.end()) {
+	attractors.push_back(fr); // is this right? // doesn't this contain additional unwanted states?
+	//attractors.push_back(frIntersected); // is this right? // doesn't this contain additional unwanted states?
       }
       else {
 	std::cout << "repeated attractor" << std::endl;
@@ -342,12 +354,15 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBddFwd, const BDD& tr
 	// std::cout << "fr:" << std::endl;
 	// fr.PrintMinterm();
 
-	std::cout << "brIntersected:" << std::endl;
-	brIntersected.PrintMinterm();
+	// std::cout << "brIntersected:" << std::endl;
+	// brIntersected.PrintMinterm();
 
-	std::cout << "br:" << std::endl;
-	br.PrintMinterm();
+	// std::cout << "br:" << std::endl;
+	// br.PrintMinterm();
       }
+    }
+    else {
+      std::cout << "NOT ATTRACTOR" << std::endl;
     }
 
     //check here that S != old_S and s not equal old_s
