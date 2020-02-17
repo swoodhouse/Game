@@ -143,37 +143,6 @@ BDD Game::nMutations(int n) const {
   }
 }
 
-// ADD Game::untreat(int level, const ADD& states) const {
-//   // this has the effect of remembering the treatment by storing it in remember@level and removing treatment var
-
-//   std::vector<int> permute(chosenMutationsIndices().back() + 1);
-//   std::iota(permute.begin(), permute.end(), 0);
-
-//   int b = bits(oeVars.size() + 1);
-//   int i = treatmentVarIndices().front();
-//   int j = chosenTreatmentsIndices().front() + level * b;
-
-//   for (int n = 0; n < b; n++) { // duplication
-//     permute[n + i] = n + j;
-//   }
-
-//   return states.Permute(&permute[0]);
-// }
-
-// ADD Game::unmutate(int level, const ADD& states) const {
-//   std::vector<int> permute(chosenMutationsIndices().back() + 1);
-//   std::iota(permute.begin(), permute.end(), 0);
-
-//   int b = bits(koVars.size() + 1);
-//   int i = mutationVarsIndices().front() + level * b;
-//   int j = chosenMutationsIndices().front() + level * b;
-//   for (int n = 0; n < b; n++) { // duplication
-//     permute[n + i] = n + j;
-//   }
-
-//   return states.Permute(&permute[0]);
-// }
-
 ADD Game::untreat(int level, const ADD& states) const {
   // this has the effect of remembering the treatment by storing it in remember@level and removing treatment var
   
@@ -570,9 +539,8 @@ ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
   BDD mutsAndTreats = treatment * nMutations(numMutations);
   
   BDD statesToRemove = !mutsAndTreats;
-  //std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, mutantTransitionRelationBack, statesToRemove);
-  // temp
-  std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, mutantTransitionRelationAtt, statesToRemove);
+
+  std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, statesToRemove);
   
   std::cout << "loops.len:" << loops.size() << std::endl; // 64..?
   
@@ -958,8 +926,6 @@ ADD Game::minimax() const {
     maximisingPlayer = !maximisingPlayer;
   }
 
-  // THIS IS REVEALING A LOT. the test is wrong here
-
   std::cout << "numMutations: " << numMutations << std::endl;
   std::cout << "maximisingPlayer: " << maximisingPlayer << std::endl;
   
@@ -1158,15 +1124,5 @@ void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) c
 
     std::cout << "printing here unreachable * back_1(fwd_1(rand(unreachable))):" << std::endl;
     (backAgain2 * unreachable).PrintMinterm(); // maybe it could be backmax then...?
-
-    // maybe it breaks when you deal with sets??????????????? or when running multiple steps
-
-    // BDD treatment = treated ? representSomeTreatment() : representTreatmentNone();
-    // BDD mutations = nMutations(numMutations);
-    // BDD mutsAndTreats = treatment * nMutations(numMutations);
-
-    // // oh.. the attractors repeatedly does backward compuation, but in the fwd bdd..........................
-    // std::list<BDD> att = attractors.attractors(mutantTransitionRelationAtt, !s, mutsAndTreats);
-    //std::cout << "length of atts(rand(unreachable)): " << att.size() << std::endl; // can go bck from here too..
   }
 }

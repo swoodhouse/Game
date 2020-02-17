@@ -165,29 +165,14 @@ BDD Attractors::renameAddingPrimes(const BDD& bdd) const {
   return bdd.Permute(&permute[0]);
 }
 
-
-// another alternative. no longer random
-// THIS DOESN'T WORK
-// BDD Attractors::randomState(const BDD& S) const {
-//   BDD rnd = S.LargestCube();//  S.PickOneMinterm(vars);
-  
-//   BDD notUnprimedQnVars = manager.bddOne();
-//   for (int i = numUnprimedBDDVars; i < numBDDVars; i++) {
-//     notUnprimedQnVars *= manager.bddVar(i);
-//   }
-//   return rnd.ExistAbstract(notUnprimedQnVars);
-// }
-
-
 BDD Attractors::randomState(const BDD& S) const {
   std::vector<BDD> vars;
   for (int i = 0; i < numBDDVars; i++) {
     BDD v = manager.bddVar(i);
     vars.push_back(v);
   }
-  //  std::cout << "in randomState, a" << std::endl;
+
   BDD rnd = S.PickOneMinterm(vars);
-  //std::cout << "in randomState, b" << std::endl;
   
   BDD notUnprimedQnVars = manager.bddOne();
   for (int i = numUnprimedBDDVars; i < numBDDVars; i++) {
@@ -195,53 +180,6 @@ BDD Attractors::randomState(const BDD& S) const {
   }
   return rnd.ExistAbstract(notUnprimedQnVars);
 }
-
-//     BDD
-// BDD::PickOneMinterm(
-//   std::vector<BDD> vars) const
-// {
-
-
-// BDD Attractors::randomState(const BDD& S) const {
-//   BDD bdd = manager.bddOne();
-
-
-//   // try this hack...........
-//   std::cout << "in randomState, 1" << std::endl;
-//   //char *out = new char[numBDDVars * 100]; // i think maybe switch to c allocation..
-//   //...
-
-//   //std::vector<char> out(numBDDVars);
-
-//   //  char *out = (char *) malloc(numBDDVars * sizeof(char)); // try calloc too
-//   char *out = (char *) calloc(numBDDVars, sizeof(char)); // try calloc too
-
-//   // hmm maybe i can use pickoneminterm.. is a cube = to a minterm
-//     // or std::vector<char> out(numBDDVars);
-//     // pickonecube(&out[0]);
-//   // return bdd.Permute(&permute[0]);
-//     // not sure if the above can work. or use malloc. or.. use a static array
-//   std::cout << "in randomState, 2" << std::endl;
-//   //char *out = new char[numBDDVars];
-//   S.PickOneCube(out); // this exact line is crashing
-
-//   // temp..................
-//   //S.PickOneCube(&out[0]); // this exact line is crashing
-  
-//   std::cout << "in randomState, 3" << std::endl;
-
-//   for (int i = 0; i < numUnprimedBDDVars; i++) {
-//     if (out[i] == 0) bdd *= !manager.bddVar(i);
-//     else bdd *= manager.bddVar(i);
-//   }
-//   std::cout << "in randomState, 4" << std::endl;
-  
-//   //delete[] out; // temp
-//   free(out);
-
-//   std::cout << "in randomState, 5" << std::endl;
-//   return bdd;
-// }
 
 void Attractors::removeInvalidBitCombinations(BDD& S) const {
   for (int var = 0; var < ranges.size(); var++) {
@@ -290,7 +228,7 @@ BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& val
   return reachable;
 }
 
-std::list<BDD> Attractors::attractors(const BDD& transitionBddFwd, const BDD& transitionBddBwd, const BDD& statesToRemove) const {
+std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove) const {
   std::list<BDD> attractors;
   BDD S = manager.bddOne();
   removeInvalidBitCombinations(S);
@@ -299,120 +237,33 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBddFwd, const BDD& tr
   while (!S.IsZero()) {
     BDD s = randomState(S) * S; // pick a random state in the QN variables only, reattach all possible configurations of mutations
 
-    //std::cout << "a random state:" << std::endl;
-    //s.PrintMinterm(); // temp
-    
-    
-    // crashing in here then
-    // for (std::vector<int>::size_type i = 0; i < ranges.size()/* * 1000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number, especially for Game
-
-    //   BDD sP = immediateSuccessorStates(transitionBddFwd, s);
-
-    //   //so it's crashing here............. which is weird.. because that should have zero dependence on bwd bdd
-    //   // it could be that the array is the wrong size now..
-    //   //s = randomState(sP) * S; // Nir thinks there may be a problem.. maybe here I should expand back out to N states
-    //   // I think I agree.. the first randomstate above is correct, but then it goes in other directions
-    //   // this should be
-    //   // actually this second random is redundant for synch qns. in asynch would have to pick a single state, per mutation
-    //   s = sP; // actually maybe calling randomstate was not incorrect, but it is not optimal in our sync case
-    // }
-
-    // here we unroll until we hit an attractor.. this is wrong though........
-    // in this implementation i really do need a fwd and a bwd attractor, because 
+    // in this new implementation, which only works for sync networks, we simply unroll until we have hit an attractor
     BDD reached = manager.bddZero();
-    while (!((s * !reached).IsZero())) { // while s - reached = 0
+    while (!((s * !reached).IsZero())) {
       reached += s;
-      s = immediateSuccessorStates(transitionBddFwd, s);
+      s = immediateSuccessorStates(transitionBdd, s);
     }
 
-    
-    BDD fr = forwardReachableStates(transitionBddFwd, s);
-    BDD br = backwardReachableStates(transitionBddBwd, s); // if i use the bwd bdd here i get repeated attractors. is it because back(false) is wierd?
+    BDD fr = forwardReachableStates(transitionBdd, s);
+    BDD br = backwardReachableStates(transitionBdd, s);
 
-    // this still needed? this is to remove the special variables -
-    // this is to be careful about intersecting states from different mutation configurations
-    // BDD variablesToKeepNonZero = fr.ExistAbstract(nonPrimeVariables) * br.ExistAbstract(nonPrimeVariables); // this is chosen and mutation that are not zero in both fr and br - those that still have some states remaining
-    // BDD frIntersected = fr * variablesToKeepNonZero;
-    // BDD brIntersected = br * variablesToKeepNonZero;
-
-    // TODO: document this code
-    // seems like we don't need brIntersected. frIntersected * !br would work
-    //if ((frIntersected * !brIntersected).IsZero()) { // fr * !br == 0 // seems like this isn't needed??
+    // these checks are redundant in theory
     if ((fr * !br).IsZero()) {
-      // temp, a set would be better. remove this, should never hit
-      //if (std::find(attractors.begin(), attractors.end(), frIntersected) == attractors.end()) {
       if (std::find(attractors.begin(), attractors.end(), fr) == attractors.end()) {
-	attractors.push_back(fr); // is this right? // doesn't this contain additional unwanted states?
-	//attractors.push_back(frIntersected); // is this right? // doesn't this contain additional unwanted states?
+	attractors.push_back(fr);
       }
       else {
 	std::cout << "repeated attractor" << std::endl;
-
-	// std::cout << "frIntersected:" << std::endl;
-	// frIntersected.PrintMinterm();
-
-	// std::cout << "fr:" << std::endl;
-	// fr.PrintMinterm();
-
-	// std::cout << "brIntersected:" << std::endl;
-	// brIntersected.PrintMinterm();
-
-	// std::cout << "br:" << std::endl;
-	// br.PrintMinterm();
       }
     }
     else {
       std::cout << "NOT ATTRACTOR" << std::endl;
     }
-
-    //check here that S != old_S and s not equal old_s
     
     S *= !(s + br);
   }
   return attractors;
 }
-
-// statesToKeep no longer used
-// std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& statesToKeep) const {
-//   std::list<BDD> attractors;
-//   BDD S = manager.bddOne();
-//   removeInvalidBitCombinations(S);
-//   S *= !statesToRemove;
-
-//   int i = 0;
-//   while (!S.IsZero()) {
-//     //std::cout << "iteration " << i << std::endl;
-//     i++;
-//     BDD s = randomState(S) * S;
-
-//     // TEMP!
-//     for (std::vector<int>::size_type i = 0; i < ranges.size()/* * 1000*/; i++) { // unrolling by ranges.size() may not be the perfect choice of number, especially for Game
-//       BDD sP = immediateSuccessorStates(transitionBdd, s);
-//       s = randomState(sP) * S;
-//     }
-
-//     BDD fr = forwardReachableStates(transitionBdd, s);
-//     BDD br = backwardReachableStates(transitionBdd, s);
-
-//     BDD variablesToKeepNonZero = fr.ExistAbstract(nonPrimeVariables) * br.ExistAbstract(nonPrimeVariables);
-//     BDD frIntersected = fr * variablesToKeepNonZero;
-//     BDD brIntersected = br * variablesToKeepNonZero;
-
-//     // seems like we don't need brIntersected. frIntersected * !br would work
-//     if ((frIntersected * !brIntersected).IsZero()) {
-//       // temp, a set would be better. remove this, should never hit
-//       if (std::find(attractors.begin(), attractors.end(), frIntersected) == attractors.end()) {
-// 	attractors.push_back(frIntersected); // is this right?
-//       }
-//       else {
-// 	std::cout << "repeated attractor" << std::endl;
-//       }
-//     }
-
-//     S *= !(s + br);
-//   }
-//   return attractors;
-// }
 
 std::string Attractors::prettyPrint(const BDD& attractor) const {
   // ideally would not use a temp file
