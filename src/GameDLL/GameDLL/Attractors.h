@@ -20,8 +20,7 @@ struct QNTable {
     /* QNTable& operator=(const QNTable&) = delete; */
 };
 
-class Attractors {
-public: // move this
+struct Attractors {
   /*const*/ std::vector<int> minValues;
   /*const*/ std::vector<int> ranges;
   /*const*/ QNTable qn;

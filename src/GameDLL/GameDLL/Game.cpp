@@ -4,7 +4,7 @@
 #include "Attractors.h"
 #include "Game.h"
 
-/*inline*/ BDD logicalImplication(const BDD& a, const BDD& b) {
+inline BDD logicalImplication(const BDD& a, const BDD& b) {
   return (!a) + b;
 }
 
@@ -120,11 +120,8 @@ BDD Game::nMutations(int n) const {
   }
   else if (n == 1) {
     if (numMutations == 2) {
-      //return representSomeMutation(0) * representMutationNone(1); // testing
-
-      // how does moving from the above to the below break both mutations and treatments?
       return ((representSomeMutation(0) * representMutationNone(1)) +
-              (representSomeMutation(1) * representMutationNone(0))); // new - not lexicographically ordered
+              (representSomeMutation(1) * representMutationNone(0)));
     }
     else if (numMutations == 1) {
       return representSomeMutation(0);
@@ -562,111 +559,65 @@ BDD Game::representTreatmentVariables() const {
 }
 
 // temp
-BDD Game::temp_mutate(const BDD& states, int level) const {
-  // exist out just treatment vars
-  // multiply by nmuts
-  // hmmmmmm... no, has to be just one level
-  //BDD mutsAndTreats = treatment * nMutations(numMutations);
+// void Game::testTreatmentTransfer(int level, const ADD& treated, const ADD& untreated) const {
+//   // hmm well in treated we have free chosen level and fixed treat and in untreated we have the opposite
+//   // so conjunction, then check those vars are exactly equal??
+//   BDD treatedBDD = treated.BddPattern();
+//   BDD untreatedBDD = untreated.BddPattern();
 
-  BDD oldMut = attractors.manager.bddOne();
-  int b = bits(koVars.size() + 1);
-  int i = mutationVarsIndices().front() + level * b;
-  for (int n = 0; n < b; n++) {
-    BDD var = attractors.manager.bddVar(i);
-    oldMut *= var;
-    i++;
-  }
+//   // std::cout << "treatedBDD:" << std::endl;
+//   // treatedBDD.PrintMinterm();
+  
+//   // std::cout << "untreatedBDD:" << std::endl;
+//   // untreatedBDD.PrintMinterm();
 
   
-  
-  BDD newMut = representSomeMutation(level) ;
-  // is this good enough or does it have to be level | other levels
-  return states.ExistAbstract(oldMut) * newMut;
-}
+//   BDD conj = treatedBDD * untreatedBDD;
 
-// also need temp_treat
+//   // std::cout << "conj:" << std::endl;
+//   // conj.PrintMinterm();
 
-// temp
-void Game::testReachability(const BDD& att1, const BDD& att2, int level) const {
-  // what is this method supposed to do...
-  // 1. each att2 is in forward(mut(att1)), and in attractors(mut(att1)) // this is not true
-  // 2. mut(att1) is in back(att2)) // this is true
-  // 3. mut(att1) |> fwd |> intersect ........
-  // 4. att2 |> back |> intersect (mut att1) |> attractors = att2 // this isn't true you have to do another round
+//   //  conj with !(treat i == chosentreat i). result should be zero
 
-  // where mut.. you ened to write.. and also treat
-  // and you need to exist out chosen vars
+//   BDD equality = attractors.manager.bddOne();
 
-    //  mut
-  //attractors(const BDD& transitionBdd, const BDD& statesToRemove, const BDD& statesToKeep)
+//   //failing.. print conj
+//   // should it be level-1 / + 1?
+//   // have i found a bug in logical equivalence??? seems like not.. but i'm doing something wrong
+//   // oh we need no treatment too - 0. 0 should never be chosen though
+//   // i think there could be some indexing issue here between chosen and current treatment. also level index could be off.. although would see in csv
+//   for (int i = 0; i < oeVars.size() + 1; i++) {
+//     equality *= logicalEquivalence(representTreatment(i - 1), representChosenTreatment(level, i - 1));
+//   }
 
-  bool test2 = (temp_mutate(att1, level) * !backMax(att2.Add()).BddPattern()).IsZero();
-  std::cout << "is mut(att1) in back(att2)?" << test2 << std::endl;
-  
-  //bool test4 = attractors.attractors(..., !(backMax(att2.Add()) * temp_mutate(att1)), ...) == att2; // this isnt true
-  //std::cout << "does att2 |> back |> intersect (mut att1) |> attractors = att2?" << test4 << std::endl;
-}
-
-// temp
-void Game::testTreatmentTransfer(int level, const ADD& treated, const ADD& untreated) const {
-  // hmm well in treated we have free chosen level and fixed treat and in untreated we have the opposite
-  // so conjunction, then check those vars are exactly equal??
-  BDD treatedBDD = treated.BddPattern();
-  BDD untreatedBDD = untreated.BddPattern();
-
-  // std::cout << "treatedBDD:" << std::endl;
-  // treatedBDD.PrintMinterm();
-  
-  // std::cout << "untreatedBDD:" << std::endl;
-  // untreatedBDD.PrintMinterm();
-
-  
-  BDD conj = treatedBDD * untreatedBDD;
-
-  // std::cout << "conj:" << std::endl;
-  // conj.PrintMinterm();
-
-  //  conj with !(treat i == chosentreat i). result should be zero
-
-  BDD equality = attractors.manager.bddOne();
-
-  //failing.. print conj
-  // should it be level-1 / + 1?
-  // have i found a bug in logical equivalence??? seems like not.. but i'm doing something wrong
-  // oh we need no treatment too - 0. 0 should never be chosen though
-  // i think there could be some indexing issue here between chosen and current treatment. also level index could be off.. although would see in csv
-  for (int i = 0; i < oeVars.size() + 1; i++) {
-    equality *= logicalEquivalence(representTreatment(i - 1), representChosenTreatment(level, i - 1));
-  }
-
-  //  std::cout << "equality:" << std::endl;
-  //equality.PrintMinterm();
+//   //  std::cout << "equality:" << std::endl;
+//   //equality.PrintMinterm();
     
-  // std::cout << "conj * !equality:" << std::endl;
+//   // std::cout << "conj * !equality:" << std::endl;
 
-  //std::cout << "conj * !equality:" << std::endl;
-  //(conj * !equality).PrintMinterm();
+//   //std::cout << "conj * !equality:" << std::endl;
+//   //(conj * !equality).PrintMinterm();
   
-  bool test = (conj * !equality).IsZero();
+//   bool test = (conj * !equality).IsZero();
   
-  std::cout << "is treatment transferred correctly? " << test << std::endl;
-}
+//   std::cout << "is treatment transferred correctly? " << test << std::endl;
+// }
 
 // temp
-void Game::testMutationTransfer(int level, const ADD& mutated, const ADD& unmutated) const {
-  //BDD representChosenMutation(int level, int mutation) const;
-  BDD conj = mutated.BddPattern() * unmutated.BddPattern();
+// void Game::testMutationTransfer(int level, const ADD& mutated, const ADD& unmutated) const {
+//   //BDD representChosenMutation(int level, int mutation) const;
+//   BDD conj = mutated.BddPattern() * unmutated.BddPattern();
 
-  BDD equality = attractors.manager.bddOne();
+//   BDD equality = attractors.manager.bddOne();
 
-  for (std::vector<int>::size_type i = 0; i < oeVars.size(); i++) {
-    equality *= logicalEquivalence(representMutation(level, i), representChosenMutation(level, i));
-  }  
+//   for (std::vector<int>::size_type i = 0; i < oeVars.size(); i++) {
+//     equality *= logicalEquivalence(representMutation(level, i), representChosenMutation(level, i));
+//   }  
 
-  bool test = (conj * !equality).IsZero();
+//   bool test = (conj * !equality).IsZero();
   
-  std::cout << "is mutation transferred correctly? " << test << std::endl;
-}
+//   std::cout << "is mutation transferred correctly? " << test << std::endl;
+// }
 
 // this isn't really doing minimax, it's computing the game tree
 ADD Game::minimax() const { 
@@ -676,8 +627,6 @@ ADD Game::minimax() const {
   int numMutations = this->numMutations;
   bool maximisingPlayer = this->maximisingPlayerLast;
 
-  //maximisingPlayer = false; // temp..............
-  // new, flipping this to be in line with Matthew
   maximisingPlayer = true;
 
   std::cout << "maximisingPlayer:" << maximisingPlayer << std::endl;
@@ -690,12 +639,6 @@ ADD Game::minimax() const {
   ADD states = scoreAttractors(maximisingPlayer, numMutations);
 
   std::cout << "[[at beginning; " << numMutations << " mutations, 1 treat]]" << std::endl;
-
-  // temp, debugging
-  std::cout << "states muts/treats/chosen vars at very beginning:" << std::endl;
-  states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
-  // std::cout << "states muts/treats/chosen vars at very beginning:" << std::endl;
-  // states.MaxAbstract(attractors.nonPrimeVariables.Add()).PrintMinterm();
   
   // temp, debugging
   std::ofstream csv;
@@ -819,7 +762,7 @@ ADD Game::minimax() const {
       std::cout << "states muts/treats/chosen vars after unmutate:" << std::endl;
       states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
 
-      testMutationTransfer(numMutations, beforeUnmutate_temp, states);
+      //testMutationTransfer(numMutations, beforeUnmutate_temp, states);
 
 
       
@@ -882,7 +825,7 @@ ADD Game::minimax() const {
       
       states = untreat(numTreatments, states);
 
-      testTreatmentTransfer(numTreatments, beforeUntreat_temp, states);
+      //testTreatmentTransfer(numTreatments, beforeUntreat_temp, states);
       
   std::ofstream csv4;
   csv4.open("Minimax_level_" + std::to_string(height) + "_untreat.csv");
@@ -1091,38 +1034,4 @@ void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) c
   }
 
   std::cout << "does back reach everything?:" << (test == abstractedBack) << std::endl;
-
-  if (test != abstractedBack) {
-    BDD unreachable = test * (!abstractedBack);
-    std::ofstream csv;
-    csv.open("unreachable.csv");
-    csv << prettyPrint(unreachable.Add()) << std::endl;
-
-
-    std::ofstream csv_expected;
-    csv_expected.open("expected_reachable.csv");
-    csv_expected << prettyPrint(test.Add()) << std::endl;
-
-    std::ofstream csv_reach;
-    csv_reach.open("reachable.csv");
-    csv_reach << prettyPrint(abstractedBack.Add()) << std::endl;
-
-    BDD fwdFromUnreachable = attractors.immediateSuccessorStates(mutantTransitionRelationAtt, unreachable);
-
-    // std::cout << "printing here fwd_1(unreachable):" << std::endl;
-    // fwdFromUnreachable.PrintMinterm();
-
-    // BDD backAgain = attractors.immediatePredecessorStates(mutantTransitionRelationBack, fwdFromUnreachable);
-    // std::cout << "printing here back_1(fwd_1(unreachable)):" << std::endl;
-    // backAgain.PrintMinterm();
-
-    BDD s = attractors.randomState(unreachable) * unreachable;
-    BDD fwdFromUnreachable2 = attractors.immediateSuccessorStates(mutantTransitionRelationAtt, s);
-    BDD backAgain2 = attractors.immediatePredecessorStates(mutantTransitionRelationBack, fwdFromUnreachable2);
-    std::cout << "printing here back_1(fwd_1(rand(unreachable))):" << std::endl;
-    backAgain2.PrintMinterm();
-
-    std::cout << "printing here unreachable * back_1(fwd_1(rand(unreachable))):" << std::endl;
-    (backAgain2 * unreachable).PrintMinterm(); // maybe it could be backmax then...?
-  }
 }

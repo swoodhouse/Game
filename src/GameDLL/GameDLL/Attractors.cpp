@@ -250,6 +250,7 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
     // these checks are redundant in theory
     if ((fr * !br).IsZero()) {
       if (std::find(attractors.begin(), attractors.end(), fr) == attractors.end()) {
+	std::cout << "found attractor" << std::endl; // temp
 	attractors.push_back(fr);
       }
       else {

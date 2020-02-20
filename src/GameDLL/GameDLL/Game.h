@@ -22,7 +22,7 @@ struct Game {
   std::vector<int> mutationVarsIndices() const;
   std::vector<int> chosenTreatmentsIndices() const;
   std::vector<int> chosenMutationsIndices() const;
-  std::vector<std::vector<std::vector<int>::size_type>> connectedComponents() const; // only needed if we go with connected components
+  std::vector<std::vector<std::vector<int>::size_type>> connectedComponents() const;
   ADD buildScoreRelation(int apopVar) const;
   ADD renameBDDVarsAddingPrimes(const ADD& add) const;
   ADD renameBDDVarsRemovingPrimes(const ADD& add) const;
@@ -49,11 +49,8 @@ struct Game {
   BDD treatmentAbstractRelation(int level) const;
   BDD mutationAbstractRelation(int level) const;
 
-
-  BDD temp_mutate(const BDD& states, int level) const;
-  void testReachability(const BDD& att1, const BDD& att2, int level) const; // temp
-  void testTreatmentTransfer(int level, const ADD& treated, const ADD& untreated) const; // temp
-  void testMutationTransfer(int level, const ADD& mutated, const ADD& unmutated) const; // temp
+  //void testTreatmentTransfer(int level, const ADD& treated, const ADD& untreated) const; // temp
+  //void testMutationTransfer(int level, const ADD& mutated, const ADD& unmutated) const; // temp
 
   BDD representChosenVariables() const;
   void testBackReachesAll(int numMutations, bool treated, const BDD& back) const;
