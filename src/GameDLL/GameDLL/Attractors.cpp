@@ -298,3 +298,16 @@ std::string Attractors::prettyPrint(const BDD& attractor) const {
 
   return out;
 }
+
+BDD Attractors::fixpoints(const BDD& syncTransitionBdd) const {
+    BDD fixpoint = manager.bddOne();
+    for (int i = 0; i < numUnprimedBDDVars; i++) {
+        BDD v = manager.bddVar(i);
+        BDD vPrime = manager.bddVar(numUnprimedBDDVars + i);
+        fixpoint *= logicalEquivalence(v, vPrime);
+    }
+
+    BDD bdd = renameRemovingPrimes(syncTransitionBdd * fixpoint);
+    removeInvalidBitCombinations(bdd);
+    return bdd;
+}

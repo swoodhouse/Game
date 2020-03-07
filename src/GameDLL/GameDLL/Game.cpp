@@ -529,23 +529,60 @@ std::string Game::prettyPrint(const ADD& states) const {
   return out;
 }
 
+// ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
+//   ADD states = attractors.manager.addZero();
+//   BDD treatment = applyTreatments ? representSomeTreatment() : representTreatmentNone();
+	
+//   BDD mutsAndTreats = treatment * nMutations(numMutations);
+  
+//   BDD statesToRemove = !mutsAndTreats;
+
+//   std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, statesToRemove);
+  
+//   std::cout << "loops.len:" << loops.size() << std::endl; // 64..?
+  
+//   for (const BDD& a : loops) {
+//     ADD scored = scoreLoop(a, scoreRelation);
+//     states = states.Maximum(scored);
+//   }
+  
+//   return states;
+// }
+
+
 ADD Game::scoreAttractors(bool applyTreatments, int numMutations) const {
+  // new, fixpoints optimisation //////
+  // std::cout << "Finding fixpoints..." << std::endl;
+  // BDD allFixpoints = attractors.fixpoints(mutantTransitionRelationAtt);// this can just be computed once, not every call
+
+  /////////////////////////////////////
+
   ADD states = attractors.manager.addZero();
   BDD treatment = applyTreatments ? representSomeTreatment() : representTreatmentNone();
-	
+
   BDD mutsAndTreats = treatment * nMutations(numMutations);
-  
-  BDD statesToRemove = !mutsAndTreats;
+
+  // new, fixpoints optimisation
+  BDD fixpoints = allFixpoints * mutsAndTreats; // fixpoints at this level only
+  //////////////////////////////////////
+
+  //BDD statesToRemove = !mutsAndTreats;
+  // new, fixpoints optimisation
+  BDD statesToRemove = !mutsAndTreats + fixpoints + attractors.backwardReachableStates(mutantTransitionRelationAtt, fixpoints);
+  ////////////////////////////////
+
 
   std::list<BDD> loops = attractors.attractors(mutantTransitionRelationAtt, statesToRemove);
-  
-  std::cout << "loops.len:" << loops.size() << std::endl; // 64..?
-  
+  // new, fixpoints optimisation
+  loops.push_back(fixpoints);
+  ///////////
+  std::cout << "loops.len:" << loops.size() << std::endl;
+ 
   for (const BDD& a : loops) {
     ADD scored = scoreLoop(a, scoreRelation);
     states = states.Maximum(scored);
   }
-  
+ 
   return states;
 }
 
@@ -557,67 +594,6 @@ BDD Game::representTreatmentVariables() const {
   }
   return bdd;
 }
-
-// temp
-// void Game::testTreatmentTransfer(int level, const ADD& treated, const ADD& untreated) const {
-//   // hmm well in treated we have free chosen level and fixed treat and in untreated we have the opposite
-//   // so conjunction, then check those vars are exactly equal??
-//   BDD treatedBDD = treated.BddPattern();
-//   BDD untreatedBDD = untreated.BddPattern();
-
-//   // std::cout << "treatedBDD:" << std::endl;
-//   // treatedBDD.PrintMinterm();
-  
-//   // std::cout << "untreatedBDD:" << std::endl;
-//   // untreatedBDD.PrintMinterm();
-
-  
-//   BDD conj = treatedBDD * untreatedBDD;
-
-//   // std::cout << "conj:" << std::endl;
-//   // conj.PrintMinterm();
-
-//   //  conj with !(treat i == chosentreat i). result should be zero
-
-//   BDD equality = attractors.manager.bddOne();
-
-//   //failing.. print conj
-//   // should it be level-1 / + 1?
-//   // have i found a bug in logical equivalence??? seems like not.. but i'm doing something wrong
-//   // oh we need no treatment too - 0. 0 should never be chosen though
-//   // i think there could be some indexing issue here between chosen and current treatment. also level index could be off.. although would see in csv
-//   for (int i = 0; i < oeVars.size() + 1; i++) {
-//     equality *= logicalEquivalence(representTreatment(i - 1), representChosenTreatment(level, i - 1));
-//   }
-
-//   //  std::cout << "equality:" << std::endl;
-//   //equality.PrintMinterm();
-    
-//   // std::cout << "conj * !equality:" << std::endl;
-
-//   //std::cout << "conj * !equality:" << std::endl;
-//   //(conj * !equality).PrintMinterm();
-  
-//   bool test = (conj * !equality).IsZero();
-  
-//   std::cout << "is treatment transferred correctly? " << test << std::endl;
-// }
-
-// temp
-// void Game::testMutationTransfer(int level, const ADD& mutated, const ADD& unmutated) const {
-//   //BDD representChosenMutation(int level, int mutation) const;
-//   BDD conj = mutated.BddPattern() * unmutated.BddPattern();
-
-//   BDD equality = attractors.manager.bddOne();
-
-//   for (std::vector<int>::size_type i = 0; i < oeVars.size(); i++) {
-//     equality *= logicalEquivalence(representMutation(level, i), representChosenMutation(level, i));
-//   }  
-
-//   bool test = (conj * !equality).IsZero();
-  
-//   std::cout << "is mutation transferred correctly? " << test << std::endl;
-// }
 
 // this isn't really doing minimax, it's computing the game tree
 ADD Game::minimax() const { 

@@ -13,7 +13,8 @@ struct Game {
   /*const*/ BDD mutantTransitionRelationAtt;
   /*const*/ BDD mutantTransitionRelationBack;
   /*const*/ ADD scoreRelation;
-	
+  /*const*/ BDD allFixpoints;
+  
   static int calcNumMutations(int height, bool maximisingPlayerGoesLast);
   static int calcNumTreatments(int height, bool maximisingPlayerGoesLast);
 
@@ -49,9 +50,6 @@ struct Game {
   BDD treatmentAbstractRelation(int level) const;
   BDD mutationAbstractRelation(int level) const;
 
-  //void testTreatmentTransfer(int level, const ADD& treated, const ADD& untreated) const; // temp
-  //void testMutationTransfer(int level, const ADD& mutated, const ADD& unmutated) const; // temp
-
   BDD representChosenVariables() const;
   void testBackReachesAll(int numMutations, bool treated, const BDD& back) const;
   
@@ -75,6 +73,12 @@ struct Game {
     mutantTransitionRelationAtt = buildMutantSyncQNTransitionRelation(false);
     mutantTransitionRelationBack = buildMutantSyncQNTransitionRelation(true);
     scoreRelation = buildScoreRelation(apopVar);
+
+      // new, fixpoints optimisation //////
+    std::cout << "Finding fixpoints..." << std::endl;
+    allFixpoints = attractors.fixpoints(mutantTransitionRelationAtt);// this can just be computed once, not every call
+    /////////////////////////////////////
+
   };
     
   // this was buggy, so be careful if you go back to move ctors

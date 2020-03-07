@@ -51,6 +51,8 @@ struct Attractors {
     std::list<BDD> attractors(const BDD& transitionBdd,  const BDD& statesToRemove) const;
     std::string prettyPrint(const BDD& attractor) const;
 
+    BDD fixpoints(const BDD& transitionBdd) const;
+
     // temp
     Attractors() {};
 
