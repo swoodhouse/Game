@@ -272,7 +272,7 @@ BDD Game::buildMutantSyncQNTransitionRelation(bool back) const {
    	    [](const std::vector<std::vector<int>::size_type>& a,
    	       const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
 
-  //  auto start = std::chrono::steady_clock::now();
+  //auto start = std::chrono::steady_clock::now();
  
   int vars_done = 0;
   int comp_num = 0;
@@ -596,7 +596,9 @@ BDD Game::representTreatmentVariables() const {
 }
 
 // this isn't really doing minimax, it's computing the game tree
-ADD Game::minimax() const { 
+ADD Game::minimax() const {
+  auto start = std::chrono::steady_clock::now();
+  
   std::cout << "\n\n\nin minimax" << std::endl;
   int height = this->height;
   int numTreatments = this->numTreatments;
@@ -613,7 +615,9 @@ ADD Game::minimax() const {
 
   std::cout << "calling scoreAttractors..." << std::endl;
   ADD states = scoreAttractors(maximisingPlayer, numMutations);
-
+  auto diff = std::chrono::steady_clock::now() - start;
+  std::cout << "scoreAttractors done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
+  
   std::cout << "[[at beginning; " << numMutations << " mutations, 1 treat]]" << std::endl;
   
   // temp, debugging
@@ -648,7 +652,9 @@ ADD Game::minimax() const {
 	//	BDD temp_oldStates = states.BddPattern();
       
 	states = backMax(states); // should this be backMin if we support async networks?
-
+        diff = std::chrono::steady_clock::now() - start;
+	std::cout << "backMax done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
+  
 	testBackReachesAll(numMutations, false, states.BddPattern()); // this one failing?
 	std::cout << "[[back params (from previous): " << numMutations << " mutations, 0 treats]]" << std::endl;
 
@@ -662,8 +668,9 @@ ADD Game::minimax() const {
        	csv3 << prettyPrint(states) << std::endl;
 	
 	std::cout << "calling scoreAttractors..." << std::endl;
-
 	BDD att = scoreAttractors(true, numMutations).BddPattern(); // to score then unscore is not ideal
+	diff = std::chrono::steady_clock::now() - start;
+	std::cout << "scoreAttractors done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
 
 	std::cout << "[[maximising branch (a): " << numMutations << " mutations, 1 treat]]" << std::endl;
 	
@@ -701,7 +708,9 @@ ADD Game::minimax() const {
       std::cout << "calling backMax..." << std::endl;
 
       states = backMax(states); // should this be backMin if we support async networks?
-
+      diff = std::chrono::steady_clock::now() - start;
+      std::cout << "backMax done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
+  
       std::ofstream csv3;
       csv3.open("Minimax_level_" + std::to_string(height) + "_b_back.csv");
       csv3 << prettyPrint(states) << std::endl;
@@ -744,6 +753,8 @@ ADD Game::minimax() const {
       
       std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
+      diff = std::chrono::steady_clock::now() - start;
+      std::cout << "scoreAttractors done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
       std::cout << "[[maximising branch (b): " << numMutations << " mutations, 1 treat]]" << std::endl;      
       // only do this on unmutate
       //testReachability(att, temp_oldAtts, numMutations); // temp
@@ -783,6 +794,9 @@ ADD Game::minimax() const {
       // BDD oldStates = states.BddPattern();
 
       states = backMax(states); // should this be backMin if we support async networks?
+      diff = std::chrono::steady_clock::now() - start;
+      std::cout << "backMax done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
+  
       testBackReachesAll(numMutations, true, states.BddPattern()); // this one passing now too?
       std::cout << "[[back params (from previous): " << numMutations << " mutations, 1 treat]]" << std::endl;
 
@@ -817,7 +831,9 @@ ADD Game::minimax() const {
 
       std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
-
+      diff = std::chrono::steady_clock::now() - start;
+  std::cout << "scoreAttractors done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
+  
       std::cout << "[[minimising branch: " << numMutations << " mutations, 0 treat]]" << std::endl;      
       // only do this on unmutate
       //testReachability(att, temp_oldAtts); // temp
