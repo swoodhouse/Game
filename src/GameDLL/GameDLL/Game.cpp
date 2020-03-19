@@ -695,8 +695,10 @@ ADD Game::minimax() const {
       	csv4.open("Minimax_level_" + std::to_string(height) + "_a_untreat.csv");
       	csv4 << prettyPrint(states) << std::endl;
 
+	std::cout << "intersecting with attractors" << std::endl;
 	states *= att.Add(); // removing the treatment = 0 forcing variables
-
+	std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
+	
 	std::ofstream csvI;
 	csvI.open("Minimax_level_" + std::to_string(height) + "_a_intersect.csv");
 	csvI << prettyPrint(states) << std::endl;
@@ -772,8 +774,10 @@ ADD Game::minimax() const {
       csv5.open("Minimax_level_" + std::to_string(height) + "_b_att.csv");
       csv5 << prettyPrint(att.Add()) << std::endl;
       
+      std::cout << "intersecting with attractors" << std::endl;
       states *= att.Add();
-
+      std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
+      
       // temp, debugging
       std::ofstream csvI;
       csvI.open("Minimax_level_" + std::to_string(height) + "_b_intersect.csv");
@@ -854,7 +858,9 @@ ADD Game::minimax() const {
       csv2.open("Minimax_level_" + std::to_string(height) + "_att.csv");
       csv2 << prettyPrint(att.Add()) << std::endl;
 
+      std::cout << "intersecting with attractors" << std::endl;
       states *= att.Add(); // if they are disappearing somewhere here could it be that some combos lead to a zero bdd attractor..
+      std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
 
       // temp, debugging
       std::ofstream csvI;
