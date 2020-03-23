@@ -598,6 +598,20 @@ BDD Game::representTreatmentVariables() const {
 
 // this isn't really doing minimax, it's computing the game tree
 ADD Game::minimax() const {
+
+
+  // temp... experimenting with reordering.........
+  //attractors.manager.AutodynDisable();  // seems to slow down by ~x2?
+  // could try other orderings here or manually call below
+  //attractors.manager.AutodynEnable(CUDD_REORDER_SIFT); // this seems to speed things up, although I'm not sure about measurement error
+  attractors.manager.AutodynEnable(CUDD_REORDER_WINDOW2); // also seems to speed things up  21289.9 ms
+  //CUDD_REORDER_WINDOW2, 3, 4
+  //CUDD_REORDER_SYMM_SIFT
+  // CUDD_REORDER_WINDOW4_CONV
+  // genetic
+  /////////////////////////////////////////////////
+  
+  
   auto start = std::chrono::steady_clock::now();
   
   std::cout << "\n\n\nin minimax" << std::endl;
@@ -623,9 +637,9 @@ ADD Game::minimax() const {
   std::cout << "[[at beginning; " << numMutations << " mutations, 1 treat]]" << std::endl;
   
   // temp, debugging
-  std::ofstream csv;
-  csv.open("Minimax_level_" + std::to_string(height) + "_att.csv");
-  csv << prettyPrint(states) << std::endl;
+  // std::ofstream csv;
+  // csv.open("Minimax_level_" + std::to_string(height) + "_att.csv");
+  // csv << prettyPrint(states) << std::endl;
 
   height--;
   maximisingPlayer = true; // temp..............
@@ -667,9 +681,9 @@ ADD Game::minimax() const {
 	//   (temp_oldStates * attractors.forwardReachableStates(mutantTransitionRelationAtt, states)) << std::endl;
 	// temp_oldStates in forward states. attractors from states = temp_oldStates
 
-	std::ofstream csv3;
-       	csv3.open("Minimax_level_" + std::to_string(height) + "_a_back.csv");
-       	csv3 << prettyPrint(states) << std::endl;
+	// std::ofstream csv3;
+       	// csv3.open("Minimax_level_" + std::to_string(height) + "_a_back.csv");
+       	// csv3 << prettyPrint(states) << std::endl;
 	
 	std::cout << "calling scoreAttractors..." << std::endl;
 	BDD att = scoreAttractors(true, numMutations).BddPattern(); // to score then unscore is not ideal
@@ -685,23 +699,23 @@ ADD Game::minimax() const {
 	
 	
 	// temp, debugging
-	std::ofstream csv2;
-	csv2.open("Minimax_level_" + std::to_string(height) + "_a_att.csv");
-	csv2 << prettyPrint(att.Add()) << std::endl;
+	// std::ofstream csv2;
+	// csv2.open("Minimax_level_" + std::to_string(height) + "_a_att.csv");
+	// csv2 << prettyPrint(att.Add()) << std::endl;
 
  
 	states = states.MaxAbstract(representTreatmentVariables().Add()); //is this a problem... allows value 3...?
-      	std::ofstream csv4;
-      	csv4.open("Minimax_level_" + std::to_string(height) + "_a_untreat.csv");
-      	csv4 << prettyPrint(states) << std::endl;
+      	// std::ofstream csv4;
+      	// csv4.open("Minimax_level_" + std::to_string(height) + "_a_untreat.csv");
+      	// csv4 << prettyPrint(states) << std::endl;
 
 	std::cout << "intersecting with attractors" << std::endl;
 	states *= att.Add(); // removing the treatment = 0 forcing variables
 	std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
 	
-	std::ofstream csvI;
-	csvI.open("Minimax_level_" + std::to_string(height) + "_a_intersect.csv");
-	csvI << prettyPrint(states) << std::endl;
+	// std::ofstream csvI;
+	// csvI.open("Minimax_level_" + std::to_string(height) + "_a_intersect.csv");
+	// csvI << prettyPrint(states) << std::endl;
 
       }
      
@@ -719,15 +733,9 @@ ADD Game::minimax() const {
       std::cout << "backMax done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
       std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
  
-      std::ofstream csv3;
-      csv3.open("Minimax_level_" + std::to_string(height) + "_b_back.csv");
-      csv3 << prettyPrint(states) << std::endl;
-
-      
-      // temp, debugging
-      std::cout << "states muts/treats/chosen vars after backMax:" << std::endl;
-      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
-
+      // std::ofstream csv3;
+      // csv3.open("Minimax_level_" + std::to_string(height) + "_b_back.csv");
+      // csv3 << prettyPrint(states) << std::endl;
 
       ADD beforeUnmutate_temp = states;
 
@@ -736,9 +744,9 @@ ADD Game::minimax() const {
       testBackReachesAll(numMutations+1, true, states.BddPattern()); // this one failing?
       std::cout << "[[back params (from previous): " << numMutations + 1 << " mutations, 1 treat]]" << std::endl;
 
-      std::ofstream csv_backtest;
-      csv_backtest.open("backtest_h" + std::to_string(height) + ".csv");
-      csv_backtest << prettyPrint(states) << std::endl;
+      // std::ofstream csv_backtest;
+      // csv_backtest.open("backtest_h" + std::to_string(height) + ".csv");
+      // csv_backtest << prettyPrint(states) << std::endl;
 
       
       //testBackReachesAll(numMutations+1, height < this->height - 1, states.BddPattern());
@@ -747,13 +755,13 @@ ADD Game::minimax() const {
       states = unmutate(numMutations, states);
 
 	// temp
-  std::ofstream csv4;
-  csv4.open("Minimax_level_" + std::to_string(height) + "_b_unmutate.csv");
-  csv4 << prettyPrint(states) << std::endl;
+  // std::ofstream csv4;
+  // csv4.open("Minimax_level_" + std::to_string(height) + "_b_unmutate.csv");
+  // csv4 << prettyPrint(states) << std::endl;
 
-      // temp, debugging
-      std::cout << "states muts/treats/chosen vars after unmutate:" << std::endl;
-      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+  //     // temp, debugging
+  //     std::cout << "states muts/treats/chosen vars after unmutate:" << std::endl;
+  //     states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
 
       //testMutationTransfer(numMutations, beforeUnmutate_temp, states);
 
@@ -770,18 +778,18 @@ ADD Game::minimax() const {
       temp_oldAtts = att;
 	
       // temp, debugging
-      std::ofstream csv5;
-      csv5.open("Minimax_level_" + std::to_string(height) + "_b_att.csv");
-      csv5 << prettyPrint(att.Add()) << std::endl;
+      // std::ofstream csv5;
+      // csv5.open("Minimax_level_" + std::to_string(height) + "_b_att.csv");
+      // csv5 << prettyPrint(att.Add()) << std::endl;
       
       std::cout << "intersecting with attractors" << std::endl;
       states *= att.Add();
       std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
       
       // temp, debugging
-      std::ofstream csvI;
-      csvI.open("Minimax_level_" + std::to_string(height) + "_b_intersect.csv");
-      csvI << prettyPrint(states) << std::endl;
+      // std::ofstream csvI;
+      // csvI.open("Minimax_level_" + std::to_string(height) + "_b_intersect.csv");
+      // csvI << prettyPrint(states) << std::endl;
 
       
       // std::cout << "att muts/treats/chosen vars:" << std::endl;
@@ -812,13 +820,13 @@ ADD Game::minimax() const {
       testBackReachesAll(numMutations, true, states.BddPattern()); // this one passing now too?
       std::cout << "[[back params (from previous): " << numMutations << " mutations, 1 treat]]" << std::endl;
 
-  std::ofstream csv3;
-  csv3.open("Minimax_level_" + std::to_string(height) + "_back.csv");
-  csv3 << prettyPrint(states) << std::endl;
+  // std::ofstream csv3;
+  // csv3.open("Minimax_level_" + std::to_string(height) + "_back.csv");
+  // csv3 << prettyPrint(states) << std::endl;
       
-      // temp, debugging
-      std::cout << "states muts/treats/chosen vars after backMax:" << std::endl;
-      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+  //     // temp, debugging
+  //     std::cout << "states muts/treats/chosen vars after backMax:" << std::endl;
+  //     states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
 
       // std::cout << "states before untreat:" << std::endl;
       // states.PrintMinterm();
@@ -829,9 +837,9 @@ ADD Game::minimax() const {
 
       //testTreatmentTransfer(numTreatments, beforeUntreat_temp, states);
       
-  std::ofstream csv4;
-  csv4.open("Minimax_level_" + std::to_string(height) + "_untreat.csv");
-  csv4 << prettyPrint(states) << std::endl;
+  // std::ofstream csv4;
+  // csv4.open("Minimax_level_" + std::to_string(height) + "_untreat.csv");
+  // csv4 << prettyPrint(states) << std::endl;
       // std::cout << "states after untreat:" << std::endl;
       // states.PrintMinterm();
       
@@ -854,22 +862,22 @@ ADD Game::minimax() const {
 
       
       // temp, debugging
-      std::ofstream csv2;
-      csv2.open("Minimax_level_" + std::to_string(height) + "_att.csv");
-      csv2 << prettyPrint(att.Add()) << std::endl;
+      // std::ofstream csv2;
+      // csv2.open("Minimax_level_" + std::to_string(height) + "_att.csv");
+      // csv2 << prettyPrint(att.Add()) << std::endl;
 
       std::cout << "intersecting with attractors" << std::endl;
       states *= att.Add(); // if they are disappearing somewhere here could it be that some combos lead to a zero bdd attractor..
       std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
 
-      // temp, debugging
-      std::ofstream csvI;
-      csvI.open("Minimax_level_" + std::to_string(height) + "_intersect.csv");
-      csvI << prettyPrint(states) << std::endl;
+      // // temp, debugging
+      // std::ofstream csvI;
+      // csvI.open("Minimax_level_" + std::to_string(height) + "_intersect.csv");
+      // csvI << prettyPrint(states) << std::endl;
       
-      // temp, debugging
-      std::cout << "states muts/treats/chosen vars after intersection with att:" << std::endl;
-      states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
+      // // temp, debugging
+      // std::cout << "states muts/treats/chosen vars after intersection with att:" << std::endl;
+      // states.BddPattern().ExistAbstract(attractors.nonPrimeVariables).PrintMinterm();
 
     }
 

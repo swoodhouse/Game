@@ -70,6 +70,7 @@ struct Attractors {
       
       // new, trying to change this to solve efficency issue on breast cancer model in Game mode
       //manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
+      //manager.AutodynEnable(CUDD_REORDER_EXACT);
       manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // CUDD_REORDER_GROUP_SIFT_CONV better than GROUP_SIFT it seems, CUDD_REORDER_SYMM_SIFT_COV not as good. CUDD_REORDER_SYMM_SIFT probably not as good. CUDD_REORDER_SIFT_CONVERGE good? maybe not as group_sif_conv. Can I get debugging information for the reordering.. actually, maybe some of these were better than CUDD_REORDER_GROUP_SIFT_CONV
 	 // try CUDD_REORDER_GROUP_SIFT_CONV? CUDD_REORDER_SYMM_SIFT_CONV? CUDD_REORDER_SYMM_SIFT? CUDD_REORDER_SIFT_CONVERGE? CUDD_REORDER_SIFT?
 
