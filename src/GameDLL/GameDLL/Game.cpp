@@ -600,14 +600,19 @@ BDD Game::representTreatmentVariables() const {
 ADD Game::minimax() const {
 
 
-  // temp... experimenting with reordering.........
+  // temp... experimenting with reordering......... 31347.1 ms / 26926.3 ms
+  // without changing, ... with removal of printing minterms
   //attractors.manager.AutodynDisable();  // seems to slow down by ~x2?
   // could try other orderings here or manually call below
-  //attractors.manager.AutodynEnable(CUDD_REORDER_SIFT); // this seems to speed things up, although I'm not sure about measurement error
-  attractors.manager.AutodynEnable(CUDD_REORDER_WINDOW2); // also seems to speed things up  21289.9 ms
-  //CUDD_REORDER_WINDOW2, 3, 4
+  //attractors.manager.AutodynEnable(CUDD_REORDER_SIFT); // 5128.17 ms with removal of printing minterms.  7263.61 ms now.
+  //attractors.manager.AutodynEnable(CUDD_REORDER_WINDOW2); // 5469.04 ms with removal of printing minterms. 4753.13 ms now
+  //attractors.manager.AutodynEnable(CUDD_REORDER_WINDOW4); //  4144.42 ms
+  attractors.manager.AutodynEnable(CUDD_REORDER_WINDOW4_CONV); //  4098.88 ms
+  //attractors.manager.AutodynEnable(CUDD_REORDER_ANNEALING); //  _SLOW_
+  //attractors.manager.AutodynEnable(CUDD_REORDER_GENETIC); // _SLOW_
+  //attractors.manager.AutodynEnable(CUDD_REORDER_WINDOW3_CONV);
+  //CUDD_REORDER_WINDOW3_CONV
   //CUDD_REORDER_SYMM_SIFT
-  // CUDD_REORDER_WINDOW4_CONV
   // genetic
   /////////////////////////////////////////////////
   
