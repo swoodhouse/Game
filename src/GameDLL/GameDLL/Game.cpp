@@ -649,7 +649,7 @@ ADD Game::minimax() const {
   height--;
   maximisingPlayer = true; // temp..............
 
-  BDD temp_oldAtts = states.BddPattern();
+  //BDD temp_oldAtts = states.BddPattern();
 	
   for (; height > 0; height--) { // do i have an off by one error
     std::cout << "height:" << height << std::endl;
@@ -678,8 +678,8 @@ ADD Game::minimax() const {
 	std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
  
   
-	testBackReachesAll(numMutations, false, states.BddPattern()); // this one failing?
-	std::cout << "[[back params (from previous): " << numMutations << " mutations, 0 treats]]" << std::endl;
+	//testBackReachesAll(numMutations, false, states.BddPattern()); // this one failing?
+	//std::cout << "[[back params (from previous): " << numMutations << " mutations, 0 treats]]" << std::endl;
 
 	// temp
 	// std::cout << "old states in forward states? " <<
@@ -700,7 +700,7 @@ ADD Game::minimax() const {
 	
 	// wait only do this on the mut introducing ones
 	// testReachability(att, temp_oldAtts); // temp
-	temp_oldAtts = att;
+	//temp_oldAtts = att;
 	
 	
 	// temp, debugging
@@ -742,12 +742,12 @@ ADD Game::minimax() const {
       // csv3.open("Minimax_level_" + std::to_string(height) + "_b_back.csv");
       // csv3 << prettyPrint(states) << std::endl;
 
-      ADD beforeUnmutate_temp = states;
+      //ADD beforeUnmutate_temp = states;
 
       //do i need an if statement here? no.. it should be irrelavant. if you run from an attractor you should hit everything
       // this has to be conditional on whether the above if statement was triggered
-      testBackReachesAll(numMutations+1, true, states.BddPattern()); // this one failing?
-      std::cout << "[[back params (from previous): " << numMutations + 1 << " mutations, 1 treat]]" << std::endl;
+      //testBackReachesAll(numMutations+1, true, states.BddPattern()); // this one failing?
+      //std::cout << "[[back params (from previous): " << numMutations + 1 << " mutations, 1 treat]]" << std::endl;
 
       // std::ofstream csv_backtest;
       // csv_backtest.open("backtest_h" + std::to_string(height) + ".csv");
@@ -780,7 +780,7 @@ ADD Game::minimax() const {
       std::cout << "[[maximising branch (b): " << numMutations << " mutations, 1 treat]]" << std::endl;      
       // only do this on unmutate
       //testReachability(att, temp_oldAtts, numMutations); // temp
-      temp_oldAtts = att;
+      //temp_oldAtts = att;
 	
       // temp, debugging
       // std::ofstream csv5;
@@ -822,8 +822,8 @@ ADD Game::minimax() const {
       std::cout << "backMax done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
       std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
 	
-      testBackReachesAll(numMutations, true, states.BddPattern()); // this one passing now too?
-      std::cout << "[[back params (from previous): " << numMutations << " mutations, 1 treat]]" << std::endl;
+      //testBackReachesAll(numMutations, true, states.BddPattern()); // this one passing now too?
+      //std::cout << "[[back params (from previous): " << numMutations << " mutations, 1 treat]]" << std::endl;
 
   // std::ofstream csv3;
   // csv3.open("Minimax_level_" + std::to_string(height) + "_back.csv");
@@ -836,7 +836,7 @@ ADD Game::minimax() const {
       // std::cout << "states before untreat:" << std::endl;
       // states.PrintMinterm();
 
-      ADD beforeUntreat_temp = states;
+      //ADD beforeUntreat_temp = states;
       
       states = untreat(numTreatments, states);
 
@@ -863,7 +863,7 @@ ADD Game::minimax() const {
       std::cout << "[[minimising branch: " << numMutations << " mutations, 0 treat]]" << std::endl;      
       // only do this on unmutate
       //testReachability(att, temp_oldAtts); // temp
-      temp_oldAtts = att;
+      //temp_oldAtts = att;
 
       
       // temp, debugging
@@ -892,8 +892,8 @@ ADD Game::minimax() const {
   std::cout << "numMutations: " << numMutations << std::endl;
   std::cout << "maximisingPlayer: " << maximisingPlayer << std::endl;
   
-  std::cout << "final testBackReaches all:" << std::endl;
-  testBackReachesAll(numMutations, false, backMax(states).BddPattern());
+  //std::cout << "final testBackReaches all:" << std::endl;
+  //testBackReachesAll(numMutations, false, backMax(states).BddPattern());
 
 
   std::cout << "[[back params (from previous): " << numMutations << " mutations, 0 treats]]" << std::endl;
