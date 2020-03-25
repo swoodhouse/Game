@@ -132,7 +132,16 @@ BDD Game::nMutations(int n) const {
     }
   }
   else if (n == 2 && numMutations == 2) {
-    return (representSomeMutation(0) * representSomeMutation(1));
+      //return (representSomeMutation(0) * representSomeMutation(1));
+      // add conjunction here saying 0 != 1. also test on benchmark to see if removes duplicates
+
+      BDD disjoint = attractors.manager.bddOne();
+
+      for (std::vector<int>::size_type val = 0; val < koVars.size(); val++) {
+	disjoint *= !(representMutation(0, val) * representMutation(1, val));
+      }
+
+      return (disjoint * representSomeMutation(0) * representSomeMutation(1));
   }
   else {
     std::cout << "nmutations > 2 not implemented" << std::endl;
@@ -601,19 +610,23 @@ ADD Game::minimax() const {
 
 
   // temp... experimenting with reordering......... 31347.1 ms / 26926.3 ms
-  // without changing, ... with removal of printing minterms
-  //attractors.manager.AutodynDisable();  // seems to slow down by ~x2?
+  // there are 17 strategies, and then there is manually applying (potentially several in sequence?) and  Cudd_SetMaxGrowth
+  // tried 10  so far?
+  // without changing, CUDD_REORDER_GROUP_SIFT_CONV with removal of printing minterms. also 52, but much slower
+  //attractors.manager.AutodynDisable();  // seems to slow down by ~x2? // now this seems quite fast..
   // could try other orderings here or manually call below
   //attractors.manager.AutodynEnable(CUDD_REORDER_SIFT); // 5128.17 ms with removal of printing minterms.  7263.61 ms now.
   //attractors.manager.AutodynEnable(CUDD_REORDER_WINDOW2); // 5469.04 ms with removal of printing minterms. 4753.13 ms now
   //attractors.manager.AutodynEnable(CUDD_REORDER_WINDOW4); //  4144.42 ms
-  attractors.manager.AutodynEnable(CUDD_REORDER_WINDOW4_CONV); //  4098.88 ms
+  attractors.manager.AutodynEnable(CUDD_REORDER_WINDOW4_CONV); //  4098.88 ms. 52 variables
   //attractors.manager.AutodynEnable(CUDD_REORDER_ANNEALING); //  _SLOW_
   //attractors.manager.AutodynEnable(CUDD_REORDER_GENETIC); // _SLOW_
-  //attractors.manager.AutodynEnable(CUDD_REORDER_WINDOW3_CONV);
-  //CUDD_REORDER_WINDOW3_CONV
-  //CUDD_REORDER_SYMM_SIFT
-  // genetic
+  //attractors.manager.AutodynEnable(CUDD_REORDER_EXACT); // EXCEPTION
+  //attractors.manager.AutodynEnable(CUDD_REORDER_WINDOW3_CONV); // 52 variables.
+  //attractors.manager.AutodynEnable(CUDD_REORDER_SYMM_SIFT); // 52
+  // after these two basically tried everything:
+  //attractors.manager.AutodynEnable(CUDD_REORDER_SIFT_CONVERGE); // 52, 7769.38 ms
+  //attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // 52, 4596 ms
   /////////////////////////////////////////////////
   
   
