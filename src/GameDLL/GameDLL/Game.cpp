@@ -281,7 +281,7 @@ BDD Game::buildMutantSyncQNTransitionRelation(bool back) const {
    	    [](const std::vector<std::vector<int>::size_type>& a,
    	       const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
 
-  //auto start = std::chrono::steady_clock::now();
+  auto start = std::chrono::steady_clock::now();
  
   int vars_done = 0;
   int comp_num = 0;
@@ -376,16 +376,16 @@ BDD Game::buildMutantSyncQNTransitionRelation(bool back) const {
         }
       }
     }
-    //auto diff = std::chrono::steady_clock::now() - start;
-    //std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
+    auto diff = std::chrono::steady_clock::now() - start;
+    std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
 
     std::cout << "adding connected component " << comp_num << std::endl;
     comp_num++;
     tr *= bdd;
     std::cout << "here1" << std::endl;
     
-    //diff = std::chrono::steady_clock::now() - start;
-    //std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
+    diff = std::chrono::steady_clock::now() - start;
+    std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
   }
 
   std::cout << "here at end" << std::endl;
