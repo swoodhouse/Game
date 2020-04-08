@@ -5,11 +5,11 @@
 #include "Attractors.h"
 #include "Game.h"
 
-extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
-	int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int height)
+//extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
+//	int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int height)
+extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[], int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int height, char outputPrefix[])
 	{
-	/*int headerLength const char *csvHeader,) {*/
-    //std::string header(csvHeader, headerLength);
+        std::string outputPrefixS(outputPrefix);
 	std::cout << "in dll. numVars:" << numVars << ", numMutations:" << numMutations << ", numTreatments:" << numTreatments << ", apopVar:" << apopVar << ", height: " << height << std::endl;
 
 	std::cout << "ranges[3]" << ranges[3] << std::endl;
@@ -91,7 +91,8 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	out.PrintMinterm();
 
 	std::ofstream csv;
-	csv.open("Minimax.csv", std::ios_base::app);
+	//csv.open("Minimax.csv", std::ios_base::app);
+	csv.open(outputPrefixS + "Minimax.csv", std::ios_base::app);
 	csv << std::endl << g.prettyPrint(out) << std::endl;
 
     return 0;
