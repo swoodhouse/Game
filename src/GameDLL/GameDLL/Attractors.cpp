@@ -47,7 +47,7 @@ std::string fromBinary(const std::string& bits, int offset) {
   return values.size() > 1 ? printRange(values) : std::to_string(values.front());
 }
 
-BDD Attractors::representState(const std::vector<bool>& values) const {
+BDD Attractors::representState(const std::vector<bool>& values) {
   BDD bdd = manager.bddOne();
   for (int i = 0; i < values.size(); i++) {
     BDD var = manager.bddVar(i);
@@ -60,11 +60,11 @@ BDD Attractors::representState(const std::vector<bool>& values) const {
 }
 
 // this is really unprimed qn vars
-BDD Attractors::representNonPrimeVariables() const {
+BDD Attractors::representNonPrimeVariables() {
   return representState(std::vector<bool>(numUnprimedBDDVars, true));
 }
 
-BDD Attractors::representPrimeVariables() const {
+BDD Attractors::representPrimeVariables() {
   BDD bdd = manager.bddOne();
   for (int i = numUnprimedBDDVars; i < numUnprimedBDDVars * 2; i++) {
     BDD var = manager.bddVar(i);
@@ -73,12 +73,13 @@ BDD Attractors::representPrimeVariables() const {
   return bdd;
 }
 
-int Attractors::countBits(int end) const {
+int Attractors::countBits(int end) {
   auto lambda = [](int a, int b) { return a + bits(b); };
   return std::accumulate(ranges.begin(), ranges.begin() + end, 0, lambda);
 }
 
-BDD Attractors::representUnprimedVarQN(int var, int val) const {
+// nir suggests allocating unprimed and primed here back to back instead, interleaving
+BDD Attractors::representUnprimedVarQN(int var, int val) {
   BDD bdd = manager.bddOne();
   int i = countBits(var);
   int b = bits(ranges[var]);
@@ -94,7 +95,7 @@ BDD Attractors::representUnprimedVarQN(int var, int val) const {
   return bdd;
 }
 
-BDD Attractors::representPrimedVarQN(int var, int val) const {
+BDD Attractors::representPrimedVarQN(int var, int val) {
   BDD bdd = manager.bddOne();
   int i = numUnprimedBDDVars + countBits(var);
 
@@ -111,7 +112,7 @@ BDD Attractors::representPrimedVarQN(int var, int val) const {
   return bdd;
 }
 
-BDD Attractors::representStateQN(const std::vector<int>& vars, const std::vector<int>& values) const {
+BDD Attractors::representStateQN(const std::vector<int>& vars, const std::vector<int>& values) {
   BDD bdd = manager.bddOne();
   for (size_t i = 0; i < vars.size(); i++) {
     int var = vars[i];
@@ -121,7 +122,7 @@ BDD Attractors::representStateQN(const std::vector<int>& vars, const std::vector
   return bdd;
 }
 
-BDD Attractors::representSyncQNTransitionRelation(const QNTable& qn) const {
+BDD Attractors::representSyncQNTransitionRelation(const QNTable& qn) {
   BDD bdd = manager.bddOne();
 
   for (int v = 0; v < ranges.size(); v++) {
@@ -143,7 +144,7 @@ BDD Attractors::representSyncQNTransitionRelation(const QNTable& qn) const {
   return bdd;
 }
 
-BDD Attractors::renameRemovingPrimes(const BDD& bdd) const {
+BDD Attractors::renameRemovingPrimes(const BDD& bdd) {
   std::vector<int> permute(numBDDVars);
   std::iota(permute.begin(), permute.end(), 0);
 
@@ -154,7 +155,7 @@ BDD Attractors::renameRemovingPrimes(const BDD& bdd) const {
   return bdd.Permute(&permute[0]);
 }
 
-BDD Attractors::renameAddingPrimes(const BDD& bdd) const {
+BDD Attractors::renameAddingPrimes(const BDD& bdd) {
   std::vector<int> permute(numBDDVars);
   std::iota(permute.begin(), permute.end(), 0);
 
@@ -165,7 +166,7 @@ BDD Attractors::renameAddingPrimes(const BDD& bdd) const {
   return bdd.Permute(&permute[0]);
 }
 
-BDD Attractors::randomState(const BDD& S) const {
+BDD Attractors::randomState(const BDD& S) {
   std::vector<BDD> vars;
   for (int i = 0; i < numBDDVars; i++) {
     BDD v = manager.bddVar(i);
@@ -181,7 +182,7 @@ BDD Attractors::randomState(const BDD& S) const {
   return rnd.ExistAbstract(notUnprimedQnVars);
 }
 
-void Attractors::removeInvalidBitCombinations(BDD& S) const {
+void Attractors::removeInvalidBitCombinations(BDD& S) {
   for (int var = 0; var < ranges.size(); var++) {
     if (ranges[var] > 0) {
       int b = bits(ranges[var]);
@@ -194,13 +195,13 @@ void Attractors::removeInvalidBitCombinations(BDD& S) const {
   }
 }
 
-BDD Attractors::immediateSuccessorStates(const BDD& transitionBdd, const BDD& valuesBdd) const {
+BDD Attractors::immediateSuccessorStates(const BDD& transitionBdd, const BDD& valuesBdd) {
   BDD bdd = transitionBdd * valuesBdd;
   bdd = bdd.ExistAbstract(nonPrimeVariables);
   return renameRemovingPrimes(bdd);
 }
 
-BDD Attractors::forwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) const {
+BDD Attractors::forwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) {
   BDD reachable = manager.bddZero();
   BDD frontier = valuesBdd;
 
@@ -211,13 +212,13 @@ BDD Attractors::forwardReachableStates(const BDD& transitionBdd, const BDD& valu
   return reachable;
 }
 
-BDD Attractors::immediatePredecessorStates(const BDD& transitionBdd, const BDD& valuesBdd) const {
+BDD Attractors::immediatePredecessorStates(const BDD& transitionBdd, const BDD& valuesBdd) {
   BDD bdd = renameAddingPrimes(valuesBdd);
   bdd *= transitionBdd;
   return bdd.ExistAbstract(primeVariables);
 }
 
-BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) const {
+BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) {
   BDD reachable = manager.bddZero();
   BDD frontier = valuesBdd;
 
@@ -228,7 +229,7 @@ BDD Attractors::backwardReachableStates(const BDD& transitionBdd, const BDD& val
   return reachable;
 }
 
-std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove) const {
+std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& statesToRemove) {
   std::list<BDD> attractors;
   BDD S = manager.bddOne();
   removeInvalidBitCombinations(S);
@@ -266,7 +267,7 @@ std::list<BDD> Attractors::attractors(const BDD& transitionBdd, const BDD& state
   return attractors;
 }
 
-std::string Attractors::prettyPrint(const BDD& attractor) const {
+std::string Attractors::prettyPrint(const BDD& attractor) {
   // ideally would not use a temp file
   FILE *old = manager.ReadStdout();
   FILE *fp = fopen("temp.txt", "w");
@@ -299,7 +300,7 @@ std::string Attractors::prettyPrint(const BDD& attractor) const {
   return out;
 }
 
-BDD Attractors::fixpoints(const BDD& syncTransitionBdd) const {
+BDD Attractors::fixpoints(const BDD& syncTransitionBdd) {
     BDD fixpoint = manager.bddOne();
     for (int i = 0; i < numUnprimedBDDVars; i++) {
         BDD v = manager.bddVar(i);
@@ -310,4 +311,14 @@ BDD Attractors::fixpoints(const BDD& syncTransitionBdd) const {
     BDD bdd = renameRemovingPrimes(syncTransitionBdd * fixpoint);
     removeInvalidBitCombinations(bdd);
     return bdd;
+}
+
+void Attractors::initialiseLevels(const std::vector<int>& levels) {
+  for (int l : levels) std::cout << l << ","; // temp
+  std::cout << std::endl; // temp
+  
+  for (int l : levels) {
+    std::cout << "creating var" << std::endl;
+    manager.bddNewVarAtLevel(l);
+  }
 }

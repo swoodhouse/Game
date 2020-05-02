@@ -1,5 +1,7 @@
 #pragma once
 
+// temp: removed all const from functions
+
 struct Game {
   /*const*/ int height;
   /*const*/ bool maximisingPlayerLast;
@@ -18,40 +20,42 @@ struct Game {
   static int calcNumMutations(int height, bool maximisingPlayerGoesLast);
   static int calcNumTreatments(int height, bool maximisingPlayerGoesLast);
 
-  std::vector<int> attractorsIndicies() const;
-  std::vector<int> treatmentVarIndices() const;
-  std::vector<int> mutationVarsIndices() const;
-  std::vector<int> chosenTreatmentsIndices() const;
-  std::vector<int> chosenMutationsIndices() const;
-  std::vector<std::vector<std::vector<int>::size_type>> connectedComponents() const;
-  ADD buildScoreRelation(int apopVar) const;
-  ADD renameBDDVarsAddingPrimes(const ADD& add) const;
-  ADD renameBDDVarsRemovingPrimes(const ADD& add) const;
-  ADD immediateForwardMax(const ADD& states) const;
-  ADD immediateBackMax(const ADD& states) const;
-  ADD backMax(const ADD& states) const;
-  ADD scoreLoop(const BDD& loop, const ADD& scoreRelation) const;
-  ADD scoreAttractors(bool maximisingPlayer, int numMutations) const;
-  BDD representTreatmentVariables() const;
-  std::string prettyPrint(const ADD & states) const;
-  BDD buildMutantSyncQNTransitionRelation(bool back) const;
-  BDD representTreatment(int val) const;
-  BDD representTreatmentNone() const;
-  BDD representSomeTreatment() const;
-  BDD representSomeMutation(int var) const;
-  BDD representMutation(int var, int val) const;
-  BDD representMutationNone(int var) const;
-  BDD representChosenTreatment(int level, int treatment) const;
-  BDD representChosenMutation(int level, int mutation) const;
-  BDD nMutations(int n) const;
-  ADD untreat(int level, const ADD& states) const;
-  ADD unmutate(int level, const ADD& states) const;
+  std::vector<int> attractorsIndicies();
+  std::vector<int> treatmentVarIndices();
+  std::vector<int> mutationVarsIndices();
+  std::vector<int> chosenTreatmentsIndices();
+  std::vector<int> chosenMutationsIndices();
+  std::vector<std::vector<std::vector<int>::size_type>> connectedComponents();
+  ADD buildScoreRelation(int apopVar);
+  ADD renameBDDVarsAddingPrimes(const ADD& add);
+  ADD renameBDDVarsRemovingPrimes(const ADD& add);
+  ADD immediateForwardMax(const ADD& states);
+  ADD immediateBackMax(const ADD& states);
+  ADD backMax(const ADD& states);
+  ADD scoreLoop(const BDD& loop, const ADD& scoreRelation);
+  ADD scoreAttractors(bool maximisingPlayer, int numMutations);
+  BDD representTreatmentVariables();
+  std::string prettyPrint(const ADD & states);
+  BDD buildMutantSyncQNTransitionRelation(bool back);
+  BDD representTreatment(int val);
+  BDD representTreatmentNone();
+  BDD representSomeTreatment();
+  BDD representSomeMutation(int var);
+  BDD representMutation(int var, int val);
+  BDD representMutationNone(int var);
+  BDD representChosenTreatment(int level, int treatment);
+  BDD representChosenMutation(int level, int mutation);
+  BDD nMutations(int n);
+  ADD untreat(int level, const ADD& states);
+  ADD unmutate(int level, const ADD& states);
 
-  BDD treatmentAbstractRelation(int level) const;
-  BDD mutationAbstractRelation(int level) const;
+  BDD treatmentAbstractRelation(int level);
+  BDD mutationAbstractRelation(int level);
 
-  BDD representChosenVariables() const;
-  void testBackReachesAll(int numMutations, bool treated, const BDD& back) const;
+  BDD representChosenVariables();
+  void testBackReachesAll(int numMutations, bool treated, const BDD& back);
+  
+  std::vector<int> computeInitialLevels();
   
   Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,
        bool maximisingPlayerGoesLast)
@@ -68,19 +72,20 @@ struct Game {
     this->numUnprimedBDDVars = std::accumulate(rangesV.begin(), rangesV.begin() + rangesV.size(), 0, lambda); // same as rangesV.end()?
     int temp = chosenMutationsIndices().back() + 1;
 
-    attractors = Attractors(minVals, rangesV, qn, temp);
-    
+    attractors = Attractors(minVals, rangesV, qn, temp, computeInitialLevels());
+
+    // try turning off here then back on..
+    attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // play with different choices again
+
     mutantTransitionRelationAtt = buildMutantSyncQNTransitionRelation(false);
     mutantTransitionRelationBack = buildMutantSyncQNTransitionRelation(true);
     scoreRelation = buildScoreRelation(apopVar);
 
-      // new, fixpoints optimisation //////
     std::cout << "Finding fixpoints..." << std::endl;
     allFixpoints = attractors.fixpoints(mutantTransitionRelationAtt);// this can just be computed once, not every call
-    /////////////////////////////////////
-
   };
-    
+
+  
   // this was buggy, so be careful if you go back to move ctors
   /* Game(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qn, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, int depth, */
 	/* 	bool maximisingPlayerGoesLast) : */
@@ -99,5 +104,5 @@ struct Game {
   Game(const Game&) = delete;
   Game& operator=(const Game&) = delete;
 
-  ADD minimax() const;
+  ADD minimax();
 };

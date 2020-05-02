@@ -31,50 +31,55 @@ struct Attractors {
     /*const*/ BDD nonPrimeVariables;
     /*const*/ BDD primeVariables;
 
-    BDD representState(const std::vector<bool>& values) const;
-    BDD representNonPrimeVariables() const;
-    BDD representPrimeVariables() const;
-    int countBits(int end) const;
-    BDD representUnprimedVarQN(int var, int val) const;
-    BDD representPrimedVarQN(int var, int val) const;
-    BDD representStateQN(const std::vector<int>& vars, const std::vector<int>& values) const;
-    BDD representSyncQNTransitionRelation(const QNTable& qn) const;
-    BDD renameRemovingPrimes(const BDD& bdd) const;
-    BDD renameAddingPrimes(const BDD& bdd) const;
-    BDD randomState(const BDD& S) const;
-    void removeInvalidBitCombinations(BDD& S) const;
-    BDD immediateSuccessorStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
-    BDD forwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
-    BDD immediatePredecessorStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
-    BDD backwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd) const;
+    BDD representState(const std::vector<bool>& values);
+    BDD representNonPrimeVariables();
+    BDD representPrimeVariables();
+    int countBits(int end);
+    BDD representUnprimedVarQN(int var, int val);
+    BDD representPrimedVarQN(int var, int val);
+    BDD representStateQN(const std::vector<int>& vars, const std::vector<int>& values);
+    BDD representSyncQNTransitionRelation(const QNTable& qn);
+    BDD renameRemovingPrimes(const BDD& bdd);
+    BDD renameAddingPrimes(const BDD& bdd);
+    BDD randomState(const BDD& S);
+    void removeInvalidBitCombinations(BDD& S);
+    BDD immediateSuccessorStates(const BDD& transitionBdd, const BDD& valuesBdd);
+    BDD forwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd);
+    BDD immediatePredecessorStates(const BDD& transitionBdd, const BDD& valuesBdd);
+    BDD backwardReachableStates(const BDD& transitionBdd, const BDD& valuesBdd);
     
-    std::list<BDD> attractors(const BDD& transitionBdd,  const BDD& statesToRemove) const;
-    std::string prettyPrint(const BDD& attractor) const;
+    std::list<BDD> attractors(const BDD& transitionBdd,  const BDD& statesToRemove);
+    std::string prettyPrint(const BDD& attractor);
 
-    BDD fixpoints(const BDD& transitionBdd) const;
+    BDD fixpoints(const BDD& transitionBdd);
 
+    void initialiseLevels(const std::vector<int>& levels);
+  
     // temp
     Attractors() {};
-
-    Attractors(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qnT, int numVars)
+  Attractors(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qnT, int numVars, const std::vector<int>& levels)
     {
-         std::cout << "in attractors ctor" << std::endl;
       minValues = minVals;
       ranges = rangesV;
       qn = qnT;
       numUnprimedBDDVars = countBits(rangesV.size());
       numBDDVars = numVars;
-      manager = Cudd(numBDDVars);
-      nonPrimeVariables = representNonPrimeVariables();
-      primeVariables = representPrimeVariables();
+      //manager = Cudd(numBDDVars);
+	    //manager = Cudd(); // temp
       
-      // new, trying to change this to solve efficency issue on breast cancer model in Game mode
-      //manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT); // seems to beat CUDD_REORDER_SIFT
-      //manager.AutodynEnable(CUDD_REORDER_EXACT);
-      manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // CUDD_REORDER_GROUP_SIFT_CONV better than GROUP_SIFT it seems, CUDD_REORDER_SYMM_SIFT_COV not as good. CUDD_REORDER_SYMM_SIFT probably not as good. CUDD_REORDER_SIFT_CONVERGE good? maybe not as group_sif_conv. Can I get debugging information for the reordering.. actually, maybe some of these were better than CUDD_REORDER_GROUP_SIFT_CONV
-	 // try CUDD_REORDER_GROUP_SIFT_CONV? CUDD_REORDER_SYMM_SIFT_CONV? CUDD_REORDER_SYMM_SIFT? CUDD_REORDER_SIFT_CONVERGE? CUDD_REORDER_SIFT?
+            initialiseLevels(levels);
+      
+      nonPrimeVariables = representNonPrimeVariables();
 
-	 std::cout << "leaving attractors ctor" << std::endl;
+      std::cout << "printing minterms early.." << std::endl;
+      nonPrimeVariables.PrintMinterm();
+
+      primeVariables = representPrimeVariables();
+
+      std::cout << "printing minterms early.." << std::endl;
+      primeVariables.PrintMinterm();
+
+      //manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // play with different choices again
      };
 
 // //Option 2: Dynamic reordering by window permutation
