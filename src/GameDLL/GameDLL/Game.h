@@ -55,7 +55,8 @@ struct Game {
   BDD representChosenVariables();
   void testBackReachesAll(int numMutations, bool treated, const BDD& back);
   
-  std::vector<int> computeInitialLevels();
+  //std::vector<int> computeInitialLevels();
+  void setBDDLevels();
   
   Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,
        bool maximisingPlayerGoesLast)
@@ -72,8 +73,10 @@ struct Game {
     this->numUnprimedBDDVars = std::accumulate(rangesV.begin(), rangesV.begin() + rangesV.size(), 0, lambda); // same as rangesV.end()?
     int temp = chosenMutationsIndices().back() + 1;
 
-    attractors = Attractors(minVals, rangesV, qn, temp, computeInitialLevels());
+    attractors = Attractors(minVals, rangesV, qn, temp);
 
+    setBDDLevels();
+    
     // try turning off here then back on..
     attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // play with different choices again
 

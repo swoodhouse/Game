@@ -531,11 +531,7 @@ std::string Game::prettyPrint(const ADD& states) {
     }
     // get the score value
 
-    std::cout << "crashing here?:" << std::endl;
-    //    std::string rest = std::to_string(std::stoi(line.substr(i)) - 1); // subtract 1 back off add value (0 is nothing, so 1 is score of 0)
-
-    size_t scoreStart = line.find_last_of(' ') + 1;
-    std::string rest = std::to_string(std::stoi(line.substr(scoreStart)) -1);
+    std::string rest = std::to_string(std::stoi(line.substr(i)) - 1); // subtract 1 back off add value (0 is nothing, so 1 is score of 0)
 
     std::cout << rest << std::endl;
     
@@ -1077,64 +1073,90 @@ void Game::testBackReachesAll(int numMutations, bool treated, const BDD& back) {
   std::cout << "does back reach everything?:" << (test == abstractedBack) << std::endl;
 }
 
-std::vector<int> Game::computeInitialLevels() {
+void Game::setBDDLevels() {
   std::vector<int> levels;
 
-  std::cout << "last var: " << chosenMutationsIndices().back();
-  std::cout << "unprimed qn vars:[";
-  int l = treatmentVarIndices().size() + mutationVarsIndices().size();
-  for (int i = 0; i < numUnprimedBDDVars; i++) {
-    std::cout << l << ",";
-    levels.push_back(l);
-    l += 2; // alternate v and vprime
-  }
-  std::cout << "]" << std::endl;
-  std::cout << "primed qn vars:[";
-  l = treatmentVarIndices().size() + mutationVarsIndices().size() + 1;
-  for (int i = 0; i < numUnprimedBDDVars; i++) {
-    std::cout << l << ",";
-    levels.push_back(l);
-    l += 2;
-  }
-  std::cout << "]" << std::endl;
-  
-// ^ do via cc's. this is much harder
-// print these out......
-
-  // this should be right assuming treatment comes before mutations..
-  std::cout << "treatment vars:[";
-  l = 0;
   for (int i : treatmentVarIndices()) {
-    std::cout << l << ",";
-    levels.push_back(l);
-    l++;
+    levels.push_back(i);
   }
-  std::cout << "]" << std::endl;
 
-  std::cout << "mutation vars:[";
   for (int i : mutationVarsIndices()) {
-    std::cout << l << ",";
-    levels.push_back(l);
-    l++;
+    levels.push_back(i);
   }
-  std::cout << "]" << std::endl;
 
-  std::cout << "chosen treatment vars:[";
-  // these should go right at the end..
-  l = treatmentVarIndices().size() + mutationVarsIndices().size() + numUnprimedBDDVars * 2; // off by one?
-  for (int i : chosenTreatmentsIndices()) {
-    std::cout << l << ",";
-    levels.push_back(l);
-    l++;
+  for (int i = 0; i < numUnprimedBDDVars; i++) {
+    levels.push_back(i);
+    levels.push_back(i + numUnprimedBDDVars);
   }
-  std::cout << "]" << std::endl;
-  std::cout << "chosen mutation vars:[";
-  for (int i : chosenMutationsIndices()) {
-    std::cout << l << ",";
-    levels.push_back(l);
-    l++;
-  }
-  std::cout << "]" << std::endl;
   
-  return levels;
+  for (int i : chosenTreatmentsIndices()) {
+    levels.push_back(i);
+  }
+  for (int i : chosenMutationsIndices()) {
+    levels.push_back(i);
+  }
+  
+  attractors.manager.ShuffleHeap(&levels[0]); // should this be .data?
 }
+
+// std::vector<int> Game::computeInitialLevels() {
+//   std::vector<int> levels;
+
+//   std::cout << "last var: " << chosenMutationsIndices().back();
+//   std::cout << "unprimed qn vars:[";
+//   int l = treatmentVarIndices().size() + mutationVarsIndices().size();
+//   for (int i = 0; i < numUnprimedBDDVars; i++) {
+//     std::cout << l << ",";
+//     levels.push_back(l);
+//     l += 2; // alternate v and vprime
+//   }
+//   std::cout << "]" << std::endl;
+//   std::cout << "primed qn vars:[";
+//   l = treatmentVarIndices().size() + mutationVarsIndices().size() + 1;
+//   for (int i = 0; i < numUnprimedBDDVars; i++) {
+//     std::cout << l << ",";
+//     levels.push_back(l);
+//     l += 2;
+//   }
+//   std::cout << "]" << std::endl;
+  
+// // ^ do via cc's. this is much harder
+// // print these out......
+
+//   // this should be right assuming treatment comes before mutations..
+//   std::cout << "treatment vars:[";
+//   l = 0;
+//   for (int i : treatmentVarIndices()) {
+//     std::cout << l << ",";
+//     levels.push_back(l);
+//     l++;
+//   }
+//   std::cout << "]" << std::endl;
+
+//   std::cout << "mutation vars:[";
+//   for (int i : mutationVarsIndices()) {
+//     std::cout << l << ",";
+//     levels.push_back(l);
+//     l++;
+//   }
+//   std::cout << "]" << std::endl;
+
+//   std::cout << "chosen treatment vars:[";
+//   // these should go right at the end..
+//   l = treatmentVarIndices().size() + mutationVarsIndices().size() + numUnprimedBDDVars * 2; // off by one?
+//   for (int i : chosenTreatmentsIndices()) {
+//     std::cout << l << ",";
+//     levels.push_back(l);
+//     l++;
+//   }
+//   std::cout << "]" << std::endl;
+//   std::cout << "chosen mutation vars:[";
+//   for (int i : chosenMutationsIndices()) {
+//     std::cout << l << ",";
+//     levels.push_back(l);
+//     l++;
+//   }
+//   std::cout << "]" << std::endl;
+  
+//   return levels;
+// }

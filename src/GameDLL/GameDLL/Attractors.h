@@ -57,17 +57,17 @@ struct Attractors {
   
     // temp
     Attractors() {};
-  Attractors(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qnT, int numVars, const std::vector<int>& levels)
+  Attractors(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qnT, int numVars)
     {
       minValues = minVals;
       ranges = rangesV;
       qn = qnT;
       numUnprimedBDDVars = countBits(rangesV.size());
       numBDDVars = numVars;
-      //manager = Cudd(numBDDVars);
+      manager = Cudd(numBDDVars);
 	    //manager = Cudd(); // temp
       
-            initialiseLevels(levels);
+            //initialiseLevels(levels);
       
       nonPrimeVariables = representNonPrimeVariables();
 

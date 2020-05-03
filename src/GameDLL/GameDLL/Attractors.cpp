@@ -313,12 +313,12 @@ BDD Attractors::fixpoints(const BDD& syncTransitionBdd) {
     return bdd;
 }
 
-void Attractors::initialiseLevels(const std::vector<int>& levels) {
-  for (int l : levels) std::cout << l << ","; // temp
-  std::cout << std::endl; // temp
+// void Attractors::initialiseLevels(const std::vector<int>& levels) {
+//   for (int l : levels) std::cout << l << ","; // temp
+//   std::cout << std::endl; // temp
   
-  for (int l : levels) {
-    std::cout << "creating var" << std::endl;
-    manager.bddNewVarAtLevel(l);
-  }
-}
+//   for (int l : levels) {
+//     std::cout << "creating var" << std::endl;
+//     manager.bddNewVarAtLevel(l);
+//   }
+// }
