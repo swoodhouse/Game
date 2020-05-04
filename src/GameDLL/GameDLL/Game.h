@@ -57,6 +57,7 @@ struct Game {
   
   //std::vector<int> computeInitialLevels();
   void setBDDLevels();
+  void setBDDLevels2();
   
   Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,
        bool maximisingPlayerGoesLast)
@@ -75,7 +76,8 @@ struct Game {
 
     attractors = Attractors(minVals, rangesV, qn, temp);
 
-    setBDDLevels();
+    //setBDDLevels();
+    setBDDLevels2();
     
     // try turning off here then back on..
     attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // play with different choices again

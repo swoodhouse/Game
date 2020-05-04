@@ -1,4 +1,4 @@
-// heavy refactoring needed. an on Attractors.cpp too i think
+// refactoring needed
 
 #include "stdafx.h"
 #include "Attractors.h"
@@ -529,14 +529,10 @@ std::string Game::prettyPrint(const ADD& states) {
       output.push_back(val);
       i += b;
     }
-    // get the score value
-
-    std::string rest = std::to_string(std::stoi(line.substr(i)) - 1); // subtract 1 back off add value (0 is nothing, so 1 is score of 0)
-
-    std::cout << rest << std::endl;
     
+    // get the score value
+    std::string rest = std::to_string(std::stoi(line.substr(i)) - 1); // subtract 1 back off add value (0 is nothing, so 1 is score of 0)
     output.push_back(rest); // trim this
-
     out += std::accumulate(std::next(output.begin()), output.end(), output.front(), lambda) + "\n";
   }
 
@@ -1160,3 +1156,47 @@ void Game::setBDDLevels() {
   
 //   return levels;
 // }
+
+void Game::setBDDLevels2() {
+  std::vector<int> levels;
+
+  for (int i : treatmentVarIndices()) {
+    levels.push_back(i);
+  }
+
+  for (int i : mutationVarsIndices()) {
+    levels.push_back(i);
+  }
+
+//  for (int i = 0; i < numUnprimedBDDVars; i++) {
+//    levels.push_back(i);
+//    levels.push_back(i + numUnprimedBDDVars);
+//  }
+  // want to topologically sort these components
+  auto components = connectedComponents();
+  std::sort(components.begin(), components.end(),
+            [](const std::vector<std::vector<int>::size_type>& a,
+            const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
+  for (auto comp : components) {
+    // want to topologically sort within a component too
+    // and maybe group
+    for (auto var : comp) {
+      int i = attractors.countBits(var);
+      int b = bits(attractors.ranges[var]);
+      for (int n = 0; n < b; n++) {
+        levels.push_back(i);
+        levels.push_back(i + numUnprimedBDDVars);
+        i++;
+      }
+    }
+  }
+  
+  for (int i : chosenTreatmentsIndices()) {
+    levels.push_back(i);
+  }
+  for (int i : chosenMutationsIndices()) {
+    levels.push_back(i);
+  }
+  
+  attractors.manager.ShuffleHeap(&levels[0]); // should this be .data?
+}
