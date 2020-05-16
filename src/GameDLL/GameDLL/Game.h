@@ -80,7 +80,7 @@ struct Game {
     setBDDLevels2();
     
     // try turning off here then back on..
-    attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // play with different choices again
+    //attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // play with different choices again
 
     mutantTransitionRelationAtt = buildMutantSyncQNTransitionRelation(false);
     mutantTransitionRelationBack = buildMutantSyncQNTransitionRelation(true);
