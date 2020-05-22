@@ -82,7 +82,8 @@ struct Game {
     
     // try turning off here then back on..
     attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // play with different choices again
-
+    attractors.manager.EnableReorderingReporting();
+    
     mutantTransitionRelationAtt = buildMutantSyncQNTransitionRelation(false);
     mutantTransitionRelationBack = buildMutantSyncQNTransitionRelation(true);
     
