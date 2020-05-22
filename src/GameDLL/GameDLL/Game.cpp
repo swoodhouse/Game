@@ -29,7 +29,8 @@ std::vector<std::vector<std::vector<int>::size_type>> Game::topologicallySortCom
         for (auto y : components[j]) {
           if (std::find(attractors.qn.inputVars[y].begin(),
                         attractors.qn.inputVars[y].end(), x) != attractors.qn.inputVars[y].end()) {
-            boost::add_edge(j, i, graph); // if edge (u,v) appears in the graph, then v comes before u in the ordering. so v should be the variable that appears in the tf
+            //boost::add_edge(j, i, graph); // if edge (u,v) appears in the graph, then v comes before u in the ordering. so v should be the variable that appears in the tf
+	    boost::add_edge(i, j, graph);
             continue;
           }
 	}
