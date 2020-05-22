@@ -4,8 +4,56 @@
 #include "Attractors.h"
 #include "Game.h"
 
+template< class T >
+std::vector<T> reorder(const std::vector<T>& v, const std::vector<size_t>& order )  {
+    std::vector<T> ret;
+    for (auto i : order) ret.push_back(v[i]);
+    return ret;
+}
+
 inline BDD logicalImplication(const BDD& a, const BDD& b) {
   return (!a) + b;
+}
+
+std::vector<std::vector<std::vector<int>::size_type>> Game::topologicallySortComponents(const std::vector<std::vector<std::vector<int>::size_type>>& components) const {
+  boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS> graph;
+  auto numComponents = components.size();
+
+  for (int i = 0; i < numComponents; i++) boost::add_vertex(graph);
+
+  for (int i = 0; i < numComponents; i++) {
+    for (int j = 0; j < numComponents; j++) {
+      if (i == j) continue;
+      
+      for (auto x : components[i]) {
+        for (auto y : components[j]) {
+          if (std::find(attractors.qn.inputVars[y].begin(),
+                        attractors.qn.inputVars[y].end(), x) != attractors.qn.inputVars[y].end()) {
+            boost::add_edge(j, i, graph); // if edge (u,v) appears in the graph, then v comes before u in the ordering. so v should be the variable that appears in the tf
+            continue;
+          }
+	}
+      }
+    }
+  }
+  
+    //typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS, boost::color_property<> > Graph;
+  typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > Graph;
+  typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
+ 
+  std::vector<Vertex> c;
+  boost::topological_sort(graph, std::back_inserter(c));
+
+  std::vector<size_t> order;
+  std::cout << "A topological ordering: ";
+  for ( std::vector<Vertex>::reverse_iterator ii=c.rbegin(); ii!=c.rend(); ++ii) {
+    order.push_back(*ii);
+    //std::cout << boost::index(*ii) << " ";
+    std::cout << *ii << " ";
+  }
+  std::cout << std::endl;
+
+  return reorder(components, order);
 }
 
 int Game::calcNumMutations(int height, bool maximisingPlayerGoesLast) {
@@ -277,10 +325,11 @@ BDD Game::buildMutantSyncQNTransitionRelation(bool back) {
   std::cout << "num connected components: " << components.size() << std::endl;
 
   // do i want to sort in ascending or descending order? ascending
-  std::sort(components.begin(), components.end(),
-   	    [](const std::vector<std::vector<int>::size_type>& a,
-   	       const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
-
+  // std::sort(components.begin(), components.end(),
+  //  	    [](const std::vector<std::vector<int>::size_type>& a,
+  //  	       const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
+  components = topologicallySortComponents(components);
+  
   auto start = std::chrono::steady_clock::now();
  
   int vars_done = 0;
@@ -1174,13 +1223,17 @@ void Game::setBDDLevels2() {
 //  }
   // want to topologically sort these components
   auto components = connectedComponents();
-  std::sort(components.begin(), components.end(),
-            [](const std::vector<std::vector<int>::size_type>& a,
-            const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
+  // std::sort(components.begin(), components.end(),
+  //           [](const std::vector<std::vector<int>::size_type>& a,
+  //           const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
+
+  components = topologicallySortComponents(components);
+    
   for (auto comp : components) {
     // want to topologically sort within a component too
     // and maybe group
     for (auto var : comp) {
+      std::cout << "next in topological ordering: " << var << std::endl;
       int i = attractors.countBits(var);
       int b = bits(attractors.ranges[var]);
       for (int n = 0; n < b; n++) {

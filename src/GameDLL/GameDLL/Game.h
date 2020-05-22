@@ -19,6 +19,7 @@ struct Game {
   
   static int calcNumMutations(int height, bool maximisingPlayerGoesLast);
   static int calcNumTreatments(int height, bool maximisingPlayerGoesLast);
+  std::vector<std::vector<std::vector<int>::size_type>> topologicallySortComponents(const std::vector<std::vector<std::vector<int>::size_type>>& components) const;
 
   std::vector<int> attractorsIndicies();
   std::vector<int> treatmentVarIndices();
@@ -80,10 +81,11 @@ struct Game {
     setBDDLevels2();
     
     // try turning off here then back on..
-    //attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // play with different choices again
+    attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // play with different choices again
 
     mutantTransitionRelationAtt = buildMutantSyncQNTransitionRelation(false);
     mutantTransitionRelationBack = buildMutantSyncQNTransitionRelation(true);
+    
     scoreRelation = buildScoreRelation(apopVar);
 
     std::cout << "Finding fixpoints..." << std::endl;
