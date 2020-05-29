@@ -657,7 +657,8 @@ BDD Game::representTreatmentVariables() {
 
 // this isn't really doing minimax, it's computing the game tree
 ADD Game::minimax() {
-
+  // TEMP!
+  //attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV);
 
   // temp... experimenting with reordering......... 31347.1 ms / 26926.3 ms
   // there are 17 strategies, and then there is manually applying (potentially several in sequence?) and  Cudd_SetMaxGrowth
@@ -699,9 +700,7 @@ ADD Game::minimax() {
   std::cout << "calling scoreAttractors..." << std::endl;
   ADD states = scoreAttractors(maximisingPlayer, numMutations);
   auto diff = std::chrono::steady_clock::now() - start;
-  std::cout << "scoreAttractors done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
-  std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
-	
+  std::cout << "scoreAttractors done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;	
   std::cout << "[[at beginning; " << numMutations << " mutations, 1 treat]]" << std::endl;
   
   // temp, debugging
@@ -738,8 +737,6 @@ ADD Game::minimax() {
 	states = backMax(states); // should this be backMin if we support async networks?
         diff = std::chrono::steady_clock::now() - start;
 	std::cout << "backMax done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
-	std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
- 
   
 	//testBackReachesAll(numMutations, false, states.BddPattern()); // this one failing?
 	//std::cout << "[[back params (from previous): " << numMutations << " mutations, 0 treats]]" << std::endl;
@@ -757,8 +754,6 @@ ADD Game::minimax() {
 	BDD att = scoreAttractors(true, numMutations).BddPattern(); // to score then unscore is not ideal
 	diff = std::chrono::steady_clock::now() - start;
 	std::cout << "scoreAttractors done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
-	std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
-
 	std::cout << "[[maximising branch (a): " << numMutations << " mutations, 1 treat]]" << std::endl;
 	
 	// wait only do this on the mut introducing ones
@@ -779,8 +774,6 @@ ADD Game::minimax() {
 
 	std::cout << "intersecting with attractors" << std::endl;
 	states *= att.Add(); // removing the treatment = 0 forcing variables
-	std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
-	
 	// std::ofstream csvI;
 	// csvI.open("Minimax_level_" + std::to_string(height) + "_a_intersect.csv");
 	// csvI << prettyPrint(states) << std::endl;
@@ -799,8 +792,6 @@ ADD Game::minimax() {
       states = backMax(states); // should this be backMin if we support async networks?
       diff = std::chrono::steady_clock::now() - start;
       std::cout << "backMax done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
-      std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
- 
       // std::ofstream csv3;
       // csv3.open("Minimax_level_" + std::to_string(height) + "_b_back.csv");
       // csv3 << prettyPrint(states) << std::endl;
@@ -839,7 +830,6 @@ ADD Game::minimax() {
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
       diff = std::chrono::steady_clock::now() - start;
       std::cout << "scoreAttractors done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
-      std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
       std::cout << "[[maximising branch (b): " << numMutations << " mutations, 1 treat]]" << std::endl;      
       // only do this on unmutate
       //testReachability(att, temp_oldAtts, numMutations); // temp
@@ -852,7 +842,6 @@ ADD Game::minimax() {
       
       std::cout << "intersecting with attractors" << std::endl;
       states *= att.Add();
-      std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
       
       // temp, debugging
       // std::ofstream csvI;
@@ -883,7 +872,6 @@ ADD Game::minimax() {
       states = backMax(states); // should this be backMin if we support async networks?
       diff = std::chrono::steady_clock::now() - start;
       std::cout << "backMax done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
-      std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
 	
       //testBackReachesAll(numMutations, true, states.BddPattern()); // this one passing now too?
       //std::cout << "[[back params (from previous): " << numMutations << " mutations, 1 treat]]" << std::endl;
@@ -920,9 +908,7 @@ ADD Game::minimax() {
       std::cout << "calling scoreAttractors..." << std::endl;
       BDD att = scoreAttractors(maximisingPlayer, numMutations).BddPattern(); // to score then unscore is not ideal
       diff = std::chrono::steady_clock::now() - start;
-      std::cout << "scoreAttractors done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
-      std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
-  
+      std::cout << "scoreAttractors done. total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;  
       std::cout << "[[minimising branch: " << numMutations << " mutations, 0 treat]]" << std::endl;      
       // only do this on unmutate
       //testReachability(att, temp_oldAtts); // temp
@@ -936,7 +922,6 @@ ADD Game::minimax() {
 
       std::cout << "intersecting with attractors" << std::endl;
       states *= att.Add(); // if they are disappearing somewhere here could it be that some combos lead to a zero bdd attractor..
-      std::cout << "number of BDD variables: " << states.SupportSize() << std::endl;
 
       // // temp, debugging
       // std::ofstream csvI;
@@ -1207,34 +1192,89 @@ void Game::setBDDLevels() {
 //   return levels;
 // }
 
+// void Game::setBDDLevels2() {
+//   std::vector<int> levels;
+
+//   for (int i : treatmentVarIndices()) {
+//     levels.push_back(i);
+//   }
+
+//   for (int i : mutationVarsIndices()) {
+//     levels.push_back(i);
+//   }
+
+// //  for (int i = 0; i < numUnprimedBDDVars; i++) {
+// //    levels.push_back(i);
+// //    levels.push_back(i + numUnprimedBDDVars);
+// //  }
+//   // want to topologically sort these components
+//   auto components = connectedComponents();
+//   // std::sort(components.begin(), components.end(),
+//   //           [](const std::vector<std::vector<int>::size_type>& a,
+//   //           const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
+
+//   components = topologicallySortComponents(components);
+    
+//   for (auto comp : components) {
+//     // want to topologically sort within a component too
+//     // and maybe group
+//     for (auto var : comp) {
+//       std::cout << "next in topological ordering: " << var << std::endl;
+//       int i = attractors.countBits(var);
+//       int b = bits(attractors.ranges[var]);
+//       for (int n = 0; n < b; n++) {
+//         levels.push_back(i);
+//         levels.push_back(i + numUnprimedBDDVars);
+//         i++;
+//       }
+//     }
+//   }
+  
+//   for (int i : chosenTreatmentsIndices()) {
+//     levels.push_back(i);
+//   }
+//   for (int i : chosenMutationsIndices()) {
+//     levels.push_back(i);
+//   }
+  
+//   attractors.manager.ShuffleHeap(&levels[0]); // should this be .data?
+// }
+
 void Game::setBDDLevels2() {
   std::vector<int> levels;
+  bool mutationVarsPlaced = false;
+  bool treatmentVarsPlaced = false;
 
-  for (int i : treatmentVarIndices()) {
-    levels.push_back(i);
-  }
+  //for (int i : treatmentVarIndices()) {
+  //  levels.push_back(i);
+  //}
 
-  for (int i : mutationVarsIndices()) {
-    levels.push_back(i);
-  }
-
-//  for (int i = 0; i < numUnprimedBDDVars; i++) {
-//    levels.push_back(i);
-//    levels.push_back(i + numUnprimedBDDVars);
-//  }
-  // want to topologically sort these components
+  //for (int i : mutationVarsIndices()) {
+  //  levels.push_back(i);
+  //}
   auto components = connectedComponents();
-  // std::sort(components.begin(), components.end(),
-  //           [](const std::vector<std::vector<int>::size_type>& a,
-  //           const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
-
   components = topologicallySortComponents(components);
     
   for (auto comp : components) {
-    // want to topologically sort within a component too
-    // and maybe group
     for (auto var : comp) {
       std::cout << "next in topological ordering: " << var << std::endl;
+
+      if (!treatmentVarsPlaced && (std::find(oeVars.begin(), oeVars.end(), var) != oeVars.end())) {
+        std::cout << "placing treatmentVars above " << var << std::endl;
+	treatmentVarsPlaced = true;
+        for (int i : treatmentVarIndices()) {
+          levels.push_back(i);
+        }
+      }
+
+      if (!mutationVarsPlaced && (std::find(koVars.begin(), koVars.end(), var) != koVars.end())) {
+        std::cout << "placing mutationVars above " << var << std::endl;
+	mutationVarsPlaced = true;
+        for (int i : mutationVarsIndices()) {
+          levels.push_back(i);
+        }
+      }
+
       int i = attractors.countBits(var);
       int b = bits(attractors.ranges[var]);
       for (int n = 0; n < b; n++) {
@@ -1254,3 +1294,5 @@ void Game::setBDDLevels2() {
   
   attractors.manager.ShuffleHeap(&levels[0]); // should this be .data?
 }
+
+

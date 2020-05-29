@@ -85,8 +85,10 @@ struct Game {
     attractors.manager.EnableReorderingReporting();
     
     mutantTransitionRelationAtt = buildMutantSyncQNTransitionRelation(false);
+    attractors.manager.AutodynDisable();
     mutantTransitionRelationBack = buildMutantSyncQNTransitionRelation(true);
-    
+
+    //attractors.manager.AutodynDisable();
     scoreRelation = buildScoreRelation(apopVar);
 
     std::cout << "Finding fixpoints..." << std::endl;
