@@ -4,6 +4,33 @@
 #include "Attractors.h"
 #include "Game.h"
 
+long global_nodeCount = 0;
+
+int pre_reordering_handler(DdManager* manager, const char* x, void* y) {
+   global_nodeCount = Cudd_ReadNodeCount(manager);
+   std::cout << std::endl << "in pre reordering handler. bdd size before:" << global_nodeCount << std::endl;
+
+   return 1;
+}
+
+int post_reordering_handler(DdManager* manager, const char* x, void* start_time) {
+    unsigned long initialTime = (unsigned long) (uintptr_t) start_time;
+    unsigned long finalTime = Cudd_ReadElapsedTime(manager) + Cudd_ReadStartTime(manager);
+    double totalTimeSec = (double)(finalTime - initialTime) / 1000.0;
+    long nodeCount = Cudd_ReadNodeCount(manager);
+
+    std::cout << "in post reordering handler. bdd size before:" << global_nodeCount;
+    std::cout << ", bdd size after:" << nodeCount;
+    std::cout << ", time taken to reorder:" << totalTimeSec;
+    auto decreaseRatio = (global_nodeCount / nodeCount) / totalTimeSec;
+    std::cout << ", decrease in size per second:" << decreaseRatio << std::endl;
+    if (decreaseRatio <= 0.1) {
+        std::cout << "turning off reordering" << std::endl;
+        Cudd_AutodynDisable(manager);
+    }
+    return 1;
+}
+
 template< class T >
 std::vector<T> reorder(const std::vector<T>& v, const std::vector<size_t>& order )  {
     std::vector<T> ret;
@@ -332,6 +359,7 @@ BDD Game::buildMutantSyncQNTransitionRelation(bool back) {
   components = topologicallySortComponents(components);
   
   auto start = std::chrono::steady_clock::now();
+  std::vector<BDD> bdds;
  
   int vars_done = 0;
   int comp_num = 0;
@@ -425,6 +453,13 @@ BDD Game::buildMutantSyncQNTransitionRelation(bool back) {
           }
         }
       }
+      // experimenting with manually triggering dynamic reordering
+      //if (!back) {
+	//attractors.manager.SetTimeLimit(10000); 
+	//attractors.manager.ReduceHeap(CUDD_REORDER_GROUP_SIFT_CONV);
+	//attractors.manager.UnsetTimeLimit();
+      //}
+      
     }
     auto diff = std::chrono::steady_clock::now() - start;
     std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
@@ -432,11 +467,20 @@ BDD Game::buildMutantSyncQNTransitionRelation(bool back) {
     std::cout << "adding connected component " << comp_num << std::endl;
     comp_num++;
     tr *= bdd;
+    //bdds.push_back(bdd);
     std::cout << "here1" << std::endl;
     
     diff = std::chrono::steady_clock::now() - start;
     std::cout << "total time so far: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
   }
+  // temp
+  if (!back) {
+     attractors.manager.AutodynDisable();
+  }
+  // for (BDD bdd : bdds) {
+  //   //std::cout << "adding connected component " << comp_num << std::endl;
+  //   tr *= bdd;    
+  // }
 
   std::cout << "here at end" << std::endl;
   return tr;

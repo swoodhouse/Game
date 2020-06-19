@@ -1,5 +1,8 @@
 #pragma once
 
+int pre_reordering_handler(DdManager* manager, const char* x, void* y);
+int post_reordering_handler(DdManager* manager, const char* x, void* start_time);
+
 // temp: removed all const from functions
 
 struct Game {
@@ -81,14 +84,18 @@ struct Game {
     setBDDLevels2();
     
     // try turning off here then back on..
+    // experimenting with manually triggering dynamic reordering
     attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // play with different choices again
     attractors.manager.EnableReorderingReporting();
+
+    attractors.manager.AddHook(&pre_reordering_handler, CUDD_PRE_REORDERING_HOOK);
+    attractors.manager.AddHook(&post_reordering_handler, CUDD_POST_REORDERING_HOOK);
     
     mutantTransitionRelationAtt = buildMutantSyncQNTransitionRelation(false);
     attractors.manager.AutodynDisable();
     mutantTransitionRelationBack = buildMutantSyncQNTransitionRelation(true);
 
-    //attractors.manager.AutodynDisable();
+    ///////attractors.manager.AutodynDisable();
     scoreRelation = buildScoreRelation(apopVar);
 
     std::cout << "Finding fixpoints..." << std::endl;
