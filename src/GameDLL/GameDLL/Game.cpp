@@ -22,7 +22,7 @@ int post_reordering_handler(DdManager* manager, const char* x, void* start_time)
     std::cout << "in post reordering handler. bdd size before:" << global_nodeCount;
     std::cout << ", bdd size after:" << nodeCount;
     std::cout << ", time taken to reorder:" << totalTimeSec;
-    auto decreaseRatio = (global_nodeCount / nodeCount) / totalTimeSec;
+    auto decreaseRatio = ((double)global_nodeCount / (double)nodeCount) / totalTimeSec;
     std::cout << ", decrease in size per second:" << decreaseRatio << std::endl;
     if (decreaseRatio <= 0.1) {
         std::cout << "turning off reordering" << std::endl;
