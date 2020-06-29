@@ -1298,7 +1298,13 @@ void Game::setBDDLevels2() {
    levels.push_back(i);
   }
   auto components = connectedComponents();
-  components = topologicallySortComponents(components);
+
+  // temp, replacing topological by size ordering
+  std::sort(components.begin(), components.end(),
+      	    [](const std::vector<std::vector<int>::size_type>& a,
+      	       const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
+
+  //components = topologicallySortComponents(components); // temp, removing topological ordering
     
   for (auto comp : components) {
     for (auto var : comp) {
