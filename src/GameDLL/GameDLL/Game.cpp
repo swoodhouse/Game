@@ -1289,13 +1289,14 @@ void Game::setBDDLevels2() {
   bool mutationVarsPlaced = false;
   bool treatmentVarsPlaced = false;
 
-  //for (int i : treatmentVarIndices()) {
-  //  levels.push_back(i);
-  //}
+  // temp, mutations at top
+  for (int i : treatmentVarIndices()) {
+   levels.push_back(i);
+  }
 
-  //for (int i : mutationVarsIndices()) {
-  //  levels.push_back(i);
-  //}
+  for (int i : mutationVarsIndices()) {
+   levels.push_back(i);
+  }
   auto components = connectedComponents();
   components = topologicallySortComponents(components);
     
@@ -1303,21 +1304,22 @@ void Game::setBDDLevels2() {
     for (auto var : comp) {
       std::cout << "next in topological ordering: " << var << std::endl;
 
-      if (!treatmentVarsPlaced && (std::find(oeVars.begin(), oeVars.end(), var) != oeVars.end())) {
-        std::cout << "placing treatmentVars above " << var << std::endl;
-	treatmentVarsPlaced = true;
-        for (int i : treatmentVarIndices()) {
-          levels.push_back(i);
-        }
-      }
+      // placing mutations close
+      // if (!treatmentVarsPlaced && (std::find(oeVars.begin(), oeVars.end(), var) != oeVars.end())) {
+      //   std::cout << "placing treatmentVars above " << var << std::endl;
+      // 	treatmentVarsPlaced = true;
+      //   for (int i : treatmentVarIndices()) {
+      //     levels.push_back(i);
+      //   }
+      // }
 
-      if (!mutationVarsPlaced && (std::find(koVars.begin(), koVars.end(), var) != koVars.end())) {
-        std::cout << "placing mutationVars above " << var << std::endl;
-	mutationVarsPlaced = true;
-        for (int i : mutationVarsIndices()) {
-          levels.push_back(i);
-        }
-      }
+      // if (!mutationVarsPlaced && (std::find(koVars.begin(), koVars.end(), var) != koVars.end())) {
+      //   std::cout << "placing mutationVars above " << var << std::endl;
+      // 	mutationVarsPlaced = true;
+      //   for (int i : mutationVarsIndices()) {
+      //     levels.push_back(i);
+      //   }
+      // }
 
       int i = attractors.countBits(var);
       int b = bits(attractors.ranges[var]);
