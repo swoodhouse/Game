@@ -1323,6 +1323,15 @@ void Game::setBDDLevels2() {
       int b = bits(attractors.ranges[var]);
       for (int n = 0; n < b; n++) {
         levels.push_back(i);
+	//        levels.push_back(i + numUnprimedBDDVars); // interleave or not primed variables
+        i++;
+      }
+    }
+    // temp - don't interleave primed variables
+    for (auto var : comp) {
+      int i = attractors.countBits(var);
+      int b = bits(attractors.ranges[var]);
+      for (int n = 0; n < b; n++) {
         levels.push_back(i + numUnprimedBDDVars);
         i++;
       }
