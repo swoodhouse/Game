@@ -5,9 +5,7 @@
 #include "Attractors.h"
 #include "Game.h"
 
-//extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[],
-//	int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int height)
-extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[], int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int height, char outputPrefix[])
+extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minValues[], int numInputs[], int inputVars[], int numUpdates[], int inputValues[], int outputValues[], int numMutations, int numTreatments, int mutationVars[], int treatmentVars[], int apopVar, int height, char outputPrefix[], int attractorDynamicReordering, int reorderingCutoffRatio)
 	{
         std::string outputPrefixS(outputPrefix);
 	std::cout << "in dll. numVars:" << numVars << ", numMutations:" << numMutations << ", numTreatments:" << numTreatments << ", apopVar:" << apopVar << ", height: " << height << std::endl;
@@ -68,8 +66,8 @@ extern "C" __declspec(dllexport) int minimax(int numVars, int ranges[], int minV
 	std::cout << "constructing game:" << std::endl;
 
 	
-	Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, height, false);
-	//Game g(minValuesV, rangesV, qn, mutationVarsV, treatmentVarsV, apopVar, height, false);
+	//	Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, height, false);
+	Game g(std::move(minValuesV), std::move(rangesV), std::move(qn), std::move(mutationVarsV), std::move(treatmentVarsV), apopVar, height, false, attractorDynamicReordering != 0, reorderingCutoffRatio);
 	std::cout << "height:" << height << std::endl;
 	std::cout << "g.numMutations:" << g.numMutations << std::endl;
 	std::cout << "g.numTreatments:" << g.numTreatments << std::endl;

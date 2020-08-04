@@ -2,7 +2,7 @@
 
 int pre_reordering_handler(DdManager* manager, const char* x, void* y);
 int post_reordering_handler(DdManager* manager, const char* x, void* start_time);
-
+void setReorderingCutoff(double c);
 // temp: removed all const from functions
 
 struct Game {
@@ -64,9 +64,12 @@ struct Game {
   void setBDDLevels2();
   
   Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,
-       bool maximisingPlayerGoesLast)
+       bool maximisingPlayerGoesLast, bool attractorDynamicReordering, int reorderingCutoffRatio)
   {
     std::cout << "in Game ctor" << std::endl;
+
+    setReorderingCutoff(1.0 / (double) reorderingCutoffRatio);
+    
     height = depth;
     maximisingPlayerLast = maximisingPlayerGoesLast;
     numMutations = calcNumMutations(depth, maximisingPlayerGoesLast);
@@ -92,13 +95,17 @@ struct Game {
     
     mutantTransitionRelationAtt = buildMutantSyncQNTransitionRelation(false);
     attractors.manager.AutodynDisable();
+    // SHOULD IT BE ENABLED HERE??
     mutantTransitionRelationBack = buildMutantSyncQNTransitionRelation(true);
 
+    
     ///////attractors.manager.AutodynDisable();
     scoreRelation = buildScoreRelation(apopVar);
 
     std::cout << "Finding fixpoints..." << std::endl;
     allFixpoints = attractors.fixpoints(mutantTransitionRelationAtt);// this can just be computed once, not every call
+
+    if (attractorDynamicReordering) attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV);
   };
 
   

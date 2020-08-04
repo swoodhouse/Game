@@ -6,6 +6,12 @@
 
 long global_nodeCount = 0;
 
+double global_reorderingCutoff = 0.1;
+
+void setReorderingCutoff(double c) {
+  global_reorderingCutoff = c;
+}
+
 int pre_reordering_handler(DdManager* manager, const char* x, void* y) {
    global_nodeCount = Cudd_ReadNodeCount(manager);
    std::cout << std::endl << "in pre reordering handler. bdd size before:" << global_nodeCount << std::endl;
@@ -24,7 +30,8 @@ int post_reordering_handler(DdManager* manager, const char* x, void* start_time)
     std::cout << ", time taken to reorder:" << totalTimeSec;
     auto decreaseRatio = ((double)global_nodeCount / (double)nodeCount) / totalTimeSec;
     std::cout << ", decrease in size per second:" << decreaseRatio << std::endl;
-    if (decreaseRatio <= 0.1) {
+    //    if (decreaseRatio <= 0.1) {
+    if (decreaseRatio <= global_reorderingCutoff) {
         std::cout << "turning off reordering" << std::endl;
         Cudd_AutodynDisable(manager);
     }

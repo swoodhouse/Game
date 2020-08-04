@@ -22,7 +22,7 @@ open BioCheckPlusZ3
 
 [<DllImport("GameDLL.dll", CallingConvention=CallingConvention.Cdecl)>]
 extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
-                   int numMutations, int numTreatments, int[] mutationVars, int[] treatmentVars, int apopVar, int height, char[] outputPrefix)
+                   int numMutations, int numTreatments, int[] mutationVars, int[] treatmentVars, int apopVar, int height, char[] outputPrefix, int attractorDynamicReordering, int reorderingCutoffRatio)
 
 //extern int minimax(int numVars, int[] ranges, int[] minValues, int[] numInputs, int[] inputVars, int[] numUpdates, int[] inputValues, int[] outputValues,
 //                   int numMutations, int numTreatments, int[] mutationVars, int[] treatmentVars, int apopVar, int height)
@@ -129,9 +129,7 @@ let read_ModelFile_as_QN model_fname =
     let qn = Marshal.QN_of_Model model
     qn
 
-//let playGame (*mode proof_output*) qn (mutations : (QN.var * int) list) (treatments : (QN.var * int) list) (apopVar : int) height maximisingPlayerGoesLast =
-let playGame (*mode*) qn (mutations : (QN.var * int) list) (treatments : (QN.var * int) list) (apopVar : int) height maximisingPlayerGoesLast proof_output =
-    printfn "intptr.size: %i" System.IntPtr.Size
+let playGame (*mode*) qn (mutations : (QN.var * int) list) (treatments : (QN.var * int) list) (apopVar : int) height maximisingPlayerGoesLast proof_output (attractorDynamicReordering : bool) reorderingCutoffRatio =
     printfn "in playGame. height = %i" height
 
     // temp!!!!
@@ -244,9 +242,8 @@ let playGame (*mode*) qn (mutations : (QN.var * int) list) (treatments : (QN.var
     try 
         minimax(List.length qn, ranges', minValues, numInputs, inputVars', numUpdates, inputValues', outputValues',
                 List.length mutations', List.length treatments', Array.ofList mutations', Array.ofList treatments', apopVar, height,
-                Seq.toArray proof_output) |> ignore
-        //minimax(List.length qn, ranges', minValues, numInputs, inputVars', numUpdates, inputValues', outputValues',
-        //        List.length mutations', List.length treatments', Array.ofList mutations', Array.ofList treatments', apopVar, height) |> ignore
+                Seq.toArray proof_output, System.Convert.ToInt32 attractorDynamicReordering, reorderingCutoffRatio) |> ignore
+
     with
     | :? System.Runtime.InteropServices.SEHException as e -> printfn "External exception: %s, code: %ui" e.Message e.ErrorCode // Unspecified failure..
   

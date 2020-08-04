@@ -100,13 +100,17 @@ let findAttractors mode proof_output qn initialCsvFilename =
     let qnVars = qn |> List.map (fun n -> n.var)
     let variables = qn |> List.map (fun n -> n.name)
 
-    let ranges, stable = runVMCAI qn
-    let ranges, stable = if initialCsvFilename = "" || stable then
-                             ranges, stable
-                         else
-                             runReachability qn (loadRangesFromCsv qnVars initialCsvFilename)
+ //    // temp: turning off vmcai for Tests.cpp
+    printfn "TEMP: TURNING OFF VMCAI FOR TESTING..."
+    let ranges = qn |> List.map (fun n -> n.var, rangeToList n.range) |> Map.ofList
 
-    let initialCsvFilename = if stable then "" else initialCsvFilename
+    //let ranges, stable = runVMCAI qn
+    //let ranges, stable = if initialCsvFilename = "" || stable then
+    //                         ranges, stable
+    //                     else
+    //                         runReachability qn (loadRangesFromCsv qnVars initialCsvFilename)
+
+    //let initialCsvFilename = if stable then "" else initialCsvFilename
 
     let minValues = Map.toArray ranges |> Array.map (fun (_, x) -> List.head x)
     let ranges' = Map.toArray ranges |> Array.map (fun (_, x) -> List.length x - 1)

@@ -85,9 +85,11 @@ let attractorMode = ref Attractors.Sync
 // related to Game engine
 let mutations : (QN.var * int) list ref = ref []
 let treatments : (QN.var * int) list ref = ref []
-
 let apopVar = ref 0
 let gameHeight = ref 0
+let dynamicReordering = ref false
+let reorderingCutoff = ref 10
+
 
 let usage i = 
     Printf.printfn "Usage: BioCheckConsole.exe -model input_analysis_file.json"
@@ -141,6 +143,8 @@ let rec parse_args args =
     | "-treat" :: id :: konst :: rest -> treatments := (ko_of_string id konst) :: !treatments; parse_args rest
     | "-apopVar" :: i :: rest -> apopVar := (int i); parse_args rest 
     | "-height" :: i :: rest -> gameHeight := (int i); parse_args rest 
+    | "-dynamicReordering" :: i :: rest -> dynamicReordering := (int i) = 1; parse_args rest
+    | "-reorderingCutoff" :: i :: rest -> reorderingCutoff := (int i); parse_args rest
     | _ -> failwith "Bad command line args"
 
 
@@ -373,7 +377,7 @@ let main args =
                     else false
                 | Some EngineGame ->
                     //runGameEngine qn !mutations !treatments !apopVar !gameHeight true; true // fix this
-                    runGameEngine qn !mutations !treatments !apopVar !gameHeight true !proof_output; true // fix this
+                    runGameEngine qn !mutations !treatments !apopVar !gameHeight true !proof_output !dynamicReordering !reorderingCutoff; true // fix this
                 | none -> false
 
             if (not parameters_were_ok) then
