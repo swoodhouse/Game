@@ -1307,11 +1307,11 @@ void Game::setBDDLevels2() {
   auto components = connectedComponents();
 
   // temp, replacing topological by size ordering
-  std::sort(components.begin(), components.end(),
-      	    [](const std::vector<std::vector<int>::size_type>& a,
-      	       const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
+  // std::sort(components.begin(), components.end(),
+  //     	    [](const std::vector<std::vector<int>::size_type>& a,
+  //     	       const std::vector<std::vector<int>::size_type>& b){ return a.size() < b.size(); });
 
-  //components = topologicallySortComponents(components); // temp, removing topological ordering
+  components = topologicallySortComponents(components); // temp, removing topological ordering
     
   for (auto comp : components) {
     for (auto var : comp) {
