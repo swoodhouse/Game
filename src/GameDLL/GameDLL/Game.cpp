@@ -1297,13 +1297,13 @@ void Game::setBDDLevels2() {
   bool treatmentVarsPlaced = false;
 
   // temp, mutations at top
-  for (int i : treatmentVarIndices()) {
-   levels.push_back(i);
-  }
+  // for (int i : treatmentVarIndices()) {
+  //  levels.push_back(i);
+  // }
 
-  for (int i : mutationVarsIndices()) {
-   levels.push_back(i);
-  }
+  // for (int i : mutationVarsIndices()) {
+  //  levels.push_back(i);
+  // }
   auto components = connectedComponents();
 
   // temp, replacing topological by size ordering
@@ -1318,21 +1318,21 @@ void Game::setBDDLevels2() {
       std::cout << "next in topological ordering: " << var << std::endl;
 
       // placing mutations close
-      // if (!treatmentVarsPlaced && (std::find(oeVars.begin(), oeVars.end(), var) != oeVars.end())) {
-      //   std::cout << "placing treatmentVars above " << var << std::endl;
-      // 	treatmentVarsPlaced = true;
-      //   for (int i : treatmentVarIndices()) {
-      //     levels.push_back(i);
-      //   }
-      // }
+      if (!treatmentVarsPlaced && (std::find(oeVars.begin(), oeVars.end(), var) != oeVars.end())) {
+        std::cout << "placing treatmentVars above " << var << std::endl;
+      	treatmentVarsPlaced = true;
+        for (int i : treatmentVarIndices()) {
+          levels.push_back(i);
+        }
+      }
 
-      // if (!mutationVarsPlaced && (std::find(koVars.begin(), koVars.end(), var) != koVars.end())) {
-      //   std::cout << "placing mutationVars above " << var << std::endl;
-      // 	mutationVarsPlaced = true;
-      //   for (int i : mutationVarsIndices()) {
-      //     levels.push_back(i);
-      //   }
-      // }
+      if (!mutationVarsPlaced && (std::find(koVars.begin(), koVars.end(), var) != koVars.end())) {
+        std::cout << "placing mutationVars above " << var << std::endl;
+      	mutationVarsPlaced = true;
+        for (int i : mutationVarsIndices()) {
+          levels.push_back(i);
+        }
+      }
 
       int i = attractors.countBits(var);
       int b = bits(attractors.ranges[var]);
