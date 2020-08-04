@@ -83,7 +83,7 @@ struct Game {
 
     attractors = Attractors(minVals, rangesV, qn, temp);
 
-    //setBDDLevels2(); // temp, turning off setting levels, so linear "worst possible" in theory (but not practice?)
+    setBDDLevels2();
     
     // try turning off here then back on..
     // experimenting with manually triggering dynamic reordering
