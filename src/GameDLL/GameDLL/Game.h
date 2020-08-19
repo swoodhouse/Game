@@ -63,7 +63,7 @@ struct Game {
   void setBDDLevels();
   void setBDDLevels2();
   
-  Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,
+Game(const std::vector<int>& minVals, const std::vector<int>& rangesV, const QNTable& qn, const std::vector<int>& koVarsV, const std::vector<int>& oeVarsV, int apopVar, int depth,
        bool maximisingPlayerGoesLast, bool attractorDynamicReordering, int reorderingCutoffRatio)
   {
     std::cout << "in Game ctor" << std::endl;
@@ -83,7 +83,7 @@ struct Game {
 
     attractors = Attractors(minVals, rangesV, qn, temp);
 
-    //setBDDLevels2(); // temp, turning off setting levels, so linear "worst possible" in theory (but not practice?)
+    setBDDLevels2();
     
     // try turning off here then back on..
     // experimenting with manually triggering dynamic reordering
@@ -94,12 +94,13 @@ struct Game {
     attractors.manager.AddHook(&post_reordering_handler, CUDD_POST_REORDERING_HOOK);
     
     mutantTransitionRelationAtt = buildMutantSyncQNTransitionRelation(false);
-    attractors.manager.AutodynDisable();
+    //attractors.manager.AutodynDisable();
     // SHOULD IT BE ENABLED HERE??
+    attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV); // keeping enabled in backwards bdd
     mutantTransitionRelationBack = buildMutantSyncQNTransitionRelation(true);
 
-    
-    ///////attractors.manager.AutodynDisable();
+    // keeping enabled in backwards bdd
+    attractors.manager.AutodynDisable();
     scoreRelation = buildScoreRelation(apopVar);
 
     std::cout << "Finding fixpoints..." << std::endl;
@@ -107,7 +108,6 @@ struct Game {
 
     if (attractorDynamicReordering) attractors.manager.AutodynEnable(CUDD_REORDER_GROUP_SIFT_CONV);
   };
-
   
   // this was buggy, so be careful if you go back to move ctors
   /* Game(std::vector<int>&& minVals, std::vector<int>&& rangesV, QNTable&& qn, std::vector<int>&& koVarsV, std::vector<int>&& oeVarsV, int apopVar, int depth, */
